@@ -1,8 +1,10 @@
 steps:
   - label: ":rspec: RSpec"
-    command: "bundle exec rspec"
+    command: "bundle install && rspec"
     soft_fail: true
     plugins:
+      - docker#v5.11.0:
+          image: "ruby:3.3-bookworm"
       - thedyrt/change-directory#v0.1.1:
           cd: rspec
     
