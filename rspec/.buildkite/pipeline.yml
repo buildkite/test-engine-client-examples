@@ -1,0 +1,8 @@
+steps:
+  - label: ":rspec: RSpec"
+    command: "bundle exec rspec"
+    soft_fail: true
+    plugins:
+      - thedyrt/change-directory#v0.1.1:
+          cd: rspec
+    
