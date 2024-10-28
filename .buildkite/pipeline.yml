@@ -7,4 +7,12 @@ steps:
           image: "ruby:3.3-bookworm"
       - thedyrt/change-directory#v0.1.1:
           cd: rspec
+  - label: ":jest: Jest"
+    command: "npm install && npm test"
+    soft_fail: true
+    plugins:
+      - docker#v5.11.0:
+          image: "node:slim"
+      - thedyrt/change-directory#v0.1.1:
+          cd: jest
     
