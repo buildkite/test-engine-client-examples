@@ -1,0 +1,13 @@
+{
+  "name": "buildkite-test-engine-client-jest-example",
+  "version": "1.0.0",
+  "description": "Jest configuration example for Buildkite Test Engine Client",
+  "main": "index.js",
+  "license": "MIT",
+  "devDependencies": {
+    "jest": "^29.7.0"
+  },
+  "scripts": {
+    "test": "jest"
+  }
+}
