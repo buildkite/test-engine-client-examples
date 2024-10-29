@@ -1,10 +1,21 @@
 steps:
   - label: ":rspec: RSpec"
-    command: "bundle install && rspec"
+    parallelism: 2
+    command: "bin/test"
     soft_fail: true
     plugins:
       - docker#v5.11.0:
           image: "ruby:3.3-bookworm"
+          # Pass env variables for Buildkite Test Engine Client to the Docker container
+          environment:
+            - BUILDKITE_BUILD_ID
+            - BUILDKITE_JOB_ID
+            - BUILDKITE_ORGANIZATION_SLUG
+            - BUILDKITE_PARALLEL_JOB
+            - BUILDKITE_PARALLEL_JOB_COUNT
+            - BUILDKITE_STEP_ID
+            - BUILDKITE_TEST_ENGINE_SUITE_SLUG
+            - BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
       - thedyrt/change-directory#v0.1.1:
           cd: rspec
   
