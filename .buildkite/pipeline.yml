@@ -6,7 +6,7 @@ steps:
     plugins:
       - docker#v5.11.0:
           image: "ruby:3.3-bookworm"
-          # Pass env variables for Buildkite Test Engine Client to the Docker container
+          # Pass required env variables for Buildkite Test Engine Client to the Docker container
           environment:
             - BUILDKITE_BUILD_ID
             - BUILDKITE_JOB_ID
