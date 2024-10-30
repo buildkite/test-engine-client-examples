@@ -11,7 +11,7 @@ chmod +x ./bktec
 # Configure Buildkite Test Engine Client
 # See https://buildkite.com/docs/test-engine/test-splitting/configuring
 export BUILDKITE_TEST_ENGINE_DEBUG_ENABLED=true
-export BUILDKITE_TEST_ENGINE_RESULT_PATH=tmp/playwright.json
+export BUILDKITE_TEST_ENGINE_RESULT_PATH=tmp/playwright-results.json
 export BUILDKITE_TEST_ENGINE_RETRY_COUNT=1
 export BUILDKITE_TEST_ENGINE_TEST_RUNNER=playwright
 
