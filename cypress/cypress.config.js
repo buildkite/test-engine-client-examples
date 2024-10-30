@@ -6,4 +6,8 @@ module.exports = defineConfig({
   },
   screenshotOnRunFailure: false,
   video: false,
+  reporter: "buildkite-test-collector/cypress/reporter",
+  reporterOptions: {
+    token_name: "BUILDKITE_ANALYTICS_TOKEN",
+  },
 })
