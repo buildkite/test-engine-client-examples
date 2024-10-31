@@ -10,11 +10,8 @@ chmod +x ./bktec
 
 # Configure Buildkite Test Engine Client
 # See https://buildkite.com/docs/test-engine/test-splitting/configuring
-export BUILDKITE_TEST_ENGINE_DEBUG_ENABLED=true
-export BUILDKITE_TEST_ENGINE_RESULT_PATH=tmp/rspec.json
-export BUILDKITE_TEST_ENGINE_RETRY_COUNT=1
-export BUILDKITE_TEST_ENGINE_SPLIT_BY_EXAMPLE=true
 export BUILDKITE_TEST_ENGINE_TEST_RUNNER=rspec
+export BUILDKITE_TEST_ENGINE_RESULT_PATH=tmp/rspec.json
 
 # Run Buildkite Test Engine Client
 ./bktec

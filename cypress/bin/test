@@ -11,7 +11,6 @@ chmod +x ./bktec
 
 # Configure Buildkite Test Engine Client
 # See https://buildkite.com/docs/test-engine/test-splitting/configuring
-export BUILDKITE_TEST_ENGINE_DEBUG_ENABLED=true
 export BUILDKITE_TEST_ENGINE_TEST_RUNNER=cypress
 
 # Run Buildkite Test Engine Client
