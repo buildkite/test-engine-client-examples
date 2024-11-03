@@ -19,5 +19,12 @@ module.exports = defineConfig({
       use: { ...devices['Desktop Chrome'] },
     }
   ],
+  reporter: [
+    ['line'],
+    // Send results to Test Engine
+    ['buildkite-test-collector/playwright/reporter'],
+    // Output results to a JSON file for Buildkite Test Engine Client to read
+    ['json', { outputFile: process.env.BUILDKITE_TEST_ENGINE_RESULT_PATH }]
+  ],
 });
 
