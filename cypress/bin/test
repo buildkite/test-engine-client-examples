@@ -6,7 +6,7 @@ npm install
 # Install Buildkite Test Engine Client
 # See https://buildkite.com/docs/test-engine/test-splitting/client-installation
 apt-get update && apt-get install curl -y
-curl -L https://github.com/buildkite/test-engine-client/releases/download/v1.1.0/bktec_1.1.0_linux_amd64 -o ./bktec
+curl -L https://github.com/buildkite/test-engine-client/releases/download/v1.2.0-rc.1/bktec_1.2.0-rc.1_linux_amd64 -o ./bktec
 chmod +x ./bktec
 
 # Configure Buildkite Test Engine Client
