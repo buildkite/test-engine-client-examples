@@ -12,6 +12,7 @@ chmod +x ./bktec
 # See https://buildkite.com/docs/test-engine/test-splitting/configuring
 export BUILDKITE_TEST_ENGINE_TEST_RUNNER=playwright
 export BUILDKITE_TEST_ENGINE_RESULT_PATH=tmp/playwright-results.json
+export BUILDKITE_TEST_ENGINE_TEST_FILE_PATTERN="**/demo-todo-app/*.spec.js"
 
 # Run Buildkite Test Engine Client
 ./bktec
