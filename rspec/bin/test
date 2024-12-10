@@ -5,7 +5,8 @@ bundle install
 
 # Install Buildkite Test Engine Client
 # See https://buildkite.com/docs/test-engine/test-splitting/client-installation
-curl -L https://github.com/buildkite/test-engine-client/releases/download/v1.1.0/bktec_1.1.0_linux_amd64 -o ./bktec
+BKTEC_VERSION=${BKTEC_VERSION:-1.2.0}
+curl -L "https://github.com/buildkite/test-engine-client/releases/download/v${BKTEC_VERSION}/bktec_${BKTEC_VERSION}_linux_amd64" -o ./bktec 
 chmod +x ./bktec
 
 # Configure Buildkite Test Engine Client
