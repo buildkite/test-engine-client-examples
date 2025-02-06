@@ -1,0 +1,16 @@
+GEM
+  remote: https://rubygems.org/
+  specs:
+    buildkite-test_collector (2.8.0)
+    minitest (5.25.4)
+
+PLATFORMS
+  arm64-darwin-24
+  ruby
+
+DEPENDENCIES
+  buildkite-test_collector
+  minitest
+
+BUNDLED WITH
+   2.6.2
