@@ -1,5 +1,5 @@
 steps:
-  - label: ":rspec: RSpec"
+  - label: ":ruby: :rspec: Ruby: RSpec"
     parallelism: 2
     command: "cd rspec && bin/test"
     soft_fail: true
@@ -9,7 +9,25 @@ steps:
             BUILDKITE_ANALYTICS_TOKEN: test_engine_client_examples_suite_token
             BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN: test_engine_client_examples_api_token
       - docker#v5.11.0:
-          image: "ruby:3.3-bookworm"
+          image: "ruby:3.4-bookworm" # requires curl
+          # Pass pipeline env variables to the Docker container
+          # See https://buildkite.com/docs/test-engine/test-splitting/configuring#using-the-test-engine-client-configure-environment-variables
+          propagate-environment: true
+          # Pass API access token and Test Engine suite token to the Docker container
+          environment:
+            - BUILDKITE_ANALYTICS_TOKEN
+            - BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
+
+  - label: ":ruby: Ruby: Minitest"
+    command: "cd ruby-minitest && bin/test"
+    soft_fail: true
+    plugins:
+      - cluster-secrets#v1.0.0:
+          variables:
+            BUILDKITE_ANALYTICS_TOKEN: test_engine_client_examples_suite_token
+            BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN: test_engine_client_examples_api_token
+      - docker#v5.11.0:
+          image: "ruby:3.4-slim"
           # Pass pipeline env variables to the Docker container
           # See https://buildkite.com/docs/test-engine/test-splitting/configuring#using-the-test-engine-client-configure-environment-variables
           propagate-environment: true
