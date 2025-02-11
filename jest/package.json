@@ -5,7 +5,7 @@
   "main": "index.js",
   "license": "MIT",
   "devDependencies": {
-    "buildkite-test-collector": "^1.7.3",
+    "buildkite-test-collector": "^1.8.0",
     "jest": "^29.7.0"
   },
   "scripts": {

@@ -22,7 +22,12 @@ module.exports = defineConfig({
   reporter: [
     ['line'],
     // Send results to Test Engine
-    ['buildkite-test-collector/playwright/reporter'],
+    ['buildkite-test-collector/playwright/reporter', {
+      tags: {
+        "test.framework.name": "playwright",
+        "test.framework.version": require('playwright/package.json').version,
+      },
+    }],
     // Output results to a JSON file for Buildkite Test Engine Client to read
     ['json', { outputFile: process.env.BUILDKITE_TEST_ENGINE_RESULT_PATH }]
   ],
