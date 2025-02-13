@@ -10,5 +10,9 @@ module.exports = defineConfig({
   reporter: "buildkite-test-collector/cypress/reporter",
   reporterOptions: {
     token_name: "BUILDKITE_ANALYTICS_TOKEN",
+    tags: {
+      "test.framework.name": "cypress",
+      "test.framework.version": require('cypress/package.json').version,
+    },
   },
 })

@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+
+# Install gems
+bundle install
+
+# Run Minitest
+bundle exec ruby -Ilib:test example_test.rb
