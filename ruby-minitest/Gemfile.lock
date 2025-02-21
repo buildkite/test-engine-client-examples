@@ -1,7 +1,13 @@
+GIT
+  remote: https://github.com/buildkite/test-collector-ruby
+  revision: 1176ad412b21845e54f9945b5e9684218f1331a3
+  branch: per-execution-tags
+  specs:
+    buildkite-test_collector (2.8.0)
+
 GEM
   remote: https://rubygems.org/
   specs:
-    buildkite-test_collector (2.8.0)
     minitest (5.25.4)
 
 PLATFORMS
@@ -9,7 +15,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  buildkite-test_collector
+  buildkite-test_collector!
   minitest
 
 BUNDLED WITH
