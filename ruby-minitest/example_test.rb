@@ -7,11 +7,13 @@ Buildkite::TestCollector.configure(
   tags: {
     "test.framework.name" => "minitest",
     "test.framework.version" => Minitest::VERSION,
+    "custom.tag.from" => "upload",
   },
 )
 
 class ExampleTest < Minitest::Test
   def test_it_works
+    Buildkite::TestCollector.tag_execution("custom.tag.from", "execution")
     assert_equal true, true
   end
 

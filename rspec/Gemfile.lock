@@ -1,13 +1,13 @@
 GEM
   remote: https://rubygems.org/
   specs:
-    buildkite-test_collector (2.7.0)
-    diff-lcs (1.5.1)
+    buildkite-test_collector (2.9.0)
+    diff-lcs (1.6.0)
     rspec (3.13.0)
       rspec-core (~> 3.13.0)
       rspec-expectations (~> 3.13.0)
       rspec-mocks (~> 3.13.0)
-    rspec-core (3.13.2)
+    rspec-core (3.13.3)
       rspec-support (~> 3.13.0)
     rspec-expectations (3.13.3)
       diff-lcs (>= 1.2.0, < 2.0)
@@ -15,14 +15,14 @@ GEM
     rspec-mocks (3.13.2)
       diff-lcs (>= 1.2.0, < 2.0)
       rspec-support (~> 3.13.0)
-    rspec-support (3.13.1)
+    rspec-support (3.13.2)
 
 PLATFORMS
   arm64-darwin-23
   ruby
 
 DEPENDENCIES
-  buildkite-test_collector (~> 2.7)
+  buildkite-test_collector
   rspec (~> 3.13)
 
 BUNDLED WITH
