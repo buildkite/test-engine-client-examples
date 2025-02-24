@@ -8,4 +8,5 @@ Buildkite::TestCollector.configure(
     "test.framework.name" => "rspec",
     "test.framework.version" => RSpec::Version::STRING,
   },
+  url: ENV["BUILDKITE_ANALYTICS_ENDPOINT"],
 )
