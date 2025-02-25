@@ -1,7 +1,7 @@
 GEM
   remote: https://rubygems.org/
   specs:
-    buildkite-test_collector (2.8.0)
+    buildkite-test_collector (2.9.0)
     minitest (5.25.4)
 
 PLATFORMS
