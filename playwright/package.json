@@ -6,7 +6,7 @@
   "license": "MIT",
   "devDependencies": {
     "@playwright/test": "^1.48.2",
-    "buildkite-test-collector": "^1.8.0"
+    "buildkite-test-collector": "buildkite/test-collector-javascript"
   },
   "scripts": {
     "test": "playwright test"

@@ -5,7 +5,7 @@
   "main": "index.js",
   "license": "MIT",
   "devDependencies": {
-    "buildkite-test-collector": "^1.8.0",
+    "buildkite-test-collector": "buildkite/test-collector-javascript",
     "cypress": "^13.15.1"
   },
   "scripts": {
