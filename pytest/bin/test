@@ -7,8 +7,8 @@ pip install -e '.[dev]'
 
 # Install Buildkite Test Engine Client
 # See https://buildkite.com/docs/test-engine/test-splitting/client-installation
-BKTEC_VERSION=${BKTEC_VERSION:-1.4.0-rc.2}
-curl -L "https://github.com/buildkite/test-engine-client/releases/download/v${BKTEC_VERSION}/bktec_${BKTEC_VERSION}_linux_amd64" -o ./bktec 
+BKTEC_VERSION=${BKTEC_VERSION:-1.4.0-rc.3}
+curl -L "https://github.com/buildkite/test-engine-client/releases/download/v${BKTEC_VERSION}/bktec_${BKTEC_VERSION}_linux_amd64" -o ./bktec
 chmod +x ./bktec
 
 # Configure Buildkite Test Engine Client
