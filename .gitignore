@@ -1,2 +1,10 @@
 node_modules/
 tmp/
+
+
+# pytest
+*.egg*
+__pycache__
+.tox
+.env*
+.direnv/*
