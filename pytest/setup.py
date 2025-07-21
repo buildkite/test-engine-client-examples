@@ -8,7 +8,7 @@ setup(
   extras_require={
     "dev": [
       "pytest>=7.0.0",
-      "buildkite-test-collector>=1.0.0rc1",
+      "buildkite-test-collector @ git+https://github.com/buildkite/test-collector-python.git@main",
     ],
   },
 )
