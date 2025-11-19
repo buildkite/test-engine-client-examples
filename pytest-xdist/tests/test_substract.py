@@ -1,4 +1,7 @@
+import pytest
+
 class TestSubstract:
+  @pytest.mark.repeat(3)
   def test_positive(self):
     assert 5 - 3 == 2
 
