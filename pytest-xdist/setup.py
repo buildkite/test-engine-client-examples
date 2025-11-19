@@ -7,8 +7,8 @@ setup(
   install_requires=[],
   extras_require={
     "dev": [
-      "pytest>=7.0.0",
-      "pytest-xdist>=3.0.0",
+      "pytest==8.4.2",
+      "pytest-xdist==3.8.0",
       "buildkite-test-collector>=1.1.0",
     ],
   },
