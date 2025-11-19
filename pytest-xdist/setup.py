@@ -9,6 +9,7 @@ setup(
     "dev": [
       "pytest==8.4.2",
       "pytest-xdist==3.8.0",
+      "pytest-rerunfailures",
       "buildkite-test-collector>=1.1.0",
     ],
   },
