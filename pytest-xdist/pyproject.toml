@@ -1,0 +1,11 @@
+[tool.pytest.ini_options]
+addopts = "-n 3"
+log_cli = true
+log_cli_level = "DEBUG"
+testpaths = ["tests"]
+asyncio_mode = "strict"
+asyncio_default_fixture_loop_scope = "function"
+asyncio_default_test_loop_scope = "function"
+timeout = "180.0"
+timeout_method = "signal"
+timeout_func_only = false
