@@ -97,9 +97,30 @@ steps:
 
   - label: ":pytest: pytest"
     parallelism: 2
-    artifact_paths: 
+    artifact_paths:
       - pytest/result.json
     command: "cd pytest && bin/test"
+    soft_fail: true
+    plugins:
+      - cluster-secrets#v1.0.0:
+          variables:
+            BUILDKITE_ANALYTICS_TOKEN: test_engine_client_examples_suite_token
+            BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN: test_engine_client_examples_api_token
+      - docker#v5.11.0:
+          image: "python:3.13.2-bookworm"
+          # Pass pipeline env variables to the Docker container
+          # See https://buildkite.com/docs/test-engine/test-splitting/configuring#using-the-test-engine-client-configure-environment-variables
+          propagate-environment: true
+          # Pass API access token and Test Engine suite token to the Docker container
+          environment:
+            - BUILDKITE_ANALYTICS_TOKEN
+            - BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
+
+  - label: ":pytest: pytest with (xdist)"
+    parallelism: 2
+    artifact_paths:
+      - pytest/result.json
+    command: "cd pytest-xdist && bin/test"
     soft_fail: true
     plugins:
       - cluster-secrets#v1.0.0:
