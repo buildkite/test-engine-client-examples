@@ -23,6 +23,7 @@ steps:
             - BKTEC_VERSION
 
   - label: ":ruby: Ruby: Minitest"
+    parallelism: 2
     command: "cd ruby-minitest && bin/test"
     soft_fail: true
     plugins:
