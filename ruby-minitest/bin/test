@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -euo pipefail
 
 # Install gems
 bundle install
@@ -14,4 +15,4 @@ chmod +x ./bktec
 export BUILDKITE_TEST_ENGINE_TEST_RUNNER=custom
 export BUILDKITE_TEST_ENGINE_TEST_CMD="bundle exec rake test TEST_FILES={{testExamples}}"
 export BUILDKITE_TEST_ENGINE_TEST_FILE_PATTERN="**/*_test.rb"
-bktec run
+./bktec run
