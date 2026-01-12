@@ -1,0 +1,5 @@
+source 'https://rubygems.org'
+
+gem 'cucumber'
+gem 'rspec'
+gem 'buildkite-test_collector', git: 'https://github.com/buildkite/test-collector-ruby.git', ref: '863e7fcc5a25457a06a09d223a7f9ae353ce9254'
