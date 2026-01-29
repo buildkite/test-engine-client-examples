@@ -16,7 +16,7 @@ export BUILDKITE_TEST_ENGINE_RESULT_PATH=jest-result.json
 
 # Configure retry settings for flaky test handling
 export BUILDKITE_TEST_ENGINE_RETRY_COUNT=3
-export BUILDKITE_TEST_ENGINE_RETRY_CMD="npm test -- --testNamePattern '{{testNamePattern}}' --json --testLocationInResults --outputFile {{resultPath}}"
+export BUILDKITE_TEST_ENGINE_RETRY_CMD="npx jest --testNamePattern '{{testNamePattern}}' --json --testLocationInResults --outputFile {{resultPath}}"
 
 # Run Buildkite Test Engine Client
 ./bktec
