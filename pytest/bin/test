@@ -7,7 +7,11 @@ pip install -e '.[dev]'
 
 # Install Buildkite Test Engine Client
 # See https://buildkite.com/docs/test-engine/test-splitting/client-installation
-BKTEC_VERSION=${BKTEC_VERSION:-1.6.1}
+if [ -z "${BKTEC_VERSION}" ]; then
+  echo "Error: BKTEC_VERSION environment variable is not set"
+  echo "Set it with: export BKTEC_VERSION=2.1.0-rc.3"
+  exit 1
+fi
 curl -L "https://github.com/buildkite/test-engine-client/releases/download/v${BKTEC_VERSION}/bktec_${BKTEC_VERSION}_linux_amd64" -o ./bktec
 chmod +x ./bktec
 
@@ -16,4 +20,4 @@ chmod +x ./bktec
 export BUILDKITE_TEST_ENGINE_TEST_RUNNER=pytest
 
 # Run Buildkite Test Engine Client
-./bktec
+./bktec run

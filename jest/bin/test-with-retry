@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-# Install gems
-bundle install
+# Install node packages
+npm install
 
 # Install Buildkite Test Engine Client
 # See https://buildkite.com/docs/test-engine/test-splitting/client-installation
@@ -15,8 +15,12 @@ chmod +x ./bktec
 
 # Configure Buildkite Test Engine Client
 # See https://buildkite.com/docs/test-engine/test-splitting/configuring
-export BUILDKITE_TEST_ENGINE_TEST_RUNNER=rspec
-export BUILDKITE_TEST_ENGINE_RESULT_PATH=tmp/rspec.json
+export BUILDKITE_TEST_ENGINE_TEST_RUNNER=jest
+export BUILDKITE_TEST_ENGINE_RESULT_PATH=jest-result.json
+
+# Configure retry settings for flaky test handling
+export BUILDKITE_TEST_ENGINE_RETRY_COUNT=3
+export BUILDKITE_TEST_ENGINE_RETRY_CMD="npx jest {{testExamples}} --testNamePattern '{{testNamePattern}}' --json --testLocationInResults --outputFile {{resultPath}}"
 
 # Run Buildkite Test Engine Client
 ./bktec run
