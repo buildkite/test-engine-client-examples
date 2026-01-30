@@ -146,3 +146,26 @@ steps:
             - BUILDKITE_ANALYTICS_TOKEN
             - BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
             - BKTEC_VERSION
+
+  - group: "Additional bktec features"
+    key: "jest-retry"
+    steps:
+      - label: ":jest: Jest (Retry Enabled)"
+        parallelism: 2
+        command: "cd jest && bin/test-with-retry"
+        soft_fail: true
+        plugins:
+          - cluster-secrets#v1.0.0:
+              variables:
+                BUILDKITE_ANALYTICS_TOKEN: test_engine_client_examples_suite_token
+                BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN: test_engine_client_examples_api_token
+          - docker#v5.11.0:
+              image: "node:23.1.0-bookworm"
+              # Pass pipeline env variables to the Docker container
+              # See https://buildkite.com/docs/test-engine/test-splitting/configuring#using-the-test-engine-client-configure-environment-variables
+              propagate-environment: true
+              # Pass API access token and Test Engine suite token to the Docker container
+              environment:
+                - BUILDKITE_ANALYTICS_TOKEN
+                - BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
+                - BKTEC_VERSION
