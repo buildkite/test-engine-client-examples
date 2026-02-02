@@ -23,6 +23,7 @@ steps:
             - BKTEC_VERSION
 
   - label: ":ruby: Ruby: Minitest"
+    parallelism: 2
     command: "cd ruby-minitest && bin/test"
     soft_fail: true
     plugins:
@@ -31,7 +32,7 @@ steps:
             BUILDKITE_ANALYTICS_TOKEN: test_engine_client_examples_suite_token
             BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN: test_engine_client_examples_api_token
       - docker#v5.11.0:
-          image: "ruby:3.4-slim"
+          image: "ruby:3.4-bookworm" # requires curl
           # Pass pipeline env variables to the Docker container
           # See https://buildkite.com/docs/test-engine/test-splitting/configuring#using-the-test-engine-client-configure-environment-variables
           propagate-environment: true
