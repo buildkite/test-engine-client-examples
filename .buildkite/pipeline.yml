@@ -148,6 +148,20 @@ steps:
             - BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
             - BKTEC_VERSION
 
+  - label: ":swift: Swift: XCTest (test-collector-swift)"
+    command: "cd swift-xctest && bin/test"
+    soft_fail: true
+    plugins:
+      - cluster-secrets#v1.0.0:
+          variables:
+            BUILDKITE_ANALYTICS_TOKEN: test_engine_client_examples_suite_token
+      - docker#v5.11.0:
+          image: "swift:6.0-noble"
+          propagate-environment: true
+          environment:
+            - BUILDKITE_ANALYTICS_TOKEN
+            - BUILDKITE_ANALYTICS_DEBUG_ENABLED
+
   - group: "Additional bktec features"
     key: "jest-retry"
     steps:
