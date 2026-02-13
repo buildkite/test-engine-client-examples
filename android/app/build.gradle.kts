@@ -26,6 +26,11 @@ android {
     }
 }
 
+buildkiteTestAnalytics {
+    tags["test.framework.name"] = "junit"
+    tags["custom.tag.from"] = "upload"
+}
+
 dependencies {
     testImplementation("junit:junit:4.13.2")
 }
