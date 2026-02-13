@@ -1,8 +1,17 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Clone the test-collector-android PR branch and publish to Maven Local
+# so we can use the unreleased tagging support.
+# This can be reverted once the PR is merged and a new version is released.
+COLLECTOR_DIR="/tmp/test-collector-android"
+if [ ! -d "$COLLECTOR_DIR" ]; then
+  git clone --branch pda/add-tagging-support --depth 1 \
+    https://github.com/buildkite/test-collector-android.git "$COLLECTOR_DIR"
+fi
+(cd "$COLLECTOR_DIR" && ./gradlew --no-daemon publishToMavenLocal -x test)
+
 # Run Android unit tests
 # The test-collector-android Gradle plugin uploads results to Test Engine automatically.
 # No bktec client is needed for this example.
-
 ./gradlew --no-daemon :app:testDebugUnitTest
