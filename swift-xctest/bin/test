@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+swift --version
+
+# Resolve dependencies
+swift package resolve
+
+# Run XCTest tests (which includes the BuildkiteTestCollector).
+# The collector auto-loads via XCTest observation and uploads results
+# when BUILDKITE_ANALYTICS_TOKEN is set.
+# Use --disable-swift-testing to only run XCTest (not Swift Testing).
+swift test --disable-swift-testing
