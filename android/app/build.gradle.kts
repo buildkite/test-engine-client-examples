@@ -28,6 +28,7 @@ android {
 
 buildkiteTestAnalytics {
     tags["test.framework.name"] = "junit"
+    tags["language.name"] = "kotlin"
     tags["custom.tag.from"] = "upload"
 }
 
