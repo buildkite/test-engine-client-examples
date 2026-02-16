@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Run Android unit tests
+# The test-collector-android Gradle plugin uploads results to Test Engine automatically.
+# No bktec client is needed for this example.
+
+./gradlew --no-daemon :app:testDebugUnitTest

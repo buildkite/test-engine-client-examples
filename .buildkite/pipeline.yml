@@ -162,6 +162,19 @@ steps:
             - BUILDKITE_ANALYTICS_TOKEN
             - BUILDKITE_ANALYTICS_DEBUG_ENABLED
 
+  - label: ":android: Android"
+    command: "cd android && bin/test"
+    soft_fail: true
+    plugins:
+      - cluster-secrets#v1.0.0:
+          variables:
+            BUILDKITE_ANALYTICS_TOKEN: test_engine_client_examples_suite_token
+      - docker#v5.11.0:
+          image: "ghcr.io/cirruslabs/android-sdk:34"
+          propagate-environment: true
+          environment:
+            - BUILDKITE_ANALYTICS_TOKEN
+
   - group: "Additional bktec features"
     key: "jest-retry"
     steps:
