@@ -1,8 +1,10 @@
+import Core
 import XCTest
 @testable import ExampleLib
 
 final class PassingTests: XCTestCase {
     func testAdd() throws {
+        self.tagExecution("custom.tag.from", "execution")
         XCTAssertEqual(ExampleLib().add(1, 2), 3)
     }
 

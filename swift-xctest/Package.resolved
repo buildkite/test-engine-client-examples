@@ -5,8 +5,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/buildkite/test-collector-swift",
       "state" : {
-        "revision" : "261b2feaafd601e5b35edb68f402d34ad8210967",
-        "version" : "0.5.0"
+        "revision" : "dbb0f13987c3f9f54611aaf0ac0dc1085ebb5ea6",
+        "version" : "0.6.0"
       }
     }
   ],

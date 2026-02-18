@@ -151,6 +151,8 @@ steps:
   - label: ":swift: Swift: XCTest (test-collector-swift)"
     command: "cd swift-xctest && bin/test"
     soft_fail: true
+    env:
+      BUILDKITE_ANALYTICS_TAGS: '{"test.framework.name":"xctest","language.name":"swift","custom.tag.from":"upload"}'
     plugins:
       - cluster-secrets#v1.0.0:
           variables:
@@ -160,6 +162,7 @@ steps:
           propagate-environment: true
           environment:
             - BUILDKITE_ANALYTICS_TOKEN
+            - BUILDKITE_ANALYTICS_TAGS
             - BUILDKITE_ANALYTICS_DEBUG_ENABLED
 
   - label: ":android: Android"
