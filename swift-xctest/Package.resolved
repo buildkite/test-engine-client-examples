@@ -1,0 +1,14 @@
+{
+  "pins" : [
+    {
+      "identity" : "test-collector-swift",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/buildkite/test-collector-swift",
+      "state" : {
+        "revision" : "dbb0f13987c3f9f54611aaf0ac0dc1085ebb5ea6",
+        "version" : "0.6.0"
+      }
+    }
+  ],
+  "version" : 2
+}

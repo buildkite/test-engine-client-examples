@@ -1,24 +1,8 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Clone the test-collector-android PR branch and publish to Maven Local
-# so we can use the unreleased tagging support.
-# This can be reverted once the PR is merged and a new version is released.
-COLLECTOR_DIR="/tmp/test-collector-android"
-if [ ! -d "$COLLECTOR_DIR" ]; then
-  git clone --branch pda/add-tagging-support --depth 1 \
-    https://github.com/buildkite/test-collector-android.git "$COLLECTOR_DIR"
-fi
-# The collector's build-logic uses kotlin-dsl which auto-detects JVM target from the
-# running JDK. JDK 21 + Kotlin 1.8.22 = "Unknown Kotlin JVM target: 21" error.
-# Install JDK 17 and use it for the collector build.
-if ! find /usr/lib/jvm -maxdepth 1 -name '*17*' -type d 2>/dev/null | grep -q .; then
-  apt-get update -qq && apt-get install -y -qq openjdk-17-jdk-headless > /dev/null 2>&1
-fi
-COLLECTOR_JAVA_HOME="$(find /usr/lib/jvm -maxdepth 1 -name '*17*' -type d | head -1)"
-(cd "$COLLECTOR_DIR" && JAVA_HOME="$COLLECTOR_JAVA_HOME" ./gradlew --no-daemon publishToMavenLocal -x test)
-
 # Run Android unit tests
 # The test-collector-android Gradle plugin uploads results to Test Engine automatically.
 # No bktec client is needed for this example.
+
 ./gradlew --no-daemon :app:testDebugUnitTest
