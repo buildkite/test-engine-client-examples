@@ -1,7 +1,7 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
-    id("com.buildkite.test-collector-android.unit-test-collector-plugin") version "0.3.0"
+    id("com.buildkite.test-collector-android.unit-test-collector-plugin") version "0.4.0"
 }
 
 android {
@@ -24,6 +24,12 @@ android {
     kotlinOptions {
         jvmTarget = "17"
     }
+}
+
+buildkiteTestAnalytics {
+    tags["test.framework.name"] = "junit"
+    tags["language.name"] = "kotlin"
+    tags["custom.tag.from"] = "upload"
 }
 
 dependencies {
