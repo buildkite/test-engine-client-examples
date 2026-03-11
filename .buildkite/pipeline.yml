@@ -1,5 +1,5 @@
 env:
-  BKTEC_VERSION: "2.1.0-rc.3"
+  BKTEC_VERSION: "2.1.3"
 
 steps:
   - label: ":ruby: :rspec: Ruby: RSpec"
