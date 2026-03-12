@@ -18,5 +18,7 @@ chmod +x ./bktec
 export BUILDKITE_TEST_ENGINE_TEST_RUNNER=jest
 export BUILDKITE_TEST_ENGINE_RESULT_PATH=jest-result.json
 
+export BUILDKITE_ANALYTICS_LOCATION_PREFIX="jest"
+
 # Run Buildkite Test Engine Client
 ./bktec run

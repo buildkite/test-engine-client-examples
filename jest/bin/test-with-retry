@@ -22,5 +22,7 @@ export BUILDKITE_TEST_ENGINE_RESULT_PATH=jest-result.json
 export BUILDKITE_TEST_ENGINE_RETRY_COUNT=3
 export BUILDKITE_TEST_ENGINE_RETRY_CMD="npx jest {{testExamples}} --testNamePattern '{{testNamePattern}}' --json --testLocationInResults --outputFile {{resultPath}}"
 
+export BUILDKITE_ANALYTICS_LOCATION_PREFIX="jest"
+
 # Run Buildkite Test Engine Client
 ./bktec run
