@@ -1,7 +1,9 @@
 GEM
   remote: https://rubygems.org/
   specs:
-    buildkite-test_collector (2.9.0)
+    buildkite-test_collector (2.13.0)
+      concurrent-ruby
+    concurrent-ruby (1.3.6)
     minitest (5.25.4)
     rake (13.3.1)
 
