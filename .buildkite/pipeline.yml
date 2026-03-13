@@ -5,7 +5,8 @@ steps:
   - label: ":ruby: :rspec: Ruby: RSpec"
     parallelism: 2
     command: "cd rspec && bin/test"
-    soft_fail: true
+    soft_fail:
+      - exit_status: 1
     plugins:
       - cluster-secrets#v1.0.0:
           variables:
@@ -25,7 +26,8 @@ steps:
   - label: ":ruby: Ruby: Minitest"
     parallelism: 2
     command: "cd ruby-minitest && bin/test"
-    soft_fail: true
+    soft_fail:
+      - exit_status: 1
     plugins:
       - cluster-secrets#v1.0.0:
           variables:
@@ -45,7 +47,8 @@ steps:
   - label: ":jest: Jest"
     parallelism: 2
     command: "cd jest && bin/test"
-    soft_fail: true
+    soft_fail:
+      - exit_status: 1
     plugins:
       - cluster-secrets#v1.0.0:
           variables:
@@ -65,7 +68,8 @@ steps:
   - label: ":cypress: Cypress"
     parallelism: 2
     command: "cd cypress && bin/test"
-    soft_fail: true
+    soft_fail:
+      - exit_status: 1
     plugins:
       - cluster-secrets#v1.0.0:
           variables:
@@ -87,7 +91,8 @@ steps:
   - label: ":playwright: Playwright"
     parallelism: 2
     command: "cd playwright && bin/test"
-    soft_fail: true
+    soft_fail:
+      - exit_status: 1
     plugins:
       - cluster-secrets#v1.0.0:
           variables:
@@ -109,7 +114,8 @@ steps:
     artifact_paths:
       - pytest/result.json
     command: "cd pytest && bin/test"
-    soft_fail: true
+    soft_fail:
+      - exit_status: 1
     plugins:
       - cluster-secrets#v1.0.0:
           variables:
@@ -131,7 +137,8 @@ steps:
     artifact_paths:
       - pytest/result.json
     command: "cd pytest-xdist && bin/test"
-    soft_fail: true
+    soft_fail:
+      - exit_status: 1
     plugins:
       - cluster-secrets#v1.0.0:
           variables:
@@ -150,7 +157,8 @@ steps:
 
   - label: ":swift: Swift: XCTest (test-collector-swift)"
     command: "cd swift-xctest && bin/test"
-    soft_fail: true
+    soft_fail:
+      - exit_status: 1
     env:
       BUILDKITE_ANALYTICS_TAGS: '{"test.framework.name":"xctest","language.name":"swift","custom.tag.from":"upload"}'
     plugins:
@@ -167,7 +175,8 @@ steps:
 
   - label: ":android: Android"
     command: "cd android && bin/test"
-    soft_fail: true
+    soft_fail:
+      - exit_status: 1
     plugins:
       - cluster-secrets#v1.0.0:
           variables:
@@ -184,7 +193,8 @@ steps:
       - label: ":jest: Jest (Retry Enabled)"
         parallelism: 2
         command: "cd jest && bin/test-with-retry"
-        soft_fail: true
+        soft_fail:
+          - exit_status: 1
         plugins:
           - cluster-secrets#v1.0.0:
               variables:
@@ -206,7 +216,8 @@ steps:
         artifact_paths:
           - pytest/result.json
         command: "cd pytest-tag-filters && bin/test"
-        soft_fail: true
+        soft_fail:
+          - exit_status: 1
         plugins:
           - cluster-secrets#v1.0.0:
               variables:
