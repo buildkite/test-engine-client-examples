@@ -10,8 +10,15 @@ if [ -z "${BKTEC_VERSION}" ]; then
   echo "Set it with: export BKTEC_VERSION=2.1.0-rc.3"
   exit 1
 fi
-apt-get update && apt-get install curl -y
-curl -L "https://github.com/buildkite/test-engine-client/releases/download/v${BKTEC_VERSION}/bktec_${BKTEC_VERSION}_linux_amd64" -o ./bktec 
+BKTEC_URL="https://github.com/buildkite/test-engine-client/releases/download/v${BKTEC_VERSION}/bktec_${BKTEC_VERSION}_linux_amd64"
+if command -v curl &> /dev/null; then
+  curl -L "$BKTEC_URL" -o ./bktec
+elif command -v wget &> /dev/null; then
+  wget -O ./bktec "$BKTEC_URL"
+else
+  echo "Error: neither curl nor wget found"
+  exit 16
+fi
 chmod +x ./bktec
 
 # Configure Buildkite Test Engine Client

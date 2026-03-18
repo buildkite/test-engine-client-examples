@@ -19,4 +19,7 @@ chmod +x ./bktec
 export BUILDKITE_TEST_ENGINE_TEST_RUNNER=custom
 export BUILDKITE_TEST_ENGINE_TEST_CMD="bundle exec rake test TEST_FILES='{{testExamples}}'"
 export BUILDKITE_TEST_ENGINE_TEST_FILE_PATTERN="**/*_test.rb"
+
+export BUILDKITE_ANALYTICS_LOCATION_PREFIX="ruby-minitest"
+
 ./bktec run
