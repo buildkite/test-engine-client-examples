@@ -202,6 +202,9 @@ steps:
       - test-collector#v1.11.0:
           files: "nunit/tests/MyLib.Tests/test-results/results.xml"
           format: "junit"
+          tags:
+            - "language.name=dotnet"
+            - "test.framework.name=nunit"
 
   - group: "Additional bktec features"
     key: "jest-retry"
