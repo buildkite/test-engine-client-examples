@@ -188,6 +188,7 @@ steps:
             - BUILDKITE_ANALYTICS_TOKEN
 
   - label: ":dotnet: NUnit"
+    parallelism: 2
     command: "cd nunit && bin/test"
     soft_fail:
       - exit_status: 1
@@ -195,6 +196,7 @@ steps:
       - cluster-secrets#v1.0.0:
           variables:
             BUILDKITE_ANALYTICS_TOKEN: test_engine_client_examples_suite_token
+            BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN: test_engine_client_examples_api_token
       - mise#v1.1.1:
           dir: nunit
       - test-collector#v1.11.0:
