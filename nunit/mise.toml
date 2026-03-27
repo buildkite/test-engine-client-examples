@@ -1,2 +1,3 @@
 [tools]
 dotnet = "latest"
+go = "latest"

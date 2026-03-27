@@ -1,24 +1,19 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Build the solution first so the custom runner can use --no-build
+# Build the solution first so bktec can use --no-build
 dotnet build
 
-# Install Buildkite Test Engine Client
-# See https://buildkite.com/docs/test-engine/test-splitting/client-installation
-if [ -z "${BKTEC_VERSION:-}" ]; then
-  echo "Error: BKTEC_VERSION environment variable is not set"
-  echo "Set it with: export BKTEC_VERSION=2.3.0-rc.3"
-  exit 1
-fi
-curl -L "https://github.com/buildkite/test-engine-client/releases/download/v${BKTEC_VERSION}/bktec_${BKTEC_VERSION}_linux_amd64" -o ./bktec
-chmod +x ./bktec
+# Install Buildkite Test Engine Client from unreleased nunit-runner branch
+# See https://github.com/buildkite/test-engine-client/pull/39
+GOBIN="$(pwd)" go install github.com/buildkite/test-engine-client@nunit-runner
+mv test-engine-client bktec
 
 # Configure Buildkite Test Engine Client
 # See https://buildkite.com/docs/test-engine/test-splitting/configuring
-export BUILDKITE_TEST_ENGINE_TEST_RUNNER=custom
+export BUILDKITE_TEST_ENGINE_TEST_RUNNER=nunit
 export BUILDKITE_TEST_ENGINE_TEST_FILE_PATTERN="tests/**/*Tests.cs"
-export BUILDKITE_TEST_ENGINE_TEST_CMD="bin/run-tests {{testExamples}}"
+export BUILDKITE_TEST_ENGINE_RESULT_PATH=test-results/results.xml
 
 # Run Buildkite Test Engine Client
 ./bktec run
