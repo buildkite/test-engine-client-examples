@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+dotnet test --logger "junit;LogFilePath=test-results/results.xml"

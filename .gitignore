@@ -3,10 +3,7 @@ tmp/
 bktec
 
 # nunit / .NET
-nunit/**/bin/
-nunit/**/obj/
 test-results/
-*.user
 
 # pytest
 *.egg*
