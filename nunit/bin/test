@@ -6,7 +6,7 @@ dotnet build
 
 # Install Buildkite Test Engine Client
 # See https://buildkite.com/docs/test-engine/test-splitting/client-installation
-if [ -z "${BKTEC_VERSION}" ]; then
+if [ -z "${BKTEC_VERSION:-}" ]; then
   echo "Error: BKTEC_VERSION environment variable is not set"
   echo "Set it with: export BKTEC_VERSION=2.3.0-rc.3"
   exit 1
