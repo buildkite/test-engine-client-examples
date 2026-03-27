@@ -2,6 +2,12 @@ node_modules/
 tmp/
 bktec
 
+# nunit / .NET
+nunit/**/bin/
+nunit/**/obj/
+test-results/
+*.user
+
 # pytest
 *.egg*
 __pycache__
