@@ -192,8 +192,14 @@ steps:
     soft_fail:
       - exit_status: 1
     plugins:
+      - cluster-secrets#v1.0.0:
+          variables:
+            BUILDKITE_ANALYTICS_TOKEN: test_engine_client_examples_suite_token
       - mise#v1.1.1:
           dir: nunit
+      - test-collector#v1.11.0:
+          files: "nunit/tests/MyLib.Tests/test-results/results.xml"
+          format: "junit"
 
   - group: "Additional bktec features"
     key: "jest-retry"
