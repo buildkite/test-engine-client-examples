@@ -8,7 +8,3 @@ __pycache__
 .tox
 .env*
 .direnv/*
-
-# dotnet-nunit
-dotnet-nunit/bin
-dotnet-nunit/obj

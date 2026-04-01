@@ -187,17 +187,6 @@ steps:
           environment:
             - BUILDKITE_ANALYTICS_TOKEN
 
-  - label: ":dotnet: .NET NUnit"
-    command: "cd dotnet-nunit && dotnet build && dotnet test --verbosity normal"
-    soft_fail:
-      - exit_status: 1
-    plugins:
-      - docker#v5.11.0:
-          image: "mcr.microsoft.com/dotnet/sdk:9.0"
-          propagate-environment: true
-          environment:
-            - BUILDKITE_ANALYTICS_TOKEN
-
   - group: "Additional bktec features"
     key: "jest-retry"
     steps:
