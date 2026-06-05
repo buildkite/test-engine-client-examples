@@ -164,7 +164,7 @@ steps:
     soft_fail:
       - exit_status: 1
     plugins:
-      - docker#v5.11.0:
+      - docker#v5.13.0:
           image: "python:3.13.2-bookworm"
           # Pass pipeline env variables (incl. BUILDKITE_* run metadata) to the container
           propagate-environment: true
