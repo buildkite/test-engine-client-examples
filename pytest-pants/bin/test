@@ -1,32 +1,28 @@
 #!/usr/bin/env bash
 
-set -e
+set -euo pipefail
 
 # Install Pants, the build tool that owns test discovery and execution for this
 # project. See https://www.pantsbuild.org/stable/docs/getting-started/installing-pants
 curl --proto '=https' --tlsv1.2 -fsSL https://static.pantsbuild.org/setup/get-pants.sh | bash
 export PATH="${HOME}/.local/bin:${PATH}"
 
-# Install Buildkite Test Engine Client
-# See https://buildkite.com/docs/test-engine/test-splitting/client-installation
-if [ -z "${BKTEC_VERSION}" ]; then
-  echo "Error: BKTEC_VERSION environment variable is not set"
-  echo "Set it with: export BKTEC_VERSION=2.5.1"
-  exit 1
+# Request an ephemeral OIDC token to authenticate result uploads to the Test
+# Engine suite, instead of a long-lived suite token. The buildkite-test-collector
+# pytest plugin reads BUILDKITE_ANALYTICS_TOKEN (passed into the pytest sandbox by
+# Pants via [test].extra_env_vars in pants.toml).
+# See https://buildkite.com/docs/test-engine/test-collection/oidc
+#
+# The suite must have an OIDC policy permitting this pipeline. Requires the agent
+# binary in the container (docker plugin: mount-buildkite-agent: true).
+if command -v buildkite-agent >/dev/null 2>&1; then
+  SUITE_URL="https://buildkite.com/organizations/buildkite/analytics/suites/test-engine-client-examples"
+  BUILDKITE_ANALYTICS_TOKEN="$(buildkite-agent oidc request-token --audience "${SUITE_URL}" --lifetime 1800)"
+  export BUILDKITE_ANALYTICS_TOKEN
+else
+  echo "buildkite-agent not found; skipping Test Engine OIDC token (results won't be uploaded)"
 fi
-curl -L "https://github.com/buildkite/test-engine-client/releases/download/v${BKTEC_VERSION}/bktec_${BKTEC_VERSION}_linux_amd64" -o ./bktec
-chmod +x ./bktec
 
-# Configure Buildkite Test Engine Client to use the Pants pytest runner.
-# See https://buildkite.com/docs/test-engine/test-splitting/configuring
-export BUILDKITE_TEST_ENGINE_TEST_RUNNER=pytest-pants
-
-# With the pytest-pants runner, Pants performs test discovery and selection, so
-# bktec runs this command verbatim rather than splitting test files itself.
-# Everything after `--` is forwarded to pytest, where the buildkite-test-collector
-# plugin provides --json/--merge-json. bktec substitutes {{resultPath}} and reads
-# the merged results from every Pants test process.
-export BUILDKITE_TEST_ENGINE_TEST_CMD='pants test :: -- --json={{resultPath}} --merge-json'
-
-# Run Buildkite Test Engine Client
-./bktec run
+# Run every test target. Pants runs each module's tests as its own pytest
+# process; the collector uploads results to Test Engine when the token is set.
+pants test ::

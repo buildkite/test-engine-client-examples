@@ -1,14 +1,29 @@
 # pytest + Pants
 
-An example of running a [Pants](https://www.pantsbuild.org/) Python codebase
-with the Buildkite Test Engine Client (`bktec`) using the `pytest-pants` test
-runner.
+An example of running a [Pants](https://www.pantsbuild.org/) Python codebase and
+reporting results to Buildkite Test Engine.
 
-With this runner, Pants owns test discovery and execution: `bktec` runs a
-`pants test` command and reads the merged results that the
+Pants owns test discovery and execution (`pants test ::`), and the
 [`buildkite-test-collector`](https://pypi.org/project/buildkite-test-collector/)
-pytest plugin writes. Because Pants selects the targets, `bktec` does not split
-test files across parallel jobs.
+pytest plugin uploads results to Test Engine. Pants runs each module's tests as
+its own pytest process.
+
+> [!NOTE]
+> The Test Engine Client (`bktec`) has an experimental `pytest-pants` runner, but
+> it is lightly used and requires job parallelism to be configured. This example
+> instead drives Pants directly and uploads via the collector, which keeps the
+> mandatory "tests run in CI" path simple while still reporting to Test Engine.
+
+## Authentication (OIDC)
+
+Result uploads authenticate with an ephemeral [OIDC token](https://buildkite.com/docs/test-engine/test-collection/oidc)
+rather than a long-lived suite token. `bin/test` mints one with
+`buildkite-agent oidc request-token` and exports it as `BUILDKITE_ANALYTICS_TOKEN`,
+which the collector reads. This requires:
+
+- an OIDC policy on the suite permitting this pipeline, and
+- `mount-buildkite-agent: true` on the docker plugin (so `buildkite-agent` is
+  available inside the container).
 
 ## Project layout
 
@@ -51,10 +66,6 @@ pants generate-lockfiles
 
 ## Running in CI
 
-`bin/test` installs Pants and `bktec`, then runs:
-
-```sh
-export BUILDKITE_TEST_ENGINE_TEST_RUNNER=pytest-pants
-export BUILDKITE_TEST_ENGINE_TEST_CMD='pants test :: -- --json={{resultPath}} --merge-json'
-./bktec run
-```
+`bin/test` installs Pants, mints an OIDC token for the suite, and runs
+`pants test ::`. See [`bin/test`](bin/test) and the pipeline step in
+[`.buildkite/pipeline.yml`](../.buildkite/pipeline.yml).
