@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+
+set -e
+
+# Install Pants, the build tool that owns test discovery and execution for this
+# project. See https://www.pantsbuild.org/stable/docs/getting-started/installing-pants
+curl --proto '=https' --tlsv1.2 -fsSL https://static.pantsbuild.org/setup/get-pants.sh | bash
+export PATH="${HOME}/.local/bin:${PATH}"
+
+# Install Buildkite Test Engine Client
+# See https://buildkite.com/docs/test-engine/test-splitting/client-installation
+if [ -z "${BKTEC_VERSION}" ]; then
+  echo "Error: BKTEC_VERSION environment variable is not set"
+  echo "Set it with: export BKTEC_VERSION=2.5.1"
+  exit 1
+fi
+curl -L "https://github.com/buildkite/test-engine-client/releases/download/v${BKTEC_VERSION}/bktec_${BKTEC_VERSION}_linux_amd64" -o ./bktec
+chmod +x ./bktec
+
+# Configure Buildkite Test Engine Client to use the Pants pytest runner.
+# See https://buildkite.com/docs/test-engine/test-splitting/configuring
+export BUILDKITE_TEST_ENGINE_TEST_RUNNER=pytest-pants
+
+# With the pytest-pants runner, Pants performs test discovery and selection, so
+# bktec runs this command verbatim rather than splitting test files itself.
+# Everything after `--` is forwarded to pytest, where the buildkite-test-collector
+# plugin provides --json/--merge-json. bktec substitutes {{resultPath}} and reads
+# the merged results from every Pants test process.
+export BUILDKITE_TEST_ENGINE_TEST_CMD='pants test :: -- --json={{resultPath}} --merge-json'
+
+# Run Buildkite Test Engine Client
+./bktec run
