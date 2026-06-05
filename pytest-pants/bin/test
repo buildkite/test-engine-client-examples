@@ -15,9 +15,13 @@ export PATH="${HOME}/.local/bin:${PATH}"
 #
 # The suite must have an OIDC policy permitting this pipeline. Requires the agent
 # binary in the container (docker plugin: mount-buildkite-agent: true).
+# --skip-redaction is required because the token is fetched over the agent REST
+# API (using the mounted BUILDKITE_AGENT_ACCESS_TOKEN), but the default log
+# redaction step needs the Job API socket, which isn't mounted into the
+# container. The token is captured into a variable and never echoed.
 if command -v buildkite-agent >/dev/null 2>&1; then
   SUITE_URL="https://buildkite.com/organizations/buildkite/analytics/suites/test-engine-client-examples"
-  BUILDKITE_ANALYTICS_TOKEN="$(buildkite-agent oidc request-token --audience "${SUITE_URL}" --lifetime 1800)"
+  BUILDKITE_ANALYTICS_TOKEN="$(buildkite-agent oidc request-token --audience "${SUITE_URL}" --lifetime 1800 --skip-redaction)"
   export BUILDKITE_ANALYTICS_TOKEN
 else
   echo "buildkite-agent not found; skipping Test Engine OIDC token (results won't be uploaded)"
