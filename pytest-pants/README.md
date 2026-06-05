@@ -25,6 +25,14 @@ which the collector reads. This requires:
 - `mount-buildkite-agent: true` on the docker plugin (so `buildkite-agent` is
   available inside the container).
 
+## Execution tags
+
+[`src/conftest.py`](src/conftest.py) tags every test execution via
+`pytest.mark.execution_tag(...)` so these uploads are identifiable in the shared
+suite: `test.framework.name=pytest`, `test.framework.version=<version>`, and
+`build.tool=pants`. Pants picks up `conftest.py` automatically through the
+`python_test_utils()` target in [`src/BUILD`](src/BUILD).
+
 ## Project layout
 
 The codebase is split into several small Pants targets that exercise different
