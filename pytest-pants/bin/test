@@ -4,7 +4,8 @@ set -euo pipefail
 
 # Install Pants, the build tool that owns test discovery and execution for this
 # project. See https://www.pantsbuild.org/stable/docs/getting-started/installing-pants
-curl --proto '=https' --tlsv1.2 -fsSL https://static.pantsbuild.org/setup/get-pants.sh | bash
+curl --proto '=https' --tlsv1.2 -fsSL --retry 5 --retry-all-errors --retry-delay 2 \
+  https://static.pantsbuild.org/setup/get-pants.sh | bash
 export PATH="${HOME}/.local/bin:${PATH}"
 
 # Request an ephemeral OIDC token to authenticate result uploads to the Test
