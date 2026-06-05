@@ -155,7 +155,7 @@ steps:
             - BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
             - BKTEC_VERSION
 
-  - label: ":pytest: :ant: pytest (Pants)"
+  - label: ":pytest: :pants: pytest (Pants)"
     # Pants owns test discovery and execution; the buildkite-test-collector
     # pytest plugin uploads results to Test Engine. Authentication uses an
     # ephemeral OIDC token minted in bin/test (no static suite token), which
