@@ -11,3 +11,9 @@ __pycache__
 .tox
 .env*
 .direnv/*
+
+# pants
+.pants.d/
+.pids
+dist/
+__pycache__/
