@@ -6,7 +6,6 @@ A .NET NUnit example demonstrating [Buildkite Test Engine](https://buildkite.com
 
 ```
 bin/test              # Entry point: builds, then runs bktec configured by the tests plugin
-bin/run-tests         # Legacy custom runner helper retained for reference
 src/MyLib/            # Library under test
 tests/MyLib.Tests/    # NUnit test project (25 tests across 3 files)
 mise.toml             # .NET SDK managed by mise
