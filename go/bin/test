@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# gotestsum generates the JUnit XML report consumed by bktec's Go runner.
+go install gotest.tools/gotestsum@v1.12.0
+export PATH="$(go env GOPATH)/bin:${PATH}"
+
+# Run Buildkite Test Engine Client configured by the tests Buildkite plugin
+bktec run

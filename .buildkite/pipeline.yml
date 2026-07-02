@@ -9,7 +9,6 @@ steps:
           test-runner: rspec
           result-path: tmp/rspec.json
           suite-slug: test-engine-client-examples
-          client-version: "2.8.1"
           client-os: linux
           upload-results: false
       - docker#v5.13.0:
@@ -30,7 +29,6 @@ steps:
           test-cmd: "bundle exec rake test TEST_FILES='{{testExamples}}'"
           test-file-pattern: "**/*_test.rb"
           suite-slug: test-engine-client-examples
-          client-version: "2.8.1"
           client-os: linux
           upload-results: false
       - docker#v5.13.0:
@@ -50,7 +48,6 @@ steps:
           test-runner: jest
           result-path: jest-result.json
           suite-slug: test-engine-client-examples
-          client-version: "2.8.1"
           client-os: linux
           upload-results: false
       - docker#v5.13.0:
@@ -69,7 +66,6 @@ steps:
       - tests#v1.0.0:
           test-runner: cypress
           suite-slug: test-engine-client-examples
-          client-version: "2.8.1"
           client-os: linux
           upload-results: false
       - docker#v5.13.0:
@@ -91,7 +87,6 @@ steps:
           test-runner: playwright
           result-path: tmp/playwright-results.json
           suite-slug: test-engine-client-examples
-          client-version: "2.8.1"
           client-os: linux
           upload-results: false
       - docker#v5.13.0:
@@ -112,7 +107,6 @@ steps:
       - tests#v1.0.0:
           test-runner: pytest
           suite-slug: test-engine-client-examples
-          client-version: "2.8.1"
           client-os: linux
           upload-results: false
       - docker#v5.13.0:
@@ -133,7 +127,6 @@ steps:
       - tests#v1.0.0:
           test-runner: pytest
           suite-slug: test-engine-client-examples
-          client-version: "2.8.1"
           client-os: linux
           upload-results: false
       - docker#v5.13.0:
@@ -203,12 +196,32 @@ steps:
           result-path: test-results/results.xml
           test-file-pattern: "tests/**/*Tests.cs"
           suite-slug: test-engine-client-examples
-          client-version: "2.8.1"
           tags:
             - "language.name=dotnet"
             - "test.framework.name=nunit"
       - mise#v1.1.1:
           dir: nunit
+
+  - label: ":golang: Go test"
+    parallelism: 2
+    command: "cd go && bin/test"
+    soft_fail:
+      - exit_status: 1
+    plugins:
+      - tests#v1.0.0:
+          test-runner: gotest
+          result-path: tmp/gotest-result.xml
+          suite-slug: test-engine-client-examples
+          client-os: linux
+          tags:
+            - "language.name=go"
+            - "test.framework.name=go-test"
+      - docker#v5.13.0:
+          image: "golang:1.24-bookworm"
+          expand-volume-vars: true
+          volumes:
+            - "$$BUILDKITE_TEST_ENGINE_CLIENT_PATH:/usr/local/bin/bktec"
+          propagate-environment: true
 
   - group: "Additional bktec features"
     key: "jest-retry"
@@ -225,7 +238,6 @@ steps:
               retry-count: 3
               retry-cmd: "npx jest {{testExamples}} --testNamePattern '{{testNamePattern}}' --json --testLocationInResults --outputFile {{resultPath}}"
               suite-slug: test-engine-client-examples
-              client-version: "2.8.1"
               client-os: linux
               upload-results: false
           - docker#v5.13.0:
@@ -247,7 +259,6 @@ steps:
               test-runner: pytest
               tag-filters: "component:frontend"
               suite-slug: test-engine-client-examples
-              client-version: "2.8.1"
               client-os: linux
               upload-results: false
           - docker#v5.13.0:
