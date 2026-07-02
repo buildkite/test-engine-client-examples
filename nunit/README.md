@@ -1,14 +1,12 @@
 # NUnit
 
-A .NET NUnit example demonstrating [Buildkite Test Engine](https://buildkite.com/docs/test-engine) test splitting using `bktec` with a custom runner.
-
-Since `bktec` doesn't have built-in NUnit support, this example uses `BUILDKITE_TEST_ENGINE_TEST_RUNNER=custom` to split test files across parallel agents and map them to `dotnet test --filter` expressions.
+A .NET NUnit example demonstrating [Buildkite Test Engine](https://buildkite.com/docs/test-engine) test splitting using `bktec` with the built-in NUnit runner.
 
 ## Structure
 
 ```
-bin/test              # Entry point: builds, installs bktec, configures custom runner
-bin/run-tests         # Custom runner invoked by bktec with test file paths
+bin/test              # Entry point: builds, then runs bktec configured by the tests plugin
+bin/run-tests         # Legacy custom runner helper retained for reference
 src/MyLib/            # Library under test
 tests/MyLib.Tests/    # NUnit test project (25 tests across 3 files)
 mise.toml             # .NET SDK managed by mise
@@ -17,18 +15,18 @@ NUnitSpike.slnx       # Solution file
 
 ## How it works
 
-1. `bin/test` builds the solution, installs `bktec`, and configures:
-   - `BUILDKITE_TEST_ENGINE_TEST_RUNNER=custom`
+1. The Buildkite pipeline's `tests#v1.0.0` plugin installs `bktec`, authenticates with OIDC, and configures:
+   - `BUILDKITE_TEST_ENGINE_TEST_RUNNER=nunit`
    - `BUILDKITE_TEST_ENGINE_TEST_FILE_PATTERN=tests/**/*Tests.cs`
-   - `BUILDKITE_TEST_ENGINE_TEST_CMD="bin/run-tests {{testExamples}}"`
+   - `BUILDKITE_TEST_ENGINE_RESULT_PATH=test-results/results.xml`
 
-2. `bktec` discovers test files matching the pattern, requests a split plan from the Test Engine API, and invokes `bin/run-tests` with the files assigned to this node.
+2. `bin/test` builds the solution once with `dotnet build`, then runs `bktec run`.
 
-3. `bin/run-tests` receives `.cs` file paths as arguments, extracts class names, and builds a `dotnet test --filter` expression to run only those test classes.
+3. `bktec` discovers test files matching the pattern, requests a split plan from the Test Engine API, and runs `dotnet test --no-build --filter {{testFilter}} --logger junit;LogFilePath={{resultPath}}` for the files assigned to this node.
 
 ## Pipeline
 
-The Buildkite pipeline step uses `parallelism: 2` and the [mise plugin](https://github.com/buildkite-plugins/mise-buildkite-plugin) (instead of Docker) to install the .NET SDK. The [test-collector plugin](https://github.com/buildkite-plugins/test-collector-buildkite-plugin) uploads JUnit XML results to Test Engine.
+The Buildkite pipeline step uses `parallelism: 2`, the [Tests plugin](https://github.com/buildkite-plugins/tests-buildkite-plugin) to install/configure `bktec`, and the [mise plugin](https://github.com/buildkite-plugins/mise-buildkite-plugin) (instead of Docker) to install the .NET SDK. `bktec` uploads JUnit XML results to Test Engine directly.
 
 ## Local development
 
