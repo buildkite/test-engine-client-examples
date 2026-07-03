@@ -4,16 +4,5 @@ set -euo pipefail
 # Build the solution first so bktec can use --no-build
 dotnet build
 
-# Install Buildkite Test Engine Client from unreleased nunit-runner branch
-# See https://github.com/buildkite/test-engine-client/pull/39
-GOBIN="$(pwd)" go install github.com/buildkite/test-engine-client@nunit-runner
-mv test-engine-client bktec
-
-# Configure Buildkite Test Engine Client
-# See https://buildkite.com/docs/test-engine/test-splitting/configuring
-export BUILDKITE_TEST_ENGINE_TEST_RUNNER=nunit
-export BUILDKITE_TEST_ENGINE_TEST_FILE_PATTERN="tests/**/*Tests.cs"
-export BUILDKITE_TEST_ENGINE_RESULT_PATH=test-results/results.xml
-
-# Run Buildkite Test Engine Client
-./bktec run
+# Run Buildkite Test Engine Client configured by the tests Buildkite plugin
+bktec run

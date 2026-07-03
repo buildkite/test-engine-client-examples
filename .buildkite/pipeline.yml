@@ -1,6 +1,3 @@
-env:
-  BKTEC_VERSION: "2.3.0"
-
 steps:
   - label: ":ruby: :rspec: Ruby: RSpec"
     parallelism: 2
@@ -8,20 +5,18 @@ steps:
     soft_fail:
       - exit_status: 1
     plugins:
-      - cluster-secrets#v1.0.0:
-          variables:
-            BUILDKITE_ANALYTICS_TOKEN: test_engine_client_examples_suite_token
-            BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN: test_engine_client_examples_api_token
-      - docker#v5.11.0:
+      - tests#v1.0.0:
+          test-runner: rspec
+          result-path: tmp/rspec.json
+          suite-slug: test-engine-client-examples
+          client-os: linux
+          upload-results: false
+      - docker#v5.13.0:
           image: "ruby:3.4-bookworm" # requires curl
-          # Pass pipeline env variables to the Docker container
-          # See https://buildkite.com/docs/test-engine/test-splitting/configuring#using-the-test-engine-client-configure-environment-variables
+          expand-volume-vars: true
+          volumes:
+            - "$$BUILDKITE_TEST_ENGINE_CLIENT_PATH:/usr/local/bin/bktec"
           propagate-environment: true
-          # Pass API access token and Test Engine suite token to the Docker container
-          environment:
-            - BUILDKITE_ANALYTICS_TOKEN
-            - BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
-            - BKTEC_VERSION
 
   - label: ":ruby: Ruby: Minitest"
     parallelism: 2
@@ -29,20 +24,19 @@ steps:
     soft_fail:
       - exit_status: 1
     plugins:
-      - cluster-secrets#v1.0.0:
-          variables:
-            BUILDKITE_ANALYTICS_TOKEN: test_engine_client_examples_suite_token
-            BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN: test_engine_client_examples_api_token
-      - docker#v5.11.0:
+      - tests#v1.0.0:
+          test-runner: custom
+          test-cmd: "bundle exec rake test TEST_FILES='{{testExamples}}'"
+          test-file-pattern: "**/*_test.rb"
+          suite-slug: test-engine-client-examples
+          client-os: linux
+          upload-results: false
+      - docker#v5.13.0:
           image: "ruby:3.4-bookworm" # requires curl
-          # Pass pipeline env variables to the Docker container
-          # See https://buildkite.com/docs/test-engine/test-splitting/configuring#using-the-test-engine-client-configure-environment-variables
+          expand-volume-vars: true
+          volumes:
+            - "$$BUILDKITE_TEST_ENGINE_CLIENT_PATH:/usr/local/bin/bktec"
           propagate-environment: true
-          # Pass API access token and Test Engine suite token to the Docker container
-          environment:
-            - BUILDKITE_ANALYTICS_TOKEN
-            - BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
-            - BKTEC_VERSION
 
   - label: ":jest: Jest"
     parallelism: 2
@@ -50,20 +44,18 @@ steps:
     soft_fail:
       - exit_status: 1
     plugins:
-      - cluster-secrets#v1.0.0:
-          variables:
-            BUILDKITE_ANALYTICS_TOKEN: test_engine_client_examples_suite_token
-            BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN: test_engine_client_examples_api_token
-      - docker#v5.11.0:
+      - tests#v1.0.0:
+          test-runner: jest
+          result-path: jest-result.json
+          suite-slug: test-engine-client-examples
+          client-os: linux
+          upload-results: false
+      - docker#v5.13.0:
           image: "node:23.1.0-bookworm"
-          # Pass pipeline env variables to the Docker container
-          # See https://buildkite.com/docs/test-engine/test-splitting/configuring#using-the-test-engine-client-configure-environment-variables
+          expand-volume-vars: true
+          volumes:
+            - "$$BUILDKITE_TEST_ENGINE_CLIENT_PATH:/usr/local/bin/bktec"
           propagate-environment: true
-          # Pass API access token and Test Engine suite token to the Docker container
-          environment:
-            - BUILDKITE_ANALYTICS_TOKEN
-            - BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
-            - BKTEC_VERSION
 
   - label: ":cypress: Cypress"
     parallelism: 2
@@ -71,22 +63,19 @@ steps:
     soft_fail:
       - exit_status: 1
     plugins:
-      - cluster-secrets#v1.0.0:
-          variables:
-            BUILDKITE_ANALYTICS_TOKEN: test_engine_client_examples_suite_token
-            BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN: test_engine_client_examples_api_token
-      - docker#v5.11.0:
+      - tests#v1.0.0:
+          test-runner: cypress
+          suite-slug: test-engine-client-examples
+          client-os: linux
+          upload-results: false
+      - docker#v5.13.0:
           image: "cypress/included:13.15.1"
           entrypoint: ""
           shell: ["/bin/sh", "-e", "-c"]
-          # Pass pipeline env variables to the Docker container
-          # See https://buildkite.com/docs/test-engine/test-splitting/configuring#using-the-test-engine-client-configure-environment-variables
+          expand-volume-vars: true
+          volumes:
+            - "$$BUILDKITE_TEST_ENGINE_CLIENT_PATH:/usr/local/bin/bktec"
           propagate-environment: true
-          # Pass API access token and Test Engine suite token to the Docker container
-          environment:
-            - BUILDKITE_ANALYTICS_TOKEN
-            - BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
-            - BKTEC_VERSION
 
   - label: ":playwright: Playwright"
     parallelism: 2
@@ -94,20 +83,18 @@ steps:
     soft_fail:
       - exit_status: 1
     plugins:
-      - cluster-secrets#v1.0.0:
-          variables:
-            BUILDKITE_ANALYTICS_TOKEN: test_engine_client_examples_suite_token
-            BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN: test_engine_client_examples_api_token
-      - docker#v5.11.0:
+      - tests#v1.0.0:
+          test-runner: playwright
+          result-path: tmp/playwright-results.json
+          suite-slug: test-engine-client-examples
+          client-os: linux
+          upload-results: false
+      - docker#v5.13.0:
           image: "mcr.microsoft.com/playwright:v1.48.1-noble"
-          # Pass pipeline env variables to the Docker container
-          # See https://buildkite.com/docs/test-engine/test-splitting/configuring#using-the-test-engine-client-configure-environment-variables
+          expand-volume-vars: true
+          volumes:
+            - "$$BUILDKITE_TEST_ENGINE_CLIENT_PATH:/usr/local/bin/bktec"
           propagate-environment: true
-          # Pass API access token and Test Engine suite token to the Docker container
-          environment:
-            - BUILDKITE_ANALYTICS_TOKEN
-            - BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
-            - BKTEC_VERSION
 
   - label: ":pytest: pytest"
     parallelism: 2
@@ -117,20 +104,17 @@ steps:
     soft_fail:
       - exit_status: 1
     plugins:
-      - cluster-secrets#v1.0.0:
-          variables:
-            BUILDKITE_ANALYTICS_TOKEN: test_engine_client_examples_suite_token
-            BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN: test_engine_client_examples_api_token
-      - docker#v5.11.0:
+      - tests#v1.0.0:
+          test-runner: pytest
+          suite-slug: test-engine-client-examples
+          client-os: linux
+          upload-results: false
+      - docker#v5.13.0:
           image: "python:3.13.2-bookworm"
-          # Pass pipeline env variables to the Docker container
-          # See https://buildkite.com/docs/test-engine/test-splitting/configuring#using-the-test-engine-client-configure-environment-variables
+          expand-volume-vars: true
+          volumes:
+            - "$$BUILDKITE_TEST_ENGINE_CLIENT_PATH:/usr/local/bin/bktec"
           propagate-environment: true
-          # Pass API access token and Test Engine suite token to the Docker container
-          environment:
-            - BUILDKITE_ANALYTICS_TOKEN
-            - BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
-            - BKTEC_VERSION
 
   - label: ":pytest: pytest with (xdist)"
     parallelism: 2
@@ -140,20 +124,17 @@ steps:
     soft_fail:
       - exit_status: 1
     plugins:
-      - cluster-secrets#v1.0.0:
-          variables:
-            BUILDKITE_ANALYTICS_TOKEN: test_engine_client_examples_suite_token
-            BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN: test_engine_client_examples_api_token
-      - docker#v5.11.0:
+      - tests#v1.0.0:
+          test-runner: pytest
+          suite-slug: test-engine-client-examples
+          client-os: linux
+          upload-results: false
+      - docker#v5.13.0:
           image: "python:3.13.2-bookworm"
-          # Pass pipeline env variables to the Docker container
-          # See https://buildkite.com/docs/test-engine/test-splitting/configuring#using-the-test-engine-client-configure-environment-variables
+          expand-volume-vars: true
+          volumes:
+            - "$$BUILDKITE_TEST_ENGINE_CLIENT_PATH:/usr/local/bin/bktec"
           propagate-environment: true
-          # Pass API access token and Test Engine suite token to the Docker container
-          environment:
-            - BUILDKITE_ANALYTICS_TOKEN
-            - BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
-            - BKTEC_VERSION
 
   - label: ":pytest: :pants: pytest (Pants)"
     # Pants owns test discovery and execution; the buildkite-test-collector
@@ -210,18 +191,37 @@ steps:
     soft_fail:
       - exit_status: 1
     plugins:
-      - cluster-secrets#v1.0.0:
-          variables:
-            BUILDKITE_ANALYTICS_TOKEN: test_engine_client_examples_suite_token
-            BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN: test_engine_client_examples_api_token
-      - mise#v1.1.1:
-          dir: nunit
-      - test-collector#v1.11.0:
-          files: "nunit/tests/MyLib.Tests/test-results/results.xml"
-          format: "junit"
+      - tests#v1.0.0:
+          test-runner: nunit
+          result-path: test-results/results.xml
+          test-file-pattern: "tests/**/*Tests.cs"
+          suite-slug: test-engine-client-examples
           tags:
             - "language.name=dotnet"
             - "test.framework.name=nunit"
+      - mise#v1.1.1:
+          dir: nunit
+
+  - label: ":golang: Go test"
+    parallelism: 2
+    command: "cd go && bin/test"
+    soft_fail:
+      - exit_status: 1
+    plugins:
+      - tests#v1.0.0:
+          test-runner: gotest
+          result-path: tmp/gotest-result.xml
+          suite-slug: test-engine-client-examples
+          client-os: linux
+          tags:
+            - "language.name=go"
+            - "test.framework.name=go-test"
+      - docker#v5.13.0:
+          image: "golang:1.24-bookworm"
+          expand-volume-vars: true
+          volumes:
+            - "$$BUILDKITE_TEST_ENGINE_CLIENT_PATH:/usr/local/bin/bktec"
+          propagate-environment: true
 
   - group: "Additional bktec features"
     key: "jest-retry"
@@ -232,20 +232,20 @@ steps:
         soft_fail:
           - exit_status: 1
         plugins:
-          - cluster-secrets#v1.0.0:
-              variables:
-                BUILDKITE_ANALYTICS_TOKEN: test_engine_client_examples_suite_token
-                BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN: test_engine_client_examples_api_token
-          - docker#v5.11.0:
+          - tests#v1.0.0:
+              test-runner: jest
+              result-path: jest-result.json
+              retry-count: 3
+              retry-cmd: "npx jest {{testExamples}} --testNamePattern '{{testNamePattern}}' --json --testLocationInResults --outputFile {{resultPath}}"
+              suite-slug: test-engine-client-examples
+              client-os: linux
+              upload-results: false
+          - docker#v5.13.0:
               image: "node:23.1.0-bookworm"
-              # Pass pipeline env variables to the Docker container
-              # See https://buildkite.com/docs/test-engine/test-splitting/configuring#using-the-test-engine-client-configure-environment-variables
+              expand-volume-vars: true
+              volumes:
+                - "$$BUILDKITE_TEST_ENGINE_CLIENT_PATH:/usr/local/bin/bktec"
               propagate-environment: true
-              # Pass API access token and Test Engine suite token to the Docker container
-              environment:
-                - BUILDKITE_ANALYTICS_TOKEN
-                - BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
-                - BKTEC_VERSION
 
       - label: ":pytest: pytest (tag filters)"
         parallelism: 2
@@ -255,17 +255,15 @@ steps:
         soft_fail:
           - exit_status: 1
         plugins:
-          - cluster-secrets#v1.0.0:
-              variables:
-                BUILDKITE_ANALYTICS_TOKEN: test_engine_client_examples_suite_token
-                BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN: test_engine_client_examples_api_token
-          - docker#v5.11.0:
+          - tests#v1.0.0:
+              test-runner: pytest
+              tag-filters: "component:frontend"
+              suite-slug: test-engine-client-examples
+              client-os: linux
+              upload-results: false
+          - docker#v5.13.0:
               image: "python:3.13.2-bookworm"
-              # Pass pipeline env variables to the Docker container
-              # See https://buildkite.com/docs/test-engine/test-splitting/configuring#using-the-test-engine-client-configure-environment-variables
+              expand-volume-vars: true
+              volumes:
+                - "$$BUILDKITE_TEST_ENGINE_CLIENT_PATH:/usr/local/bin/bktec"
               propagate-environment: true
-              # Pass API access token and Test Engine suite token to the Docker container
-              environment:
-                - BUILDKITE_ANALYTICS_TOKEN
-                - BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
-                - BKTEC_VERSION
