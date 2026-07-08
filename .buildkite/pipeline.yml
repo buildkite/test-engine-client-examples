@@ -3,7 +3,7 @@ cache:
     - "mise"
 
 steps:
-  - label: ":rspec: Ruby: RSpec"
+  - label: ":rspec: RSpec"
     parallelism: 2
     commands:
       - cd rspec
@@ -20,7 +20,7 @@ steps:
       - mise#v1.1.4:
           dir: rspec
 
-  - label: ":ruby: Ruby: Minitest"
+  - label: ":ruby: Minitest"
     parallelism: 2
     commands:
       - cd ruby-minitest
@@ -40,7 +40,7 @@ steps:
     env:
       BUILDKITE_ANALYTICS_LOCATION_PREFIX: ruby-minitest
 
-  - group: "jest: Jest"
+  - group: ":jest: Jest"
     steps:
       - label: ":jest: Jest"
         parallelism: 2
@@ -117,7 +117,7 @@ steps:
     env:
       BUILDKITE_ANALYTICS_LOCATION_PREFIX: playwright
 
-  - group: "pytest: Pytest"
+  - group: ":pytest: Pytest"
     steps:
       - label: ":pytest: pytest"
         parallelism: 2
