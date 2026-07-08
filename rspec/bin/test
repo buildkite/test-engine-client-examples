@@ -1,7 +1,0 @@
-#!/usr/bin/env bash
-
-# Install gems
-bundle install
-
-# Run Buildkite Test Engine Client configured by the tests Buildkite plugin
-bktec run

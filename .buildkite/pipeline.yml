@@ -1,7 +1,14 @@
+cache:
+  paths:
+    - "mise"
+
 steps:
   - label: ":ruby: :rspec: Ruby: RSpec"
     parallelism: 2
-    command: "cd rspec && bin/test"
+    commands:
+      - cd rspec
+      - bundle install
+      - bktec run
     soft_fail:
       - exit_status: 1
     plugins:
@@ -9,18 +16,16 @@ steps:
           test-runner: rspec
           result-path: tmp/rspec.json
           suite-slug: test-engine-client-examples
-          client-os: linux
           upload-results: false
-      - docker#v5.13.0:
-          image: "ruby:3.4-bookworm" # requires curl
-          expand-volume-vars: true
-          volumes:
-            - "$$BUILDKITE_TEST_ENGINE_CLIENT_PATH:/usr/local/bin/bktec"
-          propagate-environment: true
+      - mise#v1.1.4:
+          dir: rspec
 
   - label: ":ruby: Ruby: Minitest"
     parallelism: 2
-    command: "cd ruby-minitest && bin/test"
+    commands:
+      - cd ruby-minitest
+      - bundle install
+      - bktec run
     soft_fail:
       - exit_status: 1
     plugins:
@@ -29,18 +34,18 @@ steps:
           test-cmd: "bundle exec rake test TEST_FILES='{{testExamples}}'"
           test-file-pattern: "**/*_test.rb"
           suite-slug: test-engine-client-examples
-          client-os: linux
           upload-results: false
-      - docker#v5.13.0:
-          image: "ruby:3.4-bookworm" # requires curl
-          expand-volume-vars: true
-          volumes:
-            - "$$BUILDKITE_TEST_ENGINE_CLIENT_PATH:/usr/local/bin/bktec"
-          propagate-environment: true
+      - mise#v1.1.4:
+          dir: ruby-minitest
+    env:
+      BUILDKITE_ANALYTICS_LOCATION_PREFIX: ruby-minitest
 
   - label: ":jest: Jest"
     parallelism: 2
-    command: "cd jest && bin/test"
+    commands:
+      - cd jest
+      - npm install
+      - bktec run
     soft_fail:
       - exit_status: 1
     plugins:
@@ -48,38 +53,35 @@ steps:
           test-runner: jest
           result-path: jest-result.json
           suite-slug: test-engine-client-examples
-          client-os: linux
           upload-results: false
-      - docker#v5.13.0:
-          image: "node:23.1.0-bookworm"
-          expand-volume-vars: true
-          volumes:
-            - "$$BUILDKITE_TEST_ENGINE_CLIENT_PATH:/usr/local/bin/bktec"
-          propagate-environment: true
+      - mise#v1.1.4:
+          dir: jest
+    env:
+      BUILDKITE_ANALYTICS_LOCATION_PREFIX: jest
 
   - label: ":cypress: Cypress"
     parallelism: 2
-    command: "cd cypress && bin/test"
+    commands:
+      - cd cypress
+      - bin/setup
+      - bktec run
     soft_fail:
       - exit_status: 1
     plugins:
       - tests#v1.0.0:
           test-runner: cypress
           suite-slug: test-engine-client-examples
-          client-os: linux
           upload-results: false
-      - docker#v5.13.0:
-          image: "cypress/included:13.15.1"
-          entrypoint: ""
-          shell: ["/bin/sh", "-e", "-c"]
-          expand-volume-vars: true
-          volumes:
-            - "$$BUILDKITE_TEST_ENGINE_CLIENT_PATH:/usr/local/bin/bktec"
-          propagate-environment: true
+      - mise#v1.1.4:
+          dir: cypress
 
   - label: ":playwright: Playwright"
     parallelism: 2
-    command: "cd playwright && bin/test"
+    commands:
+      - cd playwright
+      - npm install
+      - npx playwright install --with-deps chromium
+      - bktec run
     soft_fail:
       - exit_status: 1
     plugins:
@@ -87,57 +89,60 @@ steps:
           test-runner: playwright
           result-path: tmp/playwright-results.json
           suite-slug: test-engine-client-examples
-          client-os: linux
           upload-results: false
-      - docker#v5.13.0:
-          image: "mcr.microsoft.com/playwright:v1.48.1-noble"
-          expand-volume-vars: true
-          volumes:
-            - "$$BUILDKITE_TEST_ENGINE_CLIENT_PATH:/usr/local/bin/bktec"
-          propagate-environment: true
+      - mise#v1.1.4:
+          dir: playwright
+    env:
+      BUILDKITE_ANALYTICS_LOCATION_PREFIX: playwright
 
   - label: ":pytest: pytest"
     parallelism: 2
     artifact_paths:
       - pytest/result.json
-    command: "cd pytest && bin/test"
+    commands:
+      - cd pytest
+      - pip install -e '.[dev]'
+      - bktec run
     soft_fail:
       - exit_status: 1
     plugins:
       - tests#v1.0.0:
           test-runner: pytest
           suite-slug: test-engine-client-examples
-          client-os: linux
           upload-results: false
-      - docker#v5.13.0:
-          image: "python:3.13.2-bookworm"
-          expand-volume-vars: true
-          volumes:
-            - "$$BUILDKITE_TEST_ENGINE_CLIENT_PATH:/usr/local/bin/bktec"
-          propagate-environment: true
+      - mise#v1.1.4:
+          dir: pytest
 
   - label: ":pytest: pytest with (xdist)"
     parallelism: 2
     artifact_paths:
       - pytest/result.json
-    command: "cd pytest-xdist && bin/test"
+    commands:
+      - cd pytest
+      - pip install -e '.[dev]'
+      - bktec run
     soft_fail:
       - exit_status: 1
+    env:
+      PYTEST_XDIST_ENABLED: "true"
+      PYTEST_ADDOPTS: "-n 3 -o log_cli=true -o log_cli_level=DEBUG"
     plugins:
       - tests#v1.0.0:
           test-runner: pytest
           suite-slug: test-engine-client-examples
-          client-os: linux
           upload-results: false
-      - docker#v5.13.0:
-          image: "python:3.13.2-bookworm"
-          expand-volume-vars: true
-          volumes:
-            - "$$BUILDKITE_TEST_ENGINE_CLIENT_PATH:/usr/local/bin/bktec"
-          propagate-environment: true
+      - mise#v1.1.4:
+          dir: pytest
 
   - label: ":swift: Swift: XCTest (test-collector-swift)"
-    command: "cd swift-xctest && bin/test"
+    commands:
+      - cd swift-xctest
+      - swift package resolve
+      # Run XCTest tests (which includes the BuildkiteTestCollector).
+      # The collector auto-loads via XCTest observation and uploads results
+      # when BUILDKITE_ANALYTICS_TOKEN is set.
+      # Use --disable-swift-testing to only run XCTest (not Swift Testing).
+      - swift test --disable-swift-testing
     soft_fail:
       - exit_status: 1
     env:
@@ -155,7 +160,12 @@ steps:
             - BUILDKITE_ANALYTICS_DEBUG_ENABLED
 
   - label: ":android: Android"
-    command: "cd android && bin/test"
+    commands:
+      - cd android
+      # Run Android unit tests
+      # The test-collector-android Gradle plugin uploads results to Test Engine automatically.
+      # No bktec client is needed for this example.
+      - ./gradlew --no-daemon :app:testDebugUnitTest
     soft_fail:
       - exit_status: 1
     plugins:
@@ -170,7 +180,10 @@ steps:
 
   - label: ":golang: Go test"
     parallelism: 2
-    command: "cd go && bin/test"
+    commands:
+      - cd go
+      - go install gotest.tools/gotestsum@v1.12.0
+      - bktec run
     soft_fail:
       - exit_status: 1
     plugins:
@@ -178,23 +191,21 @@ steps:
           test-runner: gotest
           result-path: tmp/gotest-result.xml
           suite-slug: test-engine-client-examples
-          client-os: linux
           tags:
             - "language.name=go"
             - "test.framework.name=go-test"
-      - docker#v5.13.0:
-          image: "golang:1.24-bookworm"
-          expand-volume-vars: true
-          volumes:
-            - "$$BUILDKITE_TEST_ENGINE_CLIENT_PATH:/usr/local/bin/bktec"
-          propagate-environment: true
+      - mise#v1.1.4:
+          dir: go
 
   - group: "Additional bktec features"
     key: "jest-retry"
     steps:
       - label: ":jest: Jest (Retry Enabled)"
         parallelism: 2
-        command: "cd jest && bin/test-with-retry"
+        commands:
+          - cd jest
+          - npm install
+          - bktec run
         soft_fail:
           - exit_status: 1
         plugins:
@@ -204,20 +215,20 @@ steps:
               retry-count: 3
               retry-cmd: "npx jest {{testExamples}} --testNamePattern '{{testNamePattern}}' --json --testLocationInResults --outputFile {{resultPath}}"
               suite-slug: test-engine-client-examples
-              client-os: linux
               upload-results: false
-          - docker#v5.13.0:
-              image: "node:23.1.0-bookworm"
-              expand-volume-vars: true
-              volumes:
-                - "$$BUILDKITE_TEST_ENGINE_CLIENT_PATH:/usr/local/bin/bktec"
-              propagate-environment: true
+          - mise#v1.1.4:
+              dir: jest
+        env:
+          BUILDKITE_ANALYTICS_LOCATION_PREFIX: jest
 
       - label: ":pytest: pytest (tag filters)"
         parallelism: 2
         artifact_paths:
           - pytest/result.json
-        command: "cd pytest-tag-filters && bin/test"
+        commands:
+          - cd pytest-tag-filters
+          - pip install -e '.[dev]'
+          - bktec run
         soft_fail:
           - exit_status: 1
         plugins:
@@ -225,11 +236,6 @@ steps:
               test-runner: pytest
               tag-filters: "component:frontend"
               suite-slug: test-engine-client-examples
-              client-os: linux
               upload-results: false
-          - docker#v5.13.0:
-              image: "python:3.13.2-bookworm"
-              expand-volume-vars: true
-              volumes:
-                - "$$BUILDKITE_TEST_ENGINE_CLIENT_PATH:/usr/local/bin/bktec"
-              propagate-environment: true
+          - mise#v1.1.4:
+              dir: pytest-tag-filters

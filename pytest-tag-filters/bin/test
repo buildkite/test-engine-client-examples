@@ -1,9 +1,0 @@
-#!/usr/bin/env bash
-
-set -e
-
-# Install packages
-pip install -e '.[dev]'
-
-# Run Buildkite Test Engine Client configured by the tests Buildkite plugin
-bktec run
