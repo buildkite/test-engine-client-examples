@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
+set -euo pipefail
 
 # Install node packages
 npm install
+npx playwright install --with-deps chromium
 
 export BUILDKITE_ANALYTICS_LOCATION_PREFIX="playwright"
 

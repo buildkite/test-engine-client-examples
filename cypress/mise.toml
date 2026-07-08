@@ -1,0 +1,15 @@
+[tools]
+node = "23.1.0"
+go = "latest"
+
+[system.packages]
+"apt:libgtk2.0-0" = "latest"
+"apt:libgtk-3-0" = "latest"
+"apt:libgbm-dev" = "latest"
+"apt:libnotify-dev" = "latest"
+"apt:libnss3" = "latest"
+"apt:libxss1" = "latest"
+"apt:libasound2" = "latest"
+"apt:libxtst6" = "latest"
+"apt:xauth" = "latest"
+"apt:xvfb" = "latest"
