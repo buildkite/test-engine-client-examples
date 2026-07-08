@@ -14,7 +14,7 @@ steps:
           result-path: tmp/rspec.json
           suite-slug: test-engine-client-examples
           upload-results: false
-      - mise#v1.1.1:
+      - mise#v1.1.4:
           dir: rspec
 
   - label: ":ruby: Ruby: Minitest"
@@ -29,7 +29,7 @@ steps:
           test-file-pattern: "**/*_test.rb"
           suite-slug: test-engine-client-examples
           upload-results: false
-      - mise#v1.1.1:
+      - mise#v1.1.4:
           dir: ruby-minitest
 
   - label: ":jest: Jest"
@@ -43,7 +43,7 @@ steps:
           result-path: jest-result.json
           suite-slug: test-engine-client-examples
           upload-results: false
-      - mise#v1.1.1:
+      - mise#v1.1.4:
           dir: jest
 
   - label: ":cypress: Cypress"
@@ -56,7 +56,7 @@ steps:
           test-runner: cypress
           suite-slug: test-engine-client-examples
           upload-results: false
-      - mise#v1.1.1:
+      - mise#v1.1.4:
           dir: cypress
           install_system_packages: true
 
@@ -71,7 +71,7 @@ steps:
           result-path: tmp/playwright-results.json
           suite-slug: test-engine-client-examples
           upload-results: false
-      - mise#v1.1.1:
+      - mise#v1.1.4:
           dir: playwright
 
   - label: ":pytest: pytest"
@@ -86,7 +86,7 @@ steps:
           test-runner: pytest
           suite-slug: test-engine-client-examples
           upload-results: false
-      - mise#v1.1.1:
+      - mise#v1.1.4:
           dir: pytest
 
   - label: ":pytest: pytest with (xdist)"
@@ -101,7 +101,7 @@ steps:
           test-runner: pytest
           suite-slug: test-engine-client-examples
           upload-results: false
-      - mise#v1.1.1:
+      - mise#v1.1.4:
           dir: pytest-xdist
 
   - label: ":pytest: :pants: pytest (Pants)"
@@ -166,7 +166,7 @@ steps:
           tags:
             - "language.name=go"
             - "test.framework.name=go-test"
-      - mise#v1.1.1:
+      - mise#v1.1.4:
           dir: go
 
   - group: "Additional bktec features"
@@ -185,7 +185,7 @@ steps:
               retry-cmd: "npx jest {{testExamples}} --testNamePattern '{{testNamePattern}}' --json --testLocationInResults --outputFile {{resultPath}}"
               suite-slug: test-engine-client-examples
               upload-results: false
-          - mise#v1.1.1:
+          - mise#v1.1.4:
               dir: jest
 
       - label: ":pytest: pytest (tag filters)"
@@ -201,5 +201,5 @@ steps:
               tag-filters: "component:frontend"
               suite-slug: test-engine-client-examples
               upload-results: false
-          - mise#v1.1.1:
+          - mise#v1.1.4:
               dir: pytest-tag-filters
