@@ -1,6 +1,5 @@
 [tools]
 ruby = "3.4"
-go = "latest"
 
 [settings.ruby]
 compile = false
