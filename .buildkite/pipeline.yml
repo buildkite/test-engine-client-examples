@@ -111,17 +111,20 @@ steps:
     artifact_paths:
       - pytest/result.json
     commands:
-      - cd pytest-xdist
+      - cd pytest
       - bin/test
     soft_fail:
       - exit_status: 1
+    env:
+      PYTEST_XDIST_ENABLED: "true"
+      PYTEST_ADDOPTS: "-n 3 -o log_cli=true -o log_cli_level=DEBUG"
     plugins:
       - tests#v1.0.0:
           test-runner: pytest
           suite-slug: test-engine-client-examples
           upload-results: false
       - mise#v1.1.4:
-          dir: pytest-xdist
+          dir: pytest
 
   - label: ":swift: Swift: XCTest (test-collector-swift)"
     commands:
