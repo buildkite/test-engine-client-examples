@@ -1,0 +1,3 @@
+[tools]
+python = "3.13.2"
+go = "latest"

@@ -1,9 +1,15 @@
 #!/usr/bin/env bash
+set -euo pipefail
 
 # Install node packages
 npm install
 
 export BUILDKITE_ANALYTICS_LOCATION_PREFIX="jest"
+
+if [[ -n "${BKTEC_REF:-}" ]]; then
+  # shellcheck source=/dev/null
+  source "${BUILDKITE_BUILD_CHECKOUT_PATH}/.buildkite/scripts/install-bktec-from-source.sh"
+fi
 
 # Run Buildkite Test Engine Client configured by the tests Buildkite plugin
 bktec run

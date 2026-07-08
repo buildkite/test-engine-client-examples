@@ -5,5 +5,10 @@ set -e
 # Install packages
 pip install -e '.[dev]'
 
+if [[ -n "${BKTEC_REF:-}" ]]; then
+  # shellcheck source=/dev/null
+  source "${BUILDKITE_BUILD_CHECKOUT_PATH}/.buildkite/scripts/install-bktec-from-source.sh"
+fi
+
 # Run Buildkite Test Engine Client configured by the tests Buildkite plugin
 bktec run
