@@ -153,23 +153,6 @@ steps:
           environment:
             - BUILDKITE_ANALYTICS_TOKEN
 
-  - label: ":dotnet: NUnit"
-    parallelism: 2
-    command: "cd nunit && bin/test"
-    soft_fail:
-      - exit_status: 1
-    plugins:
-      - tests#v1.0.0:
-          test-runner: nunit
-          result-path: test-results/results.xml
-          test-file-pattern: "tests/**/*Tests.cs"
-          suite-slug: test-engine-client-examples
-          tags:
-            - "language.name=dotnet"
-            - "test.framework.name=nunit"
-      - mise#v1.1.1:
-          dir: nunit
-
   - label: ":golang: Go test"
     parallelism: 2
     command: "cd go && bin/test"
