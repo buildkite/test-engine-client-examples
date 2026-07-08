@@ -3,7 +3,7 @@ cache:
     - "mise"
 
 steps:
-  - label: ":ruby: :rspec: Ruby: RSpec"
+  - label: ":rspec: RSpec"
     parallelism: 2
     commands:
       - cd rspec
@@ -20,7 +20,7 @@ steps:
       - mise#v1.1.4:
           dir: rspec
 
-  - label: ":ruby: Ruby: Minitest"
+  - label: ":ruby: Minitest"
     parallelism: 2
     commands:
       - cd ruby-minitest
@@ -40,24 +40,46 @@ steps:
     env:
       BUILDKITE_ANALYTICS_LOCATION_PREFIX: ruby-minitest
 
-  - label: ":jest: Jest"
-    parallelism: 2
-    commands:
-      - cd jest
-      - npm install
-      - bktec run
-    soft_fail:
-      - exit_status: 1
-    plugins:
-      - tests#v1.0.0:
-          test-runner: jest
-          result-path: jest-result.json
-          suite-slug: test-engine-client-examples
-          upload-results: false
-      - mise#v1.1.4:
-          dir: jest
-    env:
-      BUILDKITE_ANALYTICS_LOCATION_PREFIX: jest
+  - group: ":jest: Jest"
+    steps:
+      - label: ":jest: Jest"
+        parallelism: 2
+        commands:
+          - cd jest
+          - npm install
+          - bktec run
+        soft_fail:
+          - exit_status: 1
+        plugins:
+          - tests#v1.0.0:
+              test-runner: jest
+              result-path: jest-result.json
+              suite-slug: test-engine-client-examples
+              upload-results: false
+          - mise#v1.1.4:
+              dir: jest
+        env:
+          BUILDKITE_ANALYTICS_LOCATION_PREFIX: jest
+      - label: ":jest: Jest (Retry Enabled)"
+        parallelism: 2
+        commands:
+          - cd jest
+          - npm install
+          - bktec run
+        soft_fail:
+          - exit_status: 1
+        plugins:
+          - tests#v1.0.0:
+              test-runner: jest
+              result-path: jest-result.json
+              retry-count: 3
+              retry-cmd: "npx jest {{testExamples}} --testNamePattern '{{testNamePattern}}' --json --testLocationInResults --outputFile {{resultPath}}"
+              suite-slug: test-engine-client-examples
+              upload-results: false
+          - mise#v1.1.4:
+              dir: jest
+        env:
+          BUILDKITE_ANALYTICS_LOCATION_PREFIX: jest
 
   - label: ":cypress: Cypress"
     parallelism: 2
@@ -95,44 +117,65 @@ steps:
     env:
       BUILDKITE_ANALYTICS_LOCATION_PREFIX: playwright
 
-  - label: ":pytest: pytest"
-    parallelism: 2
-    artifact_paths:
-      - pytest/result.json
-    commands:
-      - cd pytest
-      - pip install -e '.[dev]'
-      - bktec run
-    soft_fail:
-      - exit_status: 1
-    plugins:
-      - tests#v1.0.0:
-          test-runner: pytest
-          suite-slug: test-engine-client-examples
-          upload-results: false
-      - mise#v1.1.4:
-          dir: pytest
+  - group: ":pytest: Pytest"
+    steps:
+      - label: ":pytest: pytest"
+        parallelism: 2
+        artifact_paths:
+          - pytest/result.json
+        commands:
+          - cd pytest
+          - pip install -e '.[dev]'
+          - bktec run
+        soft_fail:
+          - exit_status: 1
+        plugins:
+          - tests#v1.0.0:
+              test-runner: pytest
+              suite-slug: test-engine-client-examples
+              upload-results: false
+          - mise#v1.1.4:
+              dir: pytest
 
-  - label: ":pytest: pytest with (xdist)"
-    parallelism: 2
-    artifact_paths:
-      - pytest/result.json
-    commands:
-      - cd pytest
-      - pip install -e '.[dev]'
-      - bktec run
-    soft_fail:
-      - exit_status: 1
-    env:
-      PYTEST_XDIST_ENABLED: "true"
-      PYTEST_ADDOPTS: "-n 3 -o log_cli=true -o log_cli_level=DEBUG"
-    plugins:
-      - tests#v1.0.0:
-          test-runner: pytest
-          suite-slug: test-engine-client-examples
-          upload-results: false
-      - mise#v1.1.4:
-          dir: pytest
+      - label: ":pytest: pytest (with xdist)"
+        parallelism: 2
+        artifact_paths:
+          - pytest/result.json
+        commands:
+          - cd pytest
+          - pip install -e '.[dev]'
+          - bktec run
+        soft_fail:
+          - exit_status: 1
+        env:
+          PYTEST_XDIST_ENABLED: "true"
+          PYTEST_ADDOPTS: "-n 3 -o log_cli=true -o log_cli_level=DEBUG"
+        plugins:
+          - tests#v1.0.0:
+              test-runner: pytest
+              suite-slug: test-engine-client-examples
+              upload-results: false
+          - mise#v1.1.4:
+              dir: pytest
+
+      - label: ":pytest: pytest (tag filters)"
+        parallelism: 2
+        artifact_paths:
+          - pytest/result.json
+        commands:
+          - cd pytest-tag-filters
+          - pip install -e '.[dev]'
+          - bktec run
+        soft_fail:
+          - exit_status: 1
+        plugins:
+          - tests#v1.0.0:
+              test-runner: pytest
+              tag-filters: "component:frontend"
+              suite-slug: test-engine-client-examples
+              upload-results: false
+          - mise#v1.1.4:
+              dir: pytest-tag-filters
 
   - label: ":swift: Swift: XCTest (test-collector-swift)"
     commands:
@@ -196,46 +239,3 @@ steps:
             - "test.framework.name=go-test"
       - mise#v1.1.4:
           dir: go
-
-  - group: "Additional bktec features"
-    key: "jest-retry"
-    steps:
-      - label: ":jest: Jest (Retry Enabled)"
-        parallelism: 2
-        commands:
-          - cd jest
-          - npm install
-          - bktec run
-        soft_fail:
-          - exit_status: 1
-        plugins:
-          - tests#v1.0.0:
-              test-runner: jest
-              result-path: jest-result.json
-              retry-count: 3
-              retry-cmd: "npx jest {{testExamples}} --testNamePattern '{{testNamePattern}}' --json --testLocationInResults --outputFile {{resultPath}}"
-              suite-slug: test-engine-client-examples
-              upload-results: false
-          - mise#v1.1.4:
-              dir: jest
-        env:
-          BUILDKITE_ANALYTICS_LOCATION_PREFIX: jest
-
-      - label: ":pytest: pytest (tag filters)"
-        parallelism: 2
-        artifact_paths:
-          - pytest/result.json
-        commands:
-          - cd pytest-tag-filters
-          - pip install -e '.[dev]'
-          - bktec run
-        soft_fail:
-          - exit_status: 1
-        plugins:
-          - tests#v1.0.0:
-              test-runner: pytest
-              tag-filters: "component:frontend"
-              suite-slug: test-engine-client-examples
-              upload-results: false
-          - mise#v1.1.4:
-              dir: pytest-tag-filters
