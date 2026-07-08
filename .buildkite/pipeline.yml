@@ -5,7 +5,9 @@ cache:
 steps:
   - label: ":ruby: :rspec: Ruby: RSpec"
     parallelism: 2
-    command: "cd rspec && bin/test"
+    commands:
+      - cd rspec
+      - bin/test
     soft_fail:
       - exit_status: 1
     plugins:
@@ -19,7 +21,9 @@ steps:
 
   - label: ":ruby: Ruby: Minitest"
     parallelism: 2
-    command: "cd ruby-minitest && bin/test"
+    commands:
+      - cd ruby-minitest
+      - bin/test
     soft_fail:
       - exit_status: 1
     plugins:
@@ -31,10 +35,14 @@ steps:
           upload-results: false
       - mise#v1.1.4:
           dir: ruby-minitest
+    env:
+      BUILDKITE_ANALYTICS_LOCATION_PREFIX: ruby-minitest
 
   - label: ":jest: Jest"
     parallelism: 2
-    command: "cd jest && bin/test"
+    commands:
+      - cd jest
+      - bin/test
     soft_fail:
       - exit_status: 1
     plugins:
@@ -45,10 +53,14 @@ steps:
           upload-results: false
       - mise#v1.1.4:
           dir: jest
+    env:
+      BUILDKITE_ANALYTICS_LOCATION_PREFIX: jest
 
   - label: ":cypress: Cypress"
     parallelism: 2
-    command: "cd cypress && bin/test"
+    commands:
+      - cd cypress
+      - bin/test
     soft_fail:
       - exit_status: 1
     plugins:
@@ -62,7 +74,9 @@ steps:
 
   - label: ":playwright: Playwright"
     parallelism: 2
-    command: "cd playwright && bin/test"
+    commands:
+      - cd playwright
+      - bin/test
     soft_fail:
       - exit_status: 1
     plugins:
@@ -73,12 +87,16 @@ steps:
           upload-results: false
       - mise#v1.1.4:
           dir: playwright
+    env:
+      BUILDKITE_ANALYTICS_LOCATION_PREFIX: playwright
 
   - label: ":pytest: pytest"
     parallelism: 2
     artifact_paths:
       - pytest/result.json
-    command: "cd pytest && bin/test"
+    commands:
+      - cd pytest
+      - bin/test
     soft_fail:
       - exit_status: 1
     plugins:
@@ -93,7 +111,9 @@ steps:
     parallelism: 2
     artifact_paths:
       - pytest/result.json
-    command: "cd pytest-xdist && bin/test"
+    commands:
+      - cd pytest-xdist
+      - bin/test
     soft_fail:
       - exit_status: 1
     plugins:
@@ -105,7 +125,9 @@ steps:
           dir: pytest-xdist
 
   - label: ":swift: Swift: XCTest (test-collector-swift)"
-    command: "cd swift-xctest && bin/test"
+    commands:
+      - cd swift-xctest
+      - bin/test
     soft_fail:
       - exit_status: 1
     env:
@@ -123,7 +145,9 @@ steps:
             - BUILDKITE_ANALYTICS_DEBUG_ENABLED
 
   - label: ":android: Android"
-    command: "cd android && bin/test"
+    commands:
+      - cd android
+      - bin/test
     soft_fail:
       - exit_status: 1
     plugins:
@@ -138,7 +162,9 @@ steps:
 
   - label: ":golang: Go test"
     parallelism: 2
-    command: "cd go && bin/test"
+    commands:
+      - cd go
+      - bin/test
     soft_fail:
       - exit_status: 1
     plugins:
@@ -157,7 +183,9 @@ steps:
     steps:
       - label: ":jest: Jest (Retry Enabled)"
         parallelism: 2
-        command: "cd jest && bin/test-with-retry"
+        commands:
+          - cd jest
+          - bin/test
         soft_fail:
           - exit_status: 1
         plugins:
@@ -170,12 +198,16 @@ steps:
               upload-results: false
           - mise#v1.1.4:
               dir: jest
+        env:
+          BUILDKITE_ANALYTICS_LOCATION_PREFIX: jest
 
       - label: ":pytest: pytest (tag filters)"
         parallelism: 2
         artifact_paths:
           - pytest/result.json
-        command: "cd pytest-tag-filters && bin/test"
+        commands:
+          - cd pytest-tag-filters
+          - bin/test
         soft_fail:
           - exit_status: 1
         plugins:

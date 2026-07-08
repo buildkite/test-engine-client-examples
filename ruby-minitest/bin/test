@@ -4,7 +4,5 @@ set -euo pipefail
 # Install gems
 bundle install
 
-export BUILDKITE_ANALYTICS_LOCATION_PREFIX="ruby-minitest"
-
 # Run Buildkite Test Engine Client configured by the tests Buildkite plugin
 bktec run

@@ -5,7 +5,5 @@ set -euo pipefail
 npm install
 npx playwright install --with-deps chromium
 
-export BUILDKITE_ANALYTICS_LOCATION_PREFIX="playwright"
-
 # Run Buildkite Test Engine Client configured by the tests Buildkite plugin
 bktec run
