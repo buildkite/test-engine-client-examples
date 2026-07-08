@@ -7,7 +7,8 @@ steps:
     parallelism: 2
     commands:
       - cd rspec
-      - bin/test
+      - bundle install
+      - bktec run
     soft_fail:
       - exit_status: 1
     plugins:
@@ -23,7 +24,8 @@ steps:
     parallelism: 2
     commands:
       - cd ruby-minitest
-      - bin/test
+      - bundle install
+      - bktec run
     soft_fail:
       - exit_status: 1
     plugins:
@@ -42,7 +44,8 @@ steps:
     parallelism: 2
     commands:
       - cd jest
-      - bin/test
+      - npm install
+      - bktec run
     soft_fail:
       - exit_status: 1
     plugins:
@@ -60,7 +63,8 @@ steps:
     parallelism: 2
     commands:
       - cd cypress
-      - bin/test
+      - bin/setup
+      - bktec run
     soft_fail:
       - exit_status: 1
     plugins:
@@ -75,7 +79,9 @@ steps:
     parallelism: 2
     commands:
       - cd playwright
-      - bin/test
+      - npm install
+      - npx playwright install --with-deps chromium
+      - bktec run
     soft_fail:
       - exit_status: 1
     plugins:
@@ -95,7 +101,8 @@ steps:
       - pytest/result.json
     commands:
       - cd pytest
-      - bin/test
+      - pip install -e '.[dev]'
+      - bktec run
     soft_fail:
       - exit_status: 1
     plugins:
@@ -112,7 +119,8 @@ steps:
       - pytest/result.json
     commands:
       - cd pytest
-      - bin/test
+      - pip install -e '.[dev]'
+      - bktec run
     soft_fail:
       - exit_status: 1
     env:
@@ -129,7 +137,12 @@ steps:
   - label: ":swift: Swift: XCTest (test-collector-swift)"
     commands:
       - cd swift-xctest
-      - bin/test
+      - swift package resolve
+      # Run XCTest tests (which includes the BuildkiteTestCollector).
+      # The collector auto-loads via XCTest observation and uploads results
+      # when BUILDKITE_ANALYTICS_TOKEN is set.
+      # Use --disable-swift-testing to only run XCTest (not Swift Testing).
+      - swift test --disable-swift-testing
     soft_fail:
       - exit_status: 1
     env:
@@ -149,7 +162,10 @@ steps:
   - label: ":android: Android"
     commands:
       - cd android
-      - bin/test
+      # Run Android unit tests
+      # The test-collector-android Gradle plugin uploads results to Test Engine automatically.
+      # No bktec client is needed for this example.
+      - ./gradlew --no-daemon :app:testDebugUnitTest
     soft_fail:
       - exit_status: 1
     plugins:
@@ -166,7 +182,8 @@ steps:
     parallelism: 2
     commands:
       - cd go
-      - bin/test
+      - bin/setup
+      - bktec run
     soft_fail:
       - exit_status: 1
     plugins:
@@ -187,7 +204,8 @@ steps:
         parallelism: 2
         commands:
           - cd jest
-          - bin/test
+          - npm install
+          - bktec run
         soft_fail:
           - exit_status: 1
         plugins:
@@ -209,7 +227,8 @@ steps:
           - pytest/result.json
         commands:
           - cd pytest-tag-filters
-          - bin/test
+          - pip install -e '.[dev]'
+          - bktec run
         soft_fail:
           - exit_status: 1
         plugins:

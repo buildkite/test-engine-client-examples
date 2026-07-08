@@ -1,8 +1,0 @@
-#!/usr/bin/env bash
-set -euo pipefail
-
-# Install node packages
-npm install
-
-# Run Buildkite Test Engine Client configured by the tests Buildkite plugin
-bktec run

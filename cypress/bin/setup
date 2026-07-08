@@ -17,6 +17,3 @@ apt-get install -y --no-install-recommends \
 # Install node packages
 npm install
 npx cypress install
-
-# Run Buildkite Test Engine Client configured by the tests Buildkite plugin
-bktec run
