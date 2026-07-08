@@ -1,6 +1,19 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+# Cypress needs a display server plus a handful of shared libs to run
+# headless on Linux. mise-buildkite-plugin's `install_system_packages`
+# (mise.toml [system.packages]) can't be used for this yet: it calls
+# `mise system install`, which isn't wired up in any released mise version
+# as of 2026-07 (the `system` module exists in mise's source but isn't
+# registered as a CLI subcommand), so it always fails with
+# "no tasks defined ... are you in a project directory?". Install the
+# packages directly instead. See https://docs.cypress.io/app/get-started/install-cypress#Linux-Prerequisites
+apt-get update -qq
+apt-get install -y --no-install-recommends \
+  xvfb libgtk2.0-0 libgtk-3-0 libgbm-dev libnotify-dev libnss3 libxss1 \
+  libasound2 libxtst6 xauth
+
 # Install node packages
 npm install
 npx cypress install

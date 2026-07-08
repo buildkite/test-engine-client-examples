@@ -70,7 +70,6 @@ steps:
           upload-results: false
       - mise#v1.1.4:
           dir: cypress
-          install_system_packages: true
 
   - label: ":playwright: Playwright"
     parallelism: 2
