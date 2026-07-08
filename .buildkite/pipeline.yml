@@ -136,23 +136,6 @@ steps:
             - "$$BUILDKITE_TEST_ENGINE_CLIENT_PATH:/usr/local/bin/bktec"
           propagate-environment: true
 
-  - label: ":pytest: :pants: pytest (Pants)"
-    # Pants owns test discovery and execution; the buildkite-test-collector
-    # pytest plugin uploads results to Test Engine. Authentication uses an
-    # ephemeral OIDC token minted in bin/test (no static suite token), which
-    # needs the agent binary inside the container (mount-buildkite-agent).
-    command: "cd pytest-pants && bin/test"
-    soft_fail:
-      - exit_status: 1
-    plugins:
-      - docker#v5.13.0:
-          image: "python:3.13.2-bookworm"
-          # Pass pipeline env variables (incl. BUILDKITE_* run metadata) to the container
-          propagate-environment: true
-          # Make buildkite-agent available in the container for OIDC token requests
-          # See https://buildkite.com/docs/test-engine/test-collection/oidc
-          mount-buildkite-agent: true
-
   - label: ":swift: Swift: XCTest (test-collector-swift)"
     command: "cd swift-xctest && bin/test"
     soft_fail:
@@ -184,23 +167,6 @@ steps:
           propagate-environment: true
           environment:
             - BUILDKITE_ANALYTICS_TOKEN
-
-  - label: ":dotnet: NUnit"
-    parallelism: 2
-    command: "cd nunit && bin/test"
-    soft_fail:
-      - exit_status: 1
-    plugins:
-      - tests#v1.0.0:
-          test-runner: nunit
-          result-path: test-results/results.xml
-          test-file-pattern: "tests/**/*Tests.cs"
-          suite-slug: test-engine-client-examples
-          tags:
-            - "language.name=dotnet"
-            - "test.framework.name=nunit"
-      - mise#v1.1.1:
-          dir: nunit
 
   - label: ":golang: Go test"
     parallelism: 2

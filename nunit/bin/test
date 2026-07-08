@@ -1,8 +1,0 @@
-#!/usr/bin/env bash
-set -euo pipefail
-
-# Build the solution first so bktec can use --no-build
-dotnet build
-
-# Run Buildkite Test Engine Client configured by the tests Buildkite plugin
-bktec run

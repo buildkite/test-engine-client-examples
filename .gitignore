@@ -2,9 +2,6 @@ node_modules/
 tmp/
 bktec
 
-# nunit / .NET
-test-results/
-
 # pytest
 *.egg*
 __pycache__
