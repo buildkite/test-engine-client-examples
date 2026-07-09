@@ -1,0 +1,9 @@
+{
+  "name": "test-engine-client-examples",
+  "private": true,
+  "workspaces": [
+    "jest",
+    "playwright",
+    "cypress"
+  ]
+}
