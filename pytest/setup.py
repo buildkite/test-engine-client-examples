@@ -9,7 +9,7 @@ setup(
     "dev": [
       "pytest>=7.0.0",
       "pytest-xdist>=3.0.0",
-      "buildkite-test-collector>=1.1.0",
+      "buildkite-test-collector>=1.6.0",
     ],
   },
 )
