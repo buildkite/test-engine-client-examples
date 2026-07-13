@@ -20,6 +20,22 @@ steps:
       - mise#v1.1.4:
           dir: rspec
 
+  - label: ":rspec: RSpec (location prefix)"
+    parallelism: 2
+    commands:
+      - cd rspec-location-prefix
+      - bundle install
+      - bktec run
+    plugins:
+      - tests#v1.0.0:
+          test-runner: rspec
+          result-path: tmp/rspec.json
+          location-prefix: rspec-location-prefix
+          suite-slug: test-engine-client-examples
+          upload-results: true
+      - mise#v1.1.4:
+          dir: rspec-location-prefix
+
   - label: ":ruby: Minitest"
     parallelism: 2
     commands:
