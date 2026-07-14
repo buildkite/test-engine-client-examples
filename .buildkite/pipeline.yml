@@ -35,6 +35,8 @@ steps:
           upload-results: true
       - mise#v1.1.4:
           dir: rspec-location-prefix
+    env:
+      BUILDKITE_TEST_ENGINE_SELECTOR_SPLITTING: "true"
 
   - label: ":ruby: Minitest"
     parallelism: 2
