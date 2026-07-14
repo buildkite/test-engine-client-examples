@@ -40,6 +40,25 @@ steps:
     env:
       BUILDKITE_ANALYTICS_LOCATION_PREFIX: ruby-minitest
 
+  - label: ":cucumber: Cucumber"
+    parallelism: 2
+    commands:
+      - cd cucumber
+      - bundle install
+      - bktec run
+    soft_fail:
+      - exit_status: 1
+    plugins:
+      - tests#v1.0.0:
+          test-runner: cucumber
+          result-path: tmp/cucumber.json
+          suite-slug: test-engine-client-examples
+          upload-results: false
+      - mise#v1.1.4:
+          dir: cucumber
+    env:
+      BUILDKITE_ANALYTICS_LOCATION_PREFIX: cucumber
+
   - group: ":jest: Jest"
     steps:
       - label: ":jest: Jest"
