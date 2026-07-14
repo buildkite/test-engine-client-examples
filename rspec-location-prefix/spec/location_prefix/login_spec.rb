@@ -1,5 +1,3 @@
-require "spec_helper"
-
 RSpec.describe "Login" do
   it "logs in a user" do
     sleep(1)
