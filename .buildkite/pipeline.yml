@@ -149,9 +149,14 @@ steps:
       # Mocha has no JS collector, so we run it through bktec's custom runner
       # with the mocha-junit-reporter and let bktec upload the JUnit XML
       # (upload-results: true) instead of relying on a collector.
+      #
+      # The custom runner only expands {{testExamples}}, not {{resultPath}}, so
+      # the JUnit output path is hardcoded in reporter-config.json and must
+      # match result-path below. mocha-multi-reporters also keeps the spec
+      # reporter so the test run still prints to stdout.
       - tests#v1.0.0:
           test-runner: custom
-          test-cmd: "npx mocha {{testExamples}} --reporter mocha-junit-reporter --reporter-options mochaFile={{resultPath}}"
+          test-cmd: "npx mocha {{testExamples}} --reporter mocha-multi-reporters --reporter-options configFile=reporter-config.json"
           test-file-pattern: "src/**/*.test.js"
           result-path: tmp/mocha-results.xml
           suite-slug: test-engine-client-examples

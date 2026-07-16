@@ -6,9 +6,10 @@
   "license": "MIT",
   "devDependencies": {
     "mocha": "^11.7.0",
-    "mocha-junit-reporter": "^2.2.1"
+    "mocha-junit-reporter": "^2.2.1",
+    "mocha-multi-reporters": "^1.5.1"
   },
   "scripts": {
-    "test": "mocha \"src/**/*.test.js\""
+    "test": "mocha \"src/**/*.test.js\" --reporter mocha-multi-reporters --reporter-options configFile=reporter-config.json"
   }
 }
