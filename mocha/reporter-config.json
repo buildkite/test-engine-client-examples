@@ -1,6 +1,11 @@
 {
-  "reporterEnabled": "spec, mocha-junit-reporter",
+  "reporterEnabled": "spec, mocha-junit-reporter, buildkite-test-collector/mocha/reporter",
   "mochaJunitReporterReporterOptions": {
     "mochaFile": "tmp/mocha-results.xml"
+  },
+  "buildkiteTestCollectorMochaReporterReporterOptions": {
+    "tags": {
+      "test.framework.name": "mocha"
+    }
   }
 }

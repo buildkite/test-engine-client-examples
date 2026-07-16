@@ -146,21 +146,22 @@ steps:
     soft_fail:
       - exit_status: 1
     plugins:
-      # Mocha has no JS collector, so we run it through bktec's custom runner
-      # with the mocha-junit-reporter and let bktec upload the JUnit XML
-      # (upload-results: true) instead of relying on a collector.
-      #
-      # The custom runner only expands {{testExamples}}, not {{resultPath}}, so
-      # the JUnit output path is hardcoded in reporter-config.json and must
-      # match result-path below. mocha-multi-reporters also keeps the spec
-      # reporter so the test run still prints to stdout.
+      # bktec's custom runner handles test splitting. We run three reporters via
+      # mocha-multi-reporters (see reporter-config.json):
+      #   - spec: prints the run to stdout
+      #   - mocha-junit-reporter: writes JUnit XML to result-path for bktec's
+      #     internal use (e.g. muting), hardcoded to match result-path below
+      #   - buildkite-test-collector: uploads results to Test Engine
+      # The collector uploads (not bktec, so upload-results: false) because it
+      # relativises test file paths, while mocha-junit-reporter records them as
+      # absolute paths. The plugin exports BUILDKITE_ANALYTICS_TOKEN for upload.
       - tests#v1.0.0:
           test-runner: custom
           test-cmd: "npx mocha {{testExamples}} --reporter mocha-multi-reporters --reporter-options configFile=reporter-config.json"
           test-file-pattern: "src/**/*.test.js"
           result-path: tmp/mocha-results.xml
           suite-slug: test-engine-client-examples
-          upload-results: true
+          upload-results: false
       - mise#v1.1.4:
           dir: mocha
     env:

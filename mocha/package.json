@@ -1,10 +1,11 @@
 {
   "name": "buildkite-test-engine-client-mocha-example",
   "version": "1.0.0",
-  "description": "Mocha example for Buildkite Test Engine Client using a custom runner and the JUnit reporter",
+  "description": "Mocha example for Buildkite Test Engine Client using a custom runner and the Buildkite test collector",
   "main": "index.js",
   "license": "MIT",
   "devDependencies": {
+    "buildkite-test-collector": "^1.9.4",
     "mocha": "^11.7.0",
     "mocha-junit-reporter": "^2.2.1",
     "mocha-multi-reporters": "^1.5.1"
