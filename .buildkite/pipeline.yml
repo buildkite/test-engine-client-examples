@@ -137,6 +137,30 @@ steps:
     env:
       BUILDKITE_ANALYTICS_LOCATION_PREFIX: playwright
 
+  - label: ":mocha: Mocha"
+    parallelism: 2
+    commands:
+      - cd mocha
+      - npm install
+      - bktec run
+    soft_fail:
+      - exit_status: 1
+    plugins:
+      # Mocha has no JS collector, so we run it through bktec's custom runner
+      # with the mocha-junit-reporter and let bktec upload the JUnit XML
+      # (upload-results: true) instead of relying on a collector.
+      - tests#v1.0.0:
+          test-runner: custom
+          test-cmd: "npx mocha {{testExamples}} --reporter mocha-junit-reporter --reporter-options mochaFile={{resultPath}}"
+          test-file-pattern: "src/**/*.test.js"
+          result-path: tmp/mocha-results.xml
+          suite-slug: test-engine-client-examples
+          upload-results: true
+      - mise#v1.1.4:
+          dir: mocha
+    env:
+      BUILDKITE_ANALYTICS_LOCATION_PREFIX: mocha
+
   - group: ":pytest: Pytest"
     steps:
       - label: ":pytest: pytest"

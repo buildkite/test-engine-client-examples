@@ -1,0 +1,14 @@
+{
+  "name": "buildkite-test-engine-client-mocha-example",
+  "version": "1.0.0",
+  "description": "Mocha example for Buildkite Test Engine Client using a custom runner and the JUnit reporter",
+  "main": "index.js",
+  "license": "MIT",
+  "devDependencies": {
+    "mocha": "^11.7.0",
+    "mocha-junit-reporter": "^2.2.1"
+  },
+  "scripts": {
+    "test": "mocha \"src/**/*.test.js\""
+  }
+}
