@@ -19,6 +19,8 @@ steps:
           upload-results: false
       - mise#v1.1.4:
           dir: rspec
+    env:
+      BUILDKITE_TEST_ENGINE_SELECTOR_SPLITTING: "true"
 
   - label: ":ruby: Minitest"
     parallelism: 2
@@ -39,6 +41,7 @@ steps:
           dir: ruby-minitest
     env:
       BUILDKITE_ANALYTICS_LOCATION_PREFIX: ruby-minitest
+      BUILDKITE_TEST_ENGINE_SELECTOR_SPLITTING: "true"
 
   - label: ":cucumber: Cucumber"
     parallelism: 2
@@ -59,6 +62,7 @@ steps:
           dir: cucumber
     env:
       BUILDKITE_ANALYTICS_LOCATION_PREFIX: cucumber
+      BUILDKITE_TEST_ENGINE_SELECTOR_SPLITTING: "true"
 
   - group: ":jest: Jest"
     steps:
@@ -80,6 +84,7 @@ steps:
               dir: jest
         env:
           BUILDKITE_ANALYTICS_LOCATION_PREFIX: jest
+          BUILDKITE_TEST_ENGINE_SELECTOR_SPLITTING: "true"
       - label: ":jest: Jest (Retry Enabled)"
         parallelism: 2
         commands:
@@ -100,6 +105,7 @@ steps:
               dir: jest
         env:
           BUILDKITE_ANALYTICS_LOCATION_PREFIX: jest
+          BUILDKITE_TEST_ENGINE_SELECTOR_SPLITTING: "true"
 
   - label: ":cypress: Cypress"
     parallelism: 2
@@ -116,6 +122,8 @@ steps:
           upload-results: false
       - mise#v1.1.4:
           dir: cypress
+    env:
+      BUILDKITE_TEST_ENGINE_SELECTOR_SPLITTING: "true"
 
   - label: ":playwright: Playwright"
     parallelism: 2
@@ -136,6 +144,7 @@ steps:
           dir: playwright
     env:
       BUILDKITE_ANALYTICS_LOCATION_PREFIX: playwright
+      BUILDKITE_TEST_ENGINE_SELECTOR_SPLITTING: "true"
 
   - group: ":pytest: Pytest"
     steps:
@@ -156,6 +165,8 @@ steps:
               upload-results: false
           - mise#v1.1.4:
               dir: pytest
+        env:
+          BUILDKITE_TEST_ENGINE_SELECTOR_SPLITTING: "true"
 
       - label: ":pytest: pytest (with xdist)"
         parallelism: 2
@@ -170,6 +181,7 @@ steps:
         env:
           PYTEST_XDIST_ENABLED: "true"
           PYTEST_ADDOPTS: "-n 3 -o log_cli=true -o log_cli_level=DEBUG"
+          BUILDKITE_TEST_ENGINE_SELECTOR_SPLITTING: "true"
         plugins:
           - tests#v1.0.0:
               test-runner: pytest
@@ -196,6 +208,8 @@ steps:
               upload-results: false
           - mise#v1.1.4:
               dir: pytest-tag-filters
+        env:
+          BUILDKITE_TEST_ENGINE_SELECTOR_SPLITTING: "true"
 
   - label: ":swift: Swift: XCTest (test-collector-swift)"
     commands:
@@ -259,3 +273,5 @@ steps:
             - "test.framework.name=go-test"
       - mise#v1.1.4:
           dir: go
+    env:
+      BUILDKITE_TEST_ENGINE_SELECTOR_SPLITTING: "true"
