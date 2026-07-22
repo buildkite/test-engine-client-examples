@@ -146,6 +146,36 @@ steps:
       BUILDKITE_ANALYTICS_LOCATION_PREFIX: playwright
       BUILDKITE_TEST_ENGINE_SELECTOR_SPLITTING: "true"
 
+  - label: ":mocha: Mocha"
+    parallelism: 2
+    commands:
+      - cd mocha
+      - npm install
+      - bktec run
+    soft_fail:
+      - exit_status: 1
+    plugins:
+      # bktec's custom runner handles test splitting. We run three reporters via
+      # mocha-multi-reporters (see reporter-config.json):
+      #   - spec: prints the run to stdout
+      #   - mocha-junit-reporter: writes JUnit XML to result-path for bktec's
+      #     internal use (e.g. muting), hardcoded to match result-path below
+      #   - buildkite-test-collector: uploads results to Test Engine
+      # The collector uploads (not bktec, so upload-results: false) because it
+      # relativises test file paths, while mocha-junit-reporter records them as
+      # absolute paths. The plugin exports BUILDKITE_ANALYTICS_TOKEN for upload.
+      - tests#v1.0.0:
+          test-runner: custom
+          test-cmd: "npx mocha {{testExamples}} --reporter mocha-multi-reporters --reporter-options configFile=reporter-config.json"
+          test-file-pattern: "src/**/*.test.js"
+          result-path: tmp/mocha-results.xml
+          suite-slug: test-engine-client-examples
+          upload-results: false
+      - mise#v1.1.4:
+          dir: mocha
+    env:
+      BUILDKITE_ANALYTICS_LOCATION_PREFIX: mocha
+
   - group: ":pytest: Pytest"
     steps:
       - label: ":pytest: pytest"
