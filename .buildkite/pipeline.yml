@@ -211,9 +211,11 @@ steps:
     env:
       BUILDKITE_ANALYTICS_TAGS: '{"test.framework.name":"xctest","language.name":"swift","custom.tag.from":"upload"}'
     plugins:
-      - cluster-secrets#v1.0.0:
-          variables:
-            BUILDKITE_ANALYTICS_TOKEN: test_engine_client_examples_suite_token
+      - tests#v1.0.0:
+          test-runner: custom
+          suite-slug: test-engine-client-examples
+          upload-results: false
+          install-client: false
       - docker#v5.11.0:
           image: "swift:6.0-noble"
           propagate-environment: true
@@ -232,9 +234,11 @@ steps:
     soft_fail:
       - exit_status: 1
     plugins:
-      - cluster-secrets#v1.0.0:
-          variables:
-            BUILDKITE_ANALYTICS_TOKEN: test_engine_client_examples_suite_token
+      - tests#v1.0.0:
+          test-runner: custom
+          suite-slug: test-engine-client-examples
+          upload-results: false
+          install-client: false
       - docker#v5.11.0:
           image: "ghcr.io/cirruslabs/android-sdk:34"
           propagate-environment: true
