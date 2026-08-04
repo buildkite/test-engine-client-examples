@@ -256,7 +256,7 @@ steps:
     plugins:
       - tests#v1.0.0:
           test-runner: gotest
-          result-path: tmp/gotest-result.xml
+          result-path: tmp/gotest-result.jsonl
           suite-slug: test-engine-client-examples
           tags:
             - "language.name=go"
