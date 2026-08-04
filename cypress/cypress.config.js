@@ -6,6 +6,7 @@ module.exports = defineConfig({
   },
   screenshotOnRunFailure: false,
   video: false,
+  allowCypressEnv: false,
   // Send results to Test Engine
   reporter: require.resolve("buildkite-test-collector/cypress/reporter"),
   reporterOptions: {
