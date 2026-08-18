@@ -4,9 +4,18 @@ source "https://rubygems.org"
 
 gem "rspec", "~> 3.13"
 
-gem "buildkite-test_collector"
+# OpenTelemetry support is not released yet, so pin the collector commit used by
+# buildkite/buildkite#32473.
+gem "buildkite-test_collector",
+  github: "buildkite/test-collector-ruby",
+  ref: "8513f7cef39f07b4387172b6b84f4a99aa06d62b"
 
-# Used by the example specs to produce HTTP, SQL, and Redis spans.
+# This suite owns its OpenTelemetry SDK and explicitly selected instrumentations.
+gem "opentelemetry-instrumentation-active_record", "~> 0.13"
+gem "opentelemetry-instrumentation-net_http", "~> 0.29"
+gem "opentelemetry-sdk", "~> 1.13"
+
+# Used by the example specs to perform HTTP, SQL, and Redis operations.
 gem "activerecord", "~> 8.0"
 gem "redis", "~> 5.0"
 gem "sqlite3", "~> 2.0"

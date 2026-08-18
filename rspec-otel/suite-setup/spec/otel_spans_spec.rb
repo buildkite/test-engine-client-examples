@@ -39,7 +39,7 @@ RSpec.describe "OpenTelemetry spans" do
     ActiveRecord::Base.connection_pool.disconnect!
   end
 
-  it "captures a Redis command" do
+  it "makes an uninstrumented Redis command" do
     server = TCPServer.new("127.0.0.1", 0)
     server_thread = Thread.new do
       client = server.accept
