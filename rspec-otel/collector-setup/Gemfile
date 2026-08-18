@@ -1,0 +1,12 @@
+# frozen_string_literal: true
+
+source "https://rubygems.org"
+
+gem "rspec", "~> 3.13"
+
+gem "buildkite-test_collector"
+
+# Used by the example specs to produce HTTP, SQL, and Redis spans.
+gem "activerecord", "~> 8.0"
+gem "redis", "~> 5.0"
+gem "sqlite3", "~> 2.0"
