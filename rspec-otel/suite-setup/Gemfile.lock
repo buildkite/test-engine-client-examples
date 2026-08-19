@@ -1,7 +1,7 @@
 GIT
   remote: https://github.com/buildkite/test-collector-ruby.git
-  revision: 68c2d04b4ab7c170daa10b3b99dafd256f29caba
-  ref: 68c2d04b4ab7c170daa10b3b99dafd256f29caba
+  revision: 54b76a41c4e748b3e0505cd5eb805b2e38176890
+  ref: 54b76a41c4e748b3e0505cd5eb805b2e38176890
   specs:
     buildkite-test_collector (2.14.0)
       concurrent-ruby

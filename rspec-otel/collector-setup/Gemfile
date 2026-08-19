@@ -8,7 +8,7 @@ gem "rspec", "~> 3.13"
 # buildkite/buildkite#32473.
 gem "buildkite-test_collector",
   github: "buildkite/test-collector-ruby",
-  ref: "68c2d04b4ab7c170daa10b3b99dafd256f29caba"
+  ref: "54b76a41c4e748b3e0505cd5eb805b2e38176890"
 
 # Used by the example specs to produce HTTP, SQL, and Redis spans.
 gem "activerecord", "~> 8.0"
