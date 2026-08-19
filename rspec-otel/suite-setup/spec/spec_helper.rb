@@ -1,8 +1,5 @@
 # frozen_string_literal: true
 
-require "active_record"
-require "net/http"
-require "redis"
 require "rspec/version"
 
 require "opentelemetry/sdk"

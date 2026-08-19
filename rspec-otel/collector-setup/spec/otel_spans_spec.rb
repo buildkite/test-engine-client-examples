@@ -1,7 +1,10 @@
 # frozen_string_literal: true
-
 require "spec_helper"
+
 require "socket"
+require "active_record"
+require "net/http"
+require "redis"
 
 RSpec.describe "OpenTelemetry spans" do
   it "captures an HTTP request" do
