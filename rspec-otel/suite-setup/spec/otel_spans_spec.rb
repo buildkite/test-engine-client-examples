@@ -1,13 +1,10 @@
 # frozen_string_literal: true
+require "spec_helper"
+
 require "socket"
 require "active_record"
 require "net/http"
 require "redis"
-
-# We configure OTel SDK from spec_helper.rb,
-# so we must require it after all the instrumented libraries are loaded.
-# Otherwise, the instrumentations will not be installed and no spans will be captured.
-require "spec_helper"
 
 RSpec.describe "OpenTelemetry spans" do
   it "captures an HTTP request" do
