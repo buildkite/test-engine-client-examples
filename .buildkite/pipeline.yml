@@ -11,6 +11,8 @@ steps:
           - cd rspec
           - bundle install
           - bktec run
+        env:
+          BUILDKITE_TEST_ENGINE_OTLP_RELAY: "true"
         soft_fail:
           - exit_status: 1
         plugins:
