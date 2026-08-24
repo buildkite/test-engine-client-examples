@@ -6,4 +6,6 @@ source "https://rubygems.org"
 
 gem "rspec", "~> 3.13"
 
-gem "buildkite-test_collector"
+gem "buildkite-test_collector",
+    github: "buildkite/test-collector-ruby",
+    branch: "main"
