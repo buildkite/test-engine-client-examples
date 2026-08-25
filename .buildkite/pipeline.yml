@@ -3,64 +3,66 @@ cache:
     - "mise"
 
 steps:
-  - label: ":rspec: RSpec"
-    parallelism: 2
-    commands:
-      - cd rspec
-      - bundle install
-      - bktec run
-    soft_fail:
-      - exit_status: 1
-    plugins:
-      - tests#v1.0.0:
-          test-runner: rspec
-          result-path: tmp/rspec.json
-          suite-slug: test-engine-client-examples
-          upload-results: false
-      - mise#v1.1.4:
-          dir: rspec
+  - group: ":ruby: Ruby"
+    steps:
+      - label: ":rspec: RSpec"
+        parallelism: 2
+        commands:
+          - cd rspec
+          - bundle install
+          - bktec run
+        soft_fail:
+          - exit_status: 1
+        plugins:
+          - tests#v1.0.0:
+              test-runner: rspec
+              result-path: tmp/rspec.json
+              suite-slug: test-engine-client-examples
+              upload-results: false
+          - mise#v1.1.4:
+              dir: rspec
 
-  - label: ":ruby: Minitest"
-    parallelism: 2
-    commands:
-      - cd ruby-minitest
-      - bundle install
-      - bktec run
-    soft_fail:
-      - exit_status: 1
-    plugins:
-      - tests#v1.0.0:
-          test-runner: custom
-          test-cmd: "bundle exec rake test TEST_FILES='{{testExamples}}'"
-          test-file-pattern: "**/*_test.rb"
-          suite-slug: test-engine-client-examples
-          upload-results: false
-      - mise#v1.1.4:
-          dir: ruby-minitest
-    env:
-      BUILDKITE_ANALYTICS_LOCATION_PREFIX: ruby-minitest
+      - label: ":ruby: Minitest"
+        parallelism: 2
+        commands:
+          - cd ruby-minitest
+          - bundle install
+          - bktec run
+        soft_fail:
+          - exit_status: 1
+        plugins:
+          - tests#v1.0.0:
+              test-runner: custom
+              test-cmd: "bundle exec rake test TEST_FILES='{{testExamples}}'"
+              test-file-pattern: "**/*_test.rb"
+              suite-slug: test-engine-client-examples
+              upload-results: false
+          - mise#v1.1.4:
+              dir: ruby-minitest
+        env:
+          BUILDKITE_ANALYTICS_LOCATION_PREFIX: ruby-minitest
 
-  - label: ":cucumber: Cucumber"
-    parallelism: 2
-    commands:
-      - cd cucumber
-      - bundle install
-      - mkdir -p tmp
-      - bktec run
-    soft_fail:
-      - exit_status: 1
-    plugins:
-      - tests#v1.0.0:
-          test-runner: cucumber
-          result-path: tmp/cucumber.json
-          suite-slug: test-engine-client-examples
-          upload-results: false
-      - mise#v1.1.4:
-          dir: cucumber
-    env:
-      BUILDKITE_ANALYTICS_LOCATION_PREFIX: cucumber
+      - label: ":cucumber: Cucumber"
+        parallelism: 2
+        commands:
+          - cd cucumber
+          - bundle install
+          - mkdir -p tmp
+          - bktec run
+        soft_fail:
+          - exit_status: 1
+        plugins:
+          - tests#v1.0.0:
+              test-runner: cucumber
+              result-path: tmp/cucumber.json
+              suite-slug: test-engine-client-examples
+              upload-results: false
+          - mise#v1.1.4:
+              dir: cucumber
+        env:
+          BUILDKITE_ANALYTICS_LOCATION_PREFIX: cucumber
 
-  - group: ":jest: Jest"
+  - group: ":javascript: JavaScript"
     steps:
       - label: ":jest: Jest"
         parallelism: 2
@@ -101,43 +103,43 @@ steps:
         env:
           BUILDKITE_ANALYTICS_LOCATION_PREFIX: jest
 
-  - label: ":cypress: Cypress"
-    parallelism: 2
-    commands:
-      - cd cypress
-      - bin/setup
-      - bktec run
-    soft_fail:
-      - exit_status: 1
-    plugins:
-      - tests#v1.0.0:
-          test-runner: cypress
-          suite-slug: test-engine-client-examples
-          upload-results: false
-      - mise#v1.1.4:
-          dir: cypress
+      - label: ":cypress: Cypress"
+        parallelism: 2
+        commands:
+          - cd cypress
+          - bin/setup
+          - bktec run
+        soft_fail:
+          - exit_status: 1
+        plugins:
+          - tests#v1.0.0:
+              test-runner: cypress
+              suite-slug: test-engine-client-examples
+              upload-results: false
+          - mise#v1.1.4:
+              dir: cypress
 
-  - label: ":playwright: Playwright"
-    parallelism: 2
-    commands:
-      - cd playwright
-      - npm install
-      - npx playwright install --with-deps chromium
-      - bktec run
-    soft_fail:
-      - exit_status: 1
-    plugins:
-      - tests#v1.0.0:
-          test-runner: playwright
-          result-path: tmp/playwright-results.json
-          suite-slug: test-engine-client-examples
-          upload-results: false
-      - mise#v1.1.4:
-          dir: playwright
-    env:
-      BUILDKITE_ANALYTICS_LOCATION_PREFIX: playwright
+      - label: ":playwright: Playwright"
+        parallelism: 2
+        commands:
+          - cd playwright
+          - npm install
+          - npx playwright install --with-deps chromium
+          - bktec run
+        soft_fail:
+          - exit_status: 1
+        plugins:
+          - tests#v1.0.0:
+              test-runner: playwright
+              result-path: tmp/playwright-results.json
+              suite-slug: test-engine-client-examples
+              upload-results: false
+          - mise#v1.1.4:
+              dir: playwright
+        env:
+          BUILDKITE_ANALYTICS_LOCATION_PREFIX: playwright
 
-  - group: ":pytest: Pytest"
+  - group: ":python: Python"
     steps:
       - label: ":pytest: pytest"
         parallelism: 2
@@ -197,84 +199,90 @@ steps:
           - mise#v1.1.4:
               dir: pytest-tag-filters
 
-  - label: ":swift: Swift: XCTest (test-collector-swift)"
-    commands:
-      - cd swift-xctest
-      - swift package resolve
-      # Run XCTest tests (which includes the BuildkiteTestCollector).
-      # The collector auto-loads via XCTest observation and uploads results
-      # when BUILDKITE_ANALYTICS_TOKEN is set.
-      # Use --disable-swift-testing to only run XCTest (not Swift Testing).
-      - swift test --disable-swift-testing
-    soft_fail:
-      - exit_status: 1
-    env:
-      BUILDKITE_ANALYTICS_TAGS: '{"test.framework.name":"xctest","language.name":"swift","custom.tag.from":"upload"}'
-    plugins:
-      - tests#v1.0.0:
-          test-runner: custom
-          suite-slug: test-engine-client-examples
-          upload-results: false
-          install-client: false
-      - docker#v5.11.0:
-          image: "swift:6.0-noble"
-          propagate-environment: true
-          environment:
-            - BUILDKITE_ANALYTICS_TOKEN
-            - BUILDKITE_ANALYTICS_TAGS
-            - BUILDKITE_ANALYTICS_DEBUG_ENABLED
+  - group: ":apple: iOS / macOS"
+    steps:
+      - label: ":swift: Swift: XCTest (test-collector-swift)"
+        commands:
+          - cd swift-xctest
+          - swift package resolve
+          # Run XCTest tests (which includes the BuildkiteTestCollector).
+          # The collector auto-loads via XCTest observation and uploads results
+          # when BUILDKITE_ANALYTICS_TOKEN is set.
+          # Use --disable-swift-testing to only run XCTest (not Swift Testing).
+          - swift test --disable-swift-testing
+        soft_fail:
+          - exit_status: 1
+        env:
+          BUILDKITE_ANALYTICS_TAGS: '{"test.framework.name":"xctest","language.name":"swift","custom.tag.from":"upload"}'
+        plugins:
+          - tests#v1.0.0:
+              test-runner: custom
+              suite-slug: test-engine-client-examples
+              upload-results: false
+              install-client: false
+          - docker#v5.11.0:
+              image: "swift:6.0-noble"
+              propagate-environment: true
+              environment:
+                - BUILDKITE_ANALYTICS_TOKEN
+                - BUILDKITE_ANALYTICS_TAGS
+                - BUILDKITE_ANALYTICS_DEBUG_ENABLED
 
-  - label: ":swift: Swift: XCUITest (test-collector-swift)"
-    command: swift-xcuitest/bin/test
-    agents:
-      queue: macos
-    artifact_paths:
-      - swift-xcuitest/artifacts/SwiftXCUITest.xcresult/**/*
-    env:
-      BUILDKITE_ANALYTICS_TAGS: '{"test.framework.name":"xcuitest","language.name":"swift","custom.tag.from":"upload"}'
-    plugins:
-      - tests#v1.0.0:
-          test-runner: custom
-          suite-slug: test-engine-client-examples
-          upload-results: false
-          install-client: false
+      - label: ":swift: Swift: XCUITest (test-collector-swift)"
+        command: swift-xcuitest/bin/test
+        agents:
+          queue: macos
+        artifact_paths:
+          - swift-xcuitest/artifacts/SwiftXCUITest.xcresult/**/*
+        env:
+          BUILDKITE_ANALYTICS_TAGS: '{"test.framework.name":"xcuitest","language.name":"swift","custom.tag.from":"upload"}'
+        plugins:
+          - tests#v1.0.0:
+              test-runner: custom
+              suite-slug: test-engine-client-examples
+              upload-results: false
+              install-client: false
 
-  - label: ":android: Android"
-    commands:
-      - cd android
-      # Run Android unit tests
-      # The test-collector-android Gradle plugin uploads results to Test Engine automatically.
-      # No bktec client is needed for this example.
-      - ./gradlew --no-daemon :app:testDebugUnitTest
-    soft_fail:
-      - exit_status: 1
-    plugins:
-      - tests#v1.0.0:
-          test-runner: custom
-          suite-slug: test-engine-client-examples
-          upload-results: false
-          install-client: false
-      - docker#v5.11.0:
-          image: "ghcr.io/cirruslabs/android-sdk:34"
-          propagate-environment: true
-          environment:
-            - BUILDKITE_ANALYTICS_TOKEN
+  - group: ":android: Android"
+    steps:
+      - label: ":android: Android"
+        commands:
+          - cd android
+          # Run Android unit tests
+          # The test-collector-android Gradle plugin uploads results to Test Engine automatically.
+          # No bktec client is needed for this example.
+          - ./gradlew --no-daemon :app:testDebugUnitTest
+        soft_fail:
+          - exit_status: 1
+        plugins:
+          - tests#v1.0.0:
+              test-runner: custom
+              suite-slug: test-engine-client-examples
+              upload-results: false
+              install-client: false
+          - docker#v5.11.0:
+              image: "ghcr.io/cirruslabs/android-sdk:34"
+              propagate-environment: true
+              environment:
+                - BUILDKITE_ANALYTICS_TOKEN
 
-  - label: ":golang: Go test"
-    parallelism: 2
-    commands:
-      - cd go
-      - go install gotest.tools/gotestsum@v1.12.0
-      - bktec run
-    soft_fail:
-      - exit_status: 1
-    plugins:
-      - tests#v1.0.0:
-          test-runner: gotest
-          result-path: tmp/gotest-result.jsonl
-          suite-slug: test-engine-client-examples
-          tags:
-            - "language.name=go"
-            - "test.framework.name=go-test"
-      - mise#v1.1.4:
-          dir: go
+  - group: ":golang: Go"
+    steps:
+      - label: ":golang: Go test"
+        parallelism: 2
+        commands:
+          - cd go
+          - go install gotest.tools/gotestsum@v1.12.0
+          - bktec run
+        soft_fail:
+          - exit_status: 1
+        plugins:
+          - tests#v1.0.0:
+              test-runner: gotest
+              result-path: tmp/gotest-result.jsonl
+              suite-slug: test-engine-client-examples
+              tags:
+                - "language.name=go"
+                - "test.framework.name=go-test"
+          - mise#v1.1.4:
+              dir: go
