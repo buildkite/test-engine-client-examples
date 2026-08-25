@@ -7,12 +7,24 @@ test_log="${2:?usage: verify-results RESULT_BUNDLE XCODEBUILD_LOG}"
 expected_result_count=5
 expected_completed_count=4
 
-summary="$(xcrun xcresulttool get test-results summary --path "$result_bundle")"
-result_count="$(plutil -extract totalTestCount raw -o - - <<< "$summary")"
-passed_count="$(plutil -extract passedTests raw -o - - <<< "$summary")"
-failed_count="$(plutil -extract failedTests raw -o - - <<< "$summary")"
-failure_test="$(plutil -extract testFailures.0.testIdentifierString raw -o - - <<< "$summary")"
-failure_text="$(plutil -extract testFailures.0.failureText raw -o - - <<< "$summary")"
+if summary="$(xcrun xcresulttool get test-results summary --path "$result_bundle" 2>/dev/null)"; then
+  result_count="$(plutil -extract totalTestCount raw -o - - <<< "$summary")"
+  passed_count="$(plutil -extract passedTests raw -o - - <<< "$summary")"
+  failed_count="$(plutil -extract failedTests raw -o - - <<< "$summary")"
+  failure_test="$(plutil -extract testFailures.0.testIdentifierString raw -o - - <<< "$summary")"
+  failure_text="$(plutil -extract testFailures.0.failureText raw -o - - <<< "$summary")"
+else
+  if ! summary="$(xcrun xcresulttool get object --legacy --path "$result_bundle" --format json 2>/dev/null)"; then
+    summary="$(xcrun xcresulttool get --path "$result_bundle" --format json)"
+  fi
+
+  action_result="actions._values.0.actionResult"
+  result_count="$(plutil -extract "$action_result.metrics.testsCount._value" raw -o - - <<< "$summary")"
+  failed_count="$(plutil -extract "$action_result.metrics.testsFailedCount._value" raw -o - - <<< "$summary")"
+  passed_count="$((result_count - failed_count))"
+  failure_test="$(plutil -extract "$action_result.issues.testFailureSummaries._values.0.testCaseName._value" raw -o - - <<< "$summary")"
+  failure_text="$(plutil -extract "$action_result.issues.testFailureSummaries._values.0.message._value" raw -o - - <<< "$summary")"
+fi
 exported_count="$(awk '
   {
     line = $0
@@ -40,6 +52,7 @@ if [[ "$result_count" -ne "$expected_result_count" || "$passed_count" -ne 4 || "
 fi
 
 if [[ "$failure_test" != "ExampleAppUITests/test03RunnerCrashesOnce()" \
+  && "$failure_test" != "ExampleAppUITests.test03RunnerCrashesOnce()" \
   || "$failure_text" != "Test crashed with signal kill." ]]
 then
   echo "Expected test03RunnerCrashesOnce to be the only failed test" >&2
