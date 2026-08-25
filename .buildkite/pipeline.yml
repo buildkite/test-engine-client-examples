@@ -249,7 +249,7 @@ steps:
               test-file-pattern: swift-xcuitest/ExampleAppUITests/**/*.swift
               suite-slug: test-engine-client-examples
               upload-results: false
-              client-version: v3.1.0-rc.1
+              client-version: 3.1.0-rc.1
 
   - group: ":android: Android"
     steps:
