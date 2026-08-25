@@ -1,16 +1,26 @@
 # Swift XCUITest example
 
-This example reproduces the result loss that occurs when XCTest replaces an
+This example verifies OpenTelemetry execution delivery when XCTest replaces an
 XCUITest runner. Two tests finish before a third test terminates the runner.
 Xcode continues the remaining tests in a replacement process and keeps all
-five tests in the `.xcresult`, but `test-collector-swift` loses the completed
-executions buffered by the terminated process. The final test also fails with
-an execution tag, backtrace, and source location to exercise the richer native
-collector metadata.
+five tests in the `.xcresult`: four passes and the deliberately killed active
+test. Each of the four tests that receives an XCTest completion callback is
+handed to the bktec OTLP relay before its runner can exit.
 
-The verification script compares the `.xcresult` test count with the unique
-test names logged when the collector uploads. It intentionally fails while
-the counts differ. The Buildkite step is therefore soft-failed.
+The verification script asserts the expected runner crash and replacement,
+then checks that all four completed tests were accepted over OTLP. The killed
+test cannot be emitted by an in-process collector because `SIGKILL` prevents
+XCTest's completion callback; recovering that execution would require durable
+start-state reconciliation outside the runner.
+
+This branch uses the Swift collector from the `swift-otel-executions` branch of
+[`buildkite/bktest`](https://github.com/buildkite/bktest). Check it out before
+running locally:
+
+```sh
+git clone --branch swift-otel-executions --depth 1 \
+  https://github.com/buildkite/bktest ../.bktest
+```
 
 Run it with:
 

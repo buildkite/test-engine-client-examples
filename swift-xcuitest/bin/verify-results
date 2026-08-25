@@ -4,15 +4,19 @@ set -euo pipefail
 
 result_bundle="${1:?usage: verify-results RESULT_BUNDLE XCODEBUILD_LOG}"
 test_log="${2:?usage: verify-results RESULT_BUNDLE XCODEBUILD_LOG}"
-expected_count=5
+expected_result_count=5
+expected_completed_count=4
 
-result_count="$({
-  xcrun xcresulttool get test-results summary --path "$result_bundle"
-} | plutil -extract totalTestCount raw -o - -)"
-uploaded_count="$(awk '
+summary="$(xcrun xcresulttool get test-results summary --path "$result_bundle")"
+result_count="$(plutil -extract totalTestCount raw -o - - <<< "$summary")"
+passed_count="$(plutil -extract passedTests raw -o - - <<< "$summary")"
+failed_count="$(plutil -extract failedTests raw -o - - <<< "$summary")"
+failure_test="$(plutil -extract testFailures.0.testIdentifierString raw -o - - <<< "$summary")"
+failure_text="$(plutil -extract testFailures.0.failureText raw -o - - <<< "$summary")"
+exported_count="$(awk '
   {
     line = $0
-    while (match(line, /name: Optional\("test[^"]*"\)/)) {
+    while (match(line, /Exported OpenTelemetry test execution: test[^[:space:]]*/)) {
       names[substr(line, RSTART, RLENGTH)] = 1
       line = substr(line, RSTART + RLENGTH)
     }
@@ -23,29 +27,44 @@ uploaded_count="$(awk '
   }
 ' "$test_log")"
 
-echo "Expected unique tests: $expected_count"
-echo ".xcresult unique tests: $result_count"
-echo "Collector unique tests recorded for upload: $uploaded_count"
+echo "Expected .xcresult tests: $expected_result_count"
+echo ".xcresult tests: $result_count ($passed_count passed, $failed_count runner crash)"
+echo "Expected completed executions: $expected_completed_count"
+echo "Collector unique executions accepted over OTLP: $exported_count"
 
 status=0
 
-if [[ "$result_count" -ne "$expected_count" ]]; then
-  echo "Expected .xcresult to retain all $expected_count tests" >&2
+if [[ "$result_count" -ne "$expected_result_count" || "$passed_count" -ne 4 || "$failed_count" -ne 1 ]]; then
+  echo "Expected .xcresult to retain four passes and the deliberate runner crash" >&2
   status=1
 fi
 
-if grep -Fq 'location: Optional("ExampleAppUITests.swift:' "$test_log" \
-  && grep -Fq 'failureExpanded: [Core.Trace.FailureExpanded' "$test_log" \
-  && grep -Fq 'tags: Optional(["runner.replacement": "true"])' "$test_log"
+if [[ "$failure_test" != "ExampleAppUITests/test03RunnerCrashesOnce()" \
+  || "$failure_text" != "Test crashed with signal kill." ]]
 then
-  echo "Collector retained the failure location, expanded backtrace, and execution tag"
-else
-  echo "Collector did not log all expected native failure metadata" >&2
+  echo "Expected test03RunnerCrashesOnce to be the only failed test" >&2
   status=1
 fi
 
-if [[ "$uploaded_count" -ne "$result_count" ]]; then
-  echo "Collector lost executions when the XCTest runner was replaced" >&2
+if ! grep -Fq "Restarting after unexpected exit, crash, or test timeout" "$test_log"; then
+  echo "XCTest did not replace the terminated runner" >&2
+  status=1
+fi
+
+for name in \
+  test01AppLaunches \
+  test02ExecutionTag \
+  test04RunsInReplacementRunner \
+  test05ExecutionTagAfterRestart
+do
+  if ! grep -Fq "Exported OpenTelemetry test execution: $name" "$test_log"; then
+    echo "Collector did not export completed execution $name" >&2
+    status=1
+  fi
+done
+
+if [[ "$exported_count" -ne "$expected_completed_count" ]]; then
+  echo "Collector did not hand every completed execution to the OTLP endpoint" >&2
   status=1
 fi
 

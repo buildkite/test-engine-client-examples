@@ -41,16 +41,12 @@ final class ExampleAppUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["runner-crash-recorded"].waitForExistence(timeout: 5))
     }
 
-    func test05FailureIncludesDiagnostics() {
+    func test05ExecutionTagAfterRestart() {
         tagExecution("runner.replacement", "true")
 
         let app = launchApp()
         XCTAssertTrue(app.staticTexts["status"].waitForExistence(timeout: 5))
-        XCTAssertEqual(
-            app.staticTexts["status"].label,
-            "Intentional failure",
-            "This failure demonstrates native XCTest diagnostics"
-        )
+        XCTAssertEqual(app.staticTexts["status"].label, "Swift XCUITest example")
     }
 
     private func launchApp() -> XCUIApplication {

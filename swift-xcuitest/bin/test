@@ -8,7 +8,7 @@ result_bundle="$artifacts_dir/SwiftXCUITest.xcresult"
 test_log="$artifacts_dir/xcodebuild.log"
 
 for name in \
-  BUILDKITE_ANALYTICS_BASE_URL \
+  BUILDKITE_ANALYTICS_KEY \
   BUILDKITE_ANALYTICS_BRANCH \
   BUILDKITE_ANALYTICS_DEBUG_ENABLED \
   BUILDKITE_ANALYTICS_ENABLED \
@@ -18,6 +18,7 @@ for name in \
   BUILDKITE_ANALYTICS_JOB_ID \
   BUILDKITE_ANALYTICS_MESSAGE \
   BUILDKITE_ANALYTICS_NUMBER \
+  BUILDKITE_ANALYTICS_OTLP_ENDPOINT \
   BUILDKITE_ANALYTICS_SHA \
   BUILDKITE_ANALYTICS_TAGS \
   BUILDKITE_ANALYTICS_TOKEN \
@@ -28,7 +29,18 @@ for name in \
   BUILDKITE_BUILD_URL \
   BUILDKITE_COMMIT \
   BUILDKITE_JOB_ID \
-  BUILDKITE_MESSAGE
+  BUILDKITE_MESSAGE \
+  BUILDKITE_ORGANIZATION_SLUG \
+  BUILDKITE_STEP_ID \
+  BUILDKITE_TAG \
+  BUILDKITE_TEST_ENGINE_SUITE_SLUG \
+  BUILDKITE_TESTS_OTLP_TOKEN \
+  OTEL_EXPORTER_OTLP_TRACES_ENDPOINT \
+  OTEL_EXPORTER_OTLP_TRACES_HEADERS \
+  OTEL_EXPORTER_OTLP_TRACES_PROTOCOL \
+  OTEL_RESOURCE_ATTRIBUTES \
+  TRACEPARENT \
+  TRACESTATE
 do
   if [[ -n "${!name:-}" ]]; then
     export "TEST_RUNNER_${name}=${!name}"
@@ -79,7 +91,7 @@ verification_status=0
 "$root/bin/verify-results" "$result_bundle" "$test_log" || verification_status="$?"
 
 if [[ "$xcodebuild_status" -ne 0 ]]; then
-  exit "$xcodebuild_status"
+  echo "xcodebuild exited $xcodebuild_status after the expected runner termination"
 fi
 
 exit "$verification_status"
