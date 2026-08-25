@@ -6,6 +6,7 @@ require "rspec/version"
 Buildkite::TestCollector.configure(
   hook: :rspec,
   otel_only: true,
+  token: ENV["BUILDKITE_TESTS_OTLP_TOKEN"],
   tags: {
     "test.framework.name" => "rspec",
     "test.framework.version" => RSpec::Version::STRING,
