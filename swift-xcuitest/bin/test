@@ -1,0 +1,67 @@
+#!/bin/bash
+
+set -euo pipefail
+
+root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+artifacts_dir="${XCUITEST_ARTIFACTS_DIR:-$root/artifacts}"
+result_bundle="$artifacts_dir/SwiftXCUITest.xcresult"
+
+for name in \
+  BUILDKITE_ANALYTICS_BASE_URL \
+  BUILDKITE_ANALYTICS_BRANCH \
+  BUILDKITE_ANALYTICS_DEBUG_ENABLED \
+  BUILDKITE_ANALYTICS_ENABLED \
+  BUILDKITE_ANALYTICS_ENVIRONMENT \
+  BUILDKITE_ANALYTICS_EXECUTION_NAME_PREFIX \
+  BUILDKITE_ANALYTICS_EXECUTION_NAME_SUFFIX \
+  BUILDKITE_ANALYTICS_JOB_ID \
+  BUILDKITE_ANALYTICS_MESSAGE \
+  BUILDKITE_ANALYTICS_NUMBER \
+  BUILDKITE_ANALYTICS_SHA \
+  BUILDKITE_ANALYTICS_TAGS \
+  BUILDKITE_ANALYTICS_TOKEN \
+  BUILDKITE_ANALYTICS_URL \
+  BUILDKITE_BRANCH \
+  BUILDKITE_BUILD_ID \
+  BUILDKITE_BUILD_NUMBER \
+  BUILDKITE_BUILD_URL \
+  BUILDKITE_COMMIT \
+  BUILDKITE_JOB_ID \
+  BUILDKITE_MESSAGE
+do
+  if [[ -n "${!name:-}" ]]; then
+    export "TEST_RUNNER_${name}=${!name}"
+  fi
+done
+
+destination="${XCUITEST_DESTINATION:-}"
+if [[ -z "$destination" ]]; then
+  device_id="$({
+    xcrun simctl list devices available \
+      | sed -nE '/iPhone/s/^.*\(([[:xdigit:]-]{36})\).*$/\1/p'
+  } | sed -n '1p')"
+
+  if [[ -z "$device_id" ]]; then
+    echo "No available iPhone Simulator found; set XCUITEST_DESTINATION" >&2
+    exit 1
+  fi
+
+  destination="platform=iOS Simulator,id=$device_id"
+fi
+
+rm -rf "$result_bundle"
+mkdir -p "$artifacts_dir"
+
+xcodebuild \
+  -project "$root/SwiftXCUITest.xcodeproj" \
+  -scheme SwiftXCUITest \
+  -resolvePackageDependencies
+
+xcodebuild \
+  -project "$root/SwiftXCUITest.xcodeproj" \
+  -scheme SwiftXCUITest \
+  -testPlan SwiftXCUITest \
+  -destination "$destination" \
+  -derivedDataPath "$artifacts_dir/DerivedData" \
+  -resultBundlePath "$result_bundle" \
+  test
