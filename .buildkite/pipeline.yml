@@ -224,6 +224,21 @@ steps:
             - BUILDKITE_ANALYTICS_TAGS
             - BUILDKITE_ANALYTICS_DEBUG_ENABLED
 
+  - label: ":swift: Swift: XCUITest (test-collector-swift)"
+    command: swift-xcuitest/bin/test
+    agents:
+      queue: macos
+    artifact_paths:
+      - swift-xcuitest/artifacts/SwiftXCUITest.xcresult/**/*
+    env:
+      BUILDKITE_ANALYTICS_TAGS: '{"test.framework.name":"xcuitest","language.name":"swift","custom.tag.from":"upload"}'
+    plugins:
+      - tests#v1.0.0:
+          test-runner: custom
+          suite-slug: test-engine-client-examples
+          upload-results: false
+          install-client: false
+
   - label: ":android: Android"
     commands:
       - cd android

@@ -1,0 +1,23 @@
+{
+  "configurations" : [
+    {
+      "name" : "Default",
+      "options" : {
+        "testExecutionOrdering" : "lexical"
+      }
+    }
+  ],
+  "defaultOptions" : {
+    "codeCoverage" : false
+  },
+  "testTargets" : [
+    {
+      "target" : {
+        "containerPath" : "container:SwiftXCUITest.xcodeproj",
+        "identifier" : "736F5421D3126D489F8E0CFB",
+        "name" : "ExampleAppUITests"
+      }
+    }
+  ],
+  "version" : 1
+}
