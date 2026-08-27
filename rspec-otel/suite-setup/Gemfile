@@ -4,10 +4,7 @@ source "https://rubygems.org"
 
 gem "rspec", "~> 3.13"
 
-gem "buildkite-test_collector",
-  git: "https://github.com/buildkite/bktest.git",
-  ref: "test-collector-ruby/v2.15.0",
-  glob: "test-collector-ruby/*.gemspec"
+gem "buildkite-test_collector", "2.15.0"
 
 # This suite owns its OpenTelemetry SDK and explicitly selected instrumentations.
 gem "opentelemetry-exporter-otlp", "~> 0.34"
