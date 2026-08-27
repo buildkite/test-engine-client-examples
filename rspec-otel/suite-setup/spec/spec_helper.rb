@@ -12,7 +12,7 @@ require "buildkite/test_collector"
 RSpec.configure do |config|
   config.before(:suite) do
     # Configure OTel SDK in the before(:suite) hook to ensure all instrumented libraries
-    # are loaded before the instrumentation is initialized. Otherwise, the instrumentation 
+    # are loaded before the instrumentation is initialized. Otherwise, the instrumentation
     # may not be able to patch the libraries and will not produce spans.
     OpenTelemetry::SDK.configure do |config|
       config.use "OpenTelemetry::Instrumentation::ActiveRecord"
