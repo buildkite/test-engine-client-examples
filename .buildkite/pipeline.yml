@@ -30,12 +30,15 @@ steps:
           - cd rspec-otel/suite-setup
           - bundle install
           - bktec run
+        env:
+          BUILDKITE_TESTS_OTLP_RELAY: "true"
         plugins:
-          - tests#v1.0.0:
+          - tests#v1.0.1:
               test-runner: rspec
               result-path: tmp/rspec.json
               suite-slug: test-engine-client-examples
               upload-results: false
+              client-version: "v3.1.0-rc.1"
           - mise#v1.1.4:
               dir: rspec-otel/suite-setup
 
@@ -44,12 +47,15 @@ steps:
           - cd rspec-otel/collector-setup
           - bundle install
           - bktec run
+        env:
+          BUILDKITE_TESTS_OTLP_RELAY: "true"
         plugins:
-          - tests#v1.0.0:
+          - tests#v1.0.1:
               test-runner: rspec
               result-path: tmp/rspec.json
               suite-slug: test-engine-client-examples
               upload-results: false
+              client-version: "v3.1.0-rc.1"
           - mise#v1.1.4:
               dir: rspec-otel/collector-setup
 
