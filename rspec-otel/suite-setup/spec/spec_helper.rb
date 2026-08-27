@@ -2,6 +2,7 @@
 
 require "rspec/version"
 
+require "opentelemetry/exporter/otlp"
 require "opentelemetry/sdk"
 require "opentelemetry/instrumentation/active_record"
 require "opentelemetry/instrumentation/net/http"
