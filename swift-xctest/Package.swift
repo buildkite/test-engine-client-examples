@@ -1,4 +1,4 @@
-// swift-tools-version: 5.9
+// swift-tools-version: 5.10
 import PackageDescription
 
 let package = Package(
@@ -10,7 +10,7 @@ let package = Package(
         .library(name: "ExampleLib", targets: ["ExampleLib"])
     ],
     dependencies: [
-        .package(url: "https://github.com/buildkite/test-collector-swift", from: "0.6.0")
+        .package(path: "../.bktest/test-collector-swift")
     ],
     targets: [
         .target(

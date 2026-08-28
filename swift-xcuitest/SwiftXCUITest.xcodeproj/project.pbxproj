@@ -145,7 +145,7 @@
 			mainGroup = 15771E3CC944F418353D1657;
 			minimizedProjectReferenceProxies = 0;
 			packageReferences = (
-				0F260402842AAB649211B9B2 /* XCRemoteSwiftPackageReference "test-collector-swift" */,
+				0F260402842AAB649211B9B2 /* XCLocalSwiftPackageReference "../.bktest/test-collector-swift" */,
 			);
 			preferredProjectObjectVersion = 100;
 			productRefGroup = 55AE842CDC491C8FB4A68112 /* Products */;
@@ -415,21 +415,17 @@
 		};
 /* End XCConfigurationList section */
 
-/* Begin XCRemoteSwiftPackageReference section */
-		0F260402842AAB649211B9B2 /* XCRemoteSwiftPackageReference "test-collector-swift" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/buildkite/test-collector-swift";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 0.6.0;
-			};
+/* Begin XCLocalSwiftPackageReference section */
+		0F260402842AAB649211B9B2 /* XCLocalSwiftPackageReference "../.bktest/test-collector-swift" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = "../.bktest/test-collector-swift";
 		};
-/* End XCRemoteSwiftPackageReference section */
+/* End XCLocalSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
 		DB07F6513929E915435499BA /* BuildkiteTestCollector */ = {
 			isa = XCSwiftPackageProductDependency;
-			package = 0F260402842AAB649211B9B2 /* XCRemoteSwiftPackageReference "test-collector-swift" */;
+			package = 0F260402842AAB649211B9B2 /* XCLocalSwiftPackageReference "../.bktest/test-collector-swift" */;
 			productName = BuildkiteTestCollector;
 		};
 /* End XCSwiftPackageProductDependency section */

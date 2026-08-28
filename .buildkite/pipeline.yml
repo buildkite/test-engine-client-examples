@@ -240,10 +240,11 @@ steps:
     steps:
       - label: ":swift: Swift: XCTest (test-collector-swift)"
         commands:
+          - git clone --branch swift-otel-executions --depth 1 https://github.com/buildkite/bktest .bktest
           - cd swift-xctest
           - swift package resolve
           # Run XCTest tests (which includes the BuildkiteTestCollector).
-          # The collector auto-loads via XCTest observation and uploads results
+          # The collector auto-loads via XCTest observation and exports results
           # when BUILDKITE_ANALYTICS_TOKEN is set.
           # Use --disable-swift-testing to only run XCTest (not Swift Testing).
           - swift test --disable-swift-testing
@@ -266,19 +267,26 @@ steps:
                 - BUILDKITE_ANALYTICS_DEBUG_ENABLED
 
       - label: ":swift: Swift: XCUITest (test-collector-swift)"
-        command: swift-xcuitest/bin/test
+        commands:
+          - git clone --branch swift-otel-executions --depth 1 https://github.com/buildkite/bktest .bktest
+          - bktec run
         agents:
           queue: macos
         artifact_paths:
           - swift-xcuitest/artifacts/SwiftXCUITest.xcresult/**/*
+          - swift-xcuitest/artifacts/xcodebuild.log
         env:
+          BUILDKITE_ANALYTICS_DEBUG_ENABLED: "true"
           BUILDKITE_ANALYTICS_TAGS: '{"test.framework.name":"xcuitest","language.name":"swift","custom.tag.from":"upload"}'
+          BUILDKITE_TESTS_OTLP_RELAY: "true"
         plugins:
-          - tests#v1.0.0:
+          - tests#v1.0.1:
               test-runner: custom
+              test-cmd: swift-xcuitest/bin/test
+              test-file-pattern: swift-xcuitest/ExampleAppUITests/**/*.swift
               suite-slug: test-engine-client-examples
               upload-results: false
-              install-client: false
+              client-version: v3.1.0-rc.1
 
   - group: ":android: Android"
     steps:
