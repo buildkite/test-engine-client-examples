@@ -21,7 +21,7 @@ steps:
               result-path: tmp/rspec.json
               suite-slug: test-engine-client-examples
               upload-results: false
-              client-version: "v3.1.0-rc.1"
+              client-version: "v3.1.0-rc.2"
           - mise#v1.1.4:
               dir: rspec
 
@@ -38,7 +38,7 @@ steps:
               result-path: tmp/rspec.json
               suite-slug: test-engine-client-examples
               upload-results: false
-              client-version: "v3.1.0-rc.1"
+              client-version: "v3.1.0-rc.2"
           - mise#v1.1.4:
               dir: rspec-otel/suite-setup
 
@@ -55,7 +55,7 @@ steps:
               result-path: tmp/rspec.json
               suite-slug: test-engine-client-examples
               upload-results: false
-              client-version: "v3.1.0-rc.1"
+              client-version: "v3.1.0-rc.2"
           - mise#v1.1.4:
               dir: rspec-otel/collector-setup
 
