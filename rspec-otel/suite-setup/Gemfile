@@ -1,0 +1,18 @@
+# frozen_string_literal: true
+
+source "https://rubygems.org"
+
+gem "rspec", "~> 3.13"
+
+gem "buildkite-test_collector", "2.15.0"
+
+# This suite owns its OpenTelemetry SDK and explicitly selected instrumentations.
+gem "opentelemetry-exporter-otlp", "~> 0.34"
+gem "opentelemetry-instrumentation-active_record", "~> 0.13"
+gem "opentelemetry-instrumentation-net_http", "~> 0.29"
+gem "opentelemetry-sdk", "~> 1.13"
+
+# Used by the example specs to perform HTTP, SQL, and Redis operations.
+gem "activerecord", "~> 8.0"
+gem "redis", "~> 5.0"
+gem "sqlite3", "~> 2.0"

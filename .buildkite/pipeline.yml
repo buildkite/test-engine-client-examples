@@ -25,6 +25,40 @@ steps:
           - mise#v1.1.4:
               dir: rspec
 
+      - label: ":rspec: RSpec (OpenTelemetry setup in suite)"
+        commands:
+          - cd rspec-otel/suite-setup
+          - bundle install
+          - bktec run
+        env:
+          BUILDKITE_TESTS_OTLP_RELAY: "true"
+        plugins:
+          - tests#v1.0.1:
+              test-runner: rspec
+              result-path: tmp/rspec.json
+              suite-slug: test-engine-client-examples
+              upload-results: false
+              client-version: "v3.1.0-rc.1"
+          - mise#v1.1.4:
+              dir: rspec-otel/suite-setup
+
+      - label: ":rspec: RSpec (OpenTelemetry setup by test collector)"
+        commands:
+          - cd rspec-otel/collector-setup
+          - bundle install
+          - bktec run
+        env:
+          BUILDKITE_TESTS_OTLP_RELAY: "true"
+        plugins:
+          - tests#v1.0.1:
+              test-runner: rspec
+              result-path: tmp/rspec.json
+              suite-slug: test-engine-client-examples
+              upload-results: false
+              client-version: "v3.1.0-rc.1"
+          - mise#v1.1.4:
+              dir: rspec-otel/collector-setup
+
       - label: ":ruby: Minitest"
         parallelism: 2
         commands:
