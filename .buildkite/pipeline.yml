@@ -271,7 +271,10 @@ steps:
           queue: macos
         artifact_paths:
           - swift-xcuitest/artifacts/SwiftXCUITest.xcresult/**/*
+          - swift-xcuitest/artifacts/xcodebuild.log
+        soft_fail: true
         env:
+          BUILDKITE_ANALYTICS_DEBUG_ENABLED: "true"
           BUILDKITE_ANALYTICS_TAGS: '{"test.framework.name":"xcuitest","language.name":"swift","custom.tag.from":"upload"}'
         plugins:
           - tests#v1.0.0:
