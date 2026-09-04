@@ -1,3 +1,4 @@
+require "opentelemetry/sdk"
 require 'buildkite/test_collector'
 require "rspec/version"
 
