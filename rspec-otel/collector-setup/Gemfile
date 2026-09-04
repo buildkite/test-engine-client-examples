@@ -4,7 +4,10 @@ source "https://rubygems.org"
 
 gem "rspec", "~> 3.13"
 
-gem "buildkite-test_collector", "2.15.0"
+gem "buildkite-test_collector",
+  git: "https://github.com/buildkite/bktest.git",
+  ref: "39e98290604af8e1703d26093d8bd33daee5fdec",
+  glob: "test-collector-ruby/*.gemspec"
 
 # The collector configures the OpenTelemetry SDK and installs these
 # instrumentations, but applications must provide them.
