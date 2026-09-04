@@ -1,3 +1,4 @@
+require "opentelemetry/sdk"
 require 'buildkite/test_collector'
 require "rspec/version"
 
@@ -5,7 +6,7 @@ require "rspec/version"
 # See https://buildkite.com/docs/test-engine/ruby-collectors
 Buildkite::TestCollector.configure(
   hook: :rspec,
-  otel_only: true,
+  otel_enabled: true,
   tags: {
     "test.framework.name" => "rspec",
     "test.framework.version" => RSpec::Version::STRING,
