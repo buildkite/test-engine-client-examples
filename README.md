@@ -42,8 +42,9 @@ step for the complete configuration.
 
 These are standalone npm packages, deliberately outside the root workspaces.
 Each has its own lockfile and `node_modules` so the collector cannot resolve
-another example's Vitest version through npm hoisting. Use Node 24.19.0 (see
-each example's `mise.toml`):
+another example's Vitest version through npm hoisting. Use Node 24.19.0 and its
+bundled npm 11.17.0 (see each example's `mise.toml`); npm pack versions can
+produce different tarball checksums:
 
 ```sh
 npm ci --prefix vitest-4
