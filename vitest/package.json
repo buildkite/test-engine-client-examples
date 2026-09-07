@@ -7,7 +7,7 @@
     "test:collector": "node --test bin/verify-collector.mjs"
   },
   "devDependencies": {
-    "buildkite-test-collector": "1.11.0",
+    "buildkite-test-collector": "file:tmp/buildkite-test-collector-1.11.0.tgz",
     "vitest": "5.0.0"
   }
 }

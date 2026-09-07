@@ -1,4 +1,15 @@
 #!/usr/bin/env bash
 set -euo pipefail
 cd "$(dirname "$0")/.."
+
+# PR #33: fix/javascript-vitest-5-compatibility, pinned for repeatable builds.
+# npm cannot install a subdirectory of the bktest Git monorepo directly.
+revision=f685081b9cef4a6154e9772151dc320f35d69e35
+source_dir=$(mktemp -d)
+trap 'rm -rf "$source_dir"' EXIT
+mkdir -p tmp
+curl --fail --location --silent --show-error \
+  "https://codeload.github.com/buildkite/bktest/tar.gz/$revision" |
+  tar -xz -C "$source_dir" --strip-components=1 "bktest-$revision/test-collector-javascript"
+npm pack "$source_dir/test-collector-javascript" --pack-destination tmp --ignore-scripts --silent
 npm ci
