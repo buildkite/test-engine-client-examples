@@ -1,0 +1,13 @@
+{
+  "name": "buildkite-test-engine-client-vitest-example",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "vitest run",
+    "test:collector": "node --test bin/verify-collector.mjs"
+  },
+  "devDependencies": {
+    "buildkite-test-collector": "1.11.0",
+    "vitest": "5.0.0"
+  }
+}
