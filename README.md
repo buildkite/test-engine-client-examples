@@ -31,18 +31,14 @@ A Buildkite Test Collector is not a general prerequisite for using bktec. Some
 examples also demonstrate OpenTelemetry collection. Check the matching pipeline
 step for the complete configuration.
 
-## Vitest compatibility examples
+## Vitest examples
 
-- [`vitest-4`](./vitest-4): Vitest **4.1.11**, pinned to the latest v4 release
-  when added, with `buildkite-test-collector` **1.12.0**.
-- [`vitest`](./vitest): Vitest **5.0.0**, the latest release when added, with the
-  published collector **1.12.0**, which includes the compatibility fix from
-  [bktest#33](https://github.com/buildkite/bktest/pull/33).
+- [`vitest-4`](./vitest-4): Vitest 4.
+- [`vitest`](./vitest): the current Vitest major version (5).
 
-These are standalone npm packages, deliberately outside the root workspaces.
-Each has its own lockfile and `node_modules` so the collector cannot resolve
-another example's Vitest version through npm hoisting. Use Node 24.19.0 (see
-each example's `mise.toml`):
+Both examples run Vitest directly and upload results using the Buildkite Test
+Collector. They have independent npm installs to keep their Vitest versions
+isolated. Use the Node version in each example's `mise.toml`:
 
 ```sh
 npm ci --prefix vitest-4
@@ -50,25 +46,8 @@ npm test --prefix vitest-4
 
 npm ci --prefix vitest
 npm test --prefix vitest
-npm run test:collector --prefix vitest
 ```
 
-The original collector 1.11.0 failure is preserved in
-[checkpoint commit 107c741](https://github.com/buildkite/test-engine-client-examples/commit/107c7416548bd512483c18200b601823593c0730)
-and [build #801](https://buildkite.com/buildkite/test-engine-client-examples/builds/801#01a07e46-18ca-49c7-86d9-25a8da9bc689).
-At that checkpoint, Vitest 5 exits 1 with `Failed to load custom Reporter`
-because v5 removed `vitest/reporters`. Its CI step is not soft-failed. With
-collector 1.12.0, both examples should pass. The reporter configuration and
-tests are unchanged from the failing checkpoint; they run Vitest directly to
-isolate collector compatibility from bktec.
-
-The Vitest 5 `test:collector` integration check uses a local HTTP receiver and
-a dummy token. It requires exactly one upload, checks nested passing, skipped,
-todo and runtime-skipped results and source locations, and requires receipt of
-the server's delayed acknowledgement before Vitest exits. This catches the
-silent missing-upload bug as well as reporter-loading failures. It needs no
-Buildkite credentials and never sends results to Test Engine.
-
-The separate `npm test` invocation uploads to Test Engine when
+`npm test` uploads to Test Engine when
 `BUILDKITE_ANALYTICS_TOKEN` is set (provided by the Tests plugin in CI). Without
 a token, the collector prints a warning and skips the upload.

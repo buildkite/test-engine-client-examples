@@ -103,7 +103,7 @@ steps:
   # bktec so long dependency installs cannot leave it with stale credentials.
   - group: ":javascript: JavaScript"
     steps:
-      - label: ":vitest: Vitest 4 (collector 1.12.0)"
+      - label: ":vitest: Vitest 4"
         key: vitest-4
         commands:
           - cd vitest-4
@@ -120,13 +120,12 @@ steps:
         env:
           BUILDKITE_ANALYTICS_LOCATION_PREFIX: vitest-4
 
-      - label: ":vitest: Vitest 5"
+      - label: ":vitest: Vitest"
         key: vitest
         commands:
           - cd vitest
           - npm ci
           - npm test
-          - npm run test:collector
         plugins:
           - tests#v1.0.0:
               test-runner: custom
