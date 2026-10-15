@@ -27,7 +27,8 @@ steps:
 
       # bktec pool exec runs one persistent buildkite-rspec process that leases
       # batches from a Test Scheduler pool shared by this step's jobs.
-      # --pool-lease-max-attempts lets each lease contain more than one batch.
+      # --pool-lease-max-attempts 2 caps attempts per lease so jobs cycle
+      # through several leases from the pool instead of one big lease.
       # Unlike pool consume, pool exec does not inject an upload token, so the
       # BUILDKITE_ANALYTICS_TOKEN exported by the Tests plugin stays set for the
       # collector running inside the persistent runner.
@@ -37,7 +38,7 @@ steps:
           - cd rspec
           - bundle install
           - unset BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
-          - bktec pool exec --pool-lease-max-attempts 3 -- bundle exec buildkite-rspec
+          - bktec pool exec --pool-lease-max-attempts 2 -- bundle exec buildkite-rspec
         soft_fail:
           - exit_status: 1
         plugins:
@@ -209,14 +210,15 @@ steps:
 
       # bktec pool consume starts a fresh Jest process for each leased batch,
       # drawing from a Test Scheduler pool shared by this step's jobs.
-      # --pool-lease-max-attempts lets each lease contain more than one batch.
+      # --pool-lease-max-attempts 2 caps attempts per lease so jobs cycle
+      # through several leases from the pool instead of one big lease.
       - label: ":jest: Jest (Test Scheduler pool)"
         parallelism: 2
         commands:
           - cd jest
           - npm install
           - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
-          - bktec pool consume --pool-lease-max-attempts 3
+          - bktec pool consume --pool-lease-max-attempts 2
         soft_fail:
           - exit_status: 1
         plugins:
@@ -273,7 +275,8 @@ steps:
 
       # bktec pool consume starts a fresh Playwright process for each leased
       # batch, drawing from a Test Scheduler pool shared by this step's jobs.
-      # --pool-lease-max-attempts lets each lease contain more than one batch.
+      # --pool-lease-max-attempts 2 caps attempts per lease so jobs cycle
+      # through several leases from the pool instead of one big lease.
       - label: ":playwright: Playwright (Test Scheduler pool)"
         parallelism: 2
         commands:
@@ -281,7 +284,7 @@ steps:
           - npm install
           - npx playwright install --with-deps chromium
           - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
-          - bktec pool consume --pool-lease-max-attempts 3
+          - bktec pool consume --pool-lease-max-attempts 2
         soft_fail:
           - exit_status: 1
         plugins:
@@ -361,14 +364,15 @@ steps:
 
       # bktec pool consume starts a fresh pytest process for each leased batch,
       # drawing from a Test Scheduler pool shared by this step's jobs.
-      # --pool-lease-max-attempts lets each lease contain more than one batch.
+      # --pool-lease-max-attempts 2 caps attempts per lease so jobs cycle
+      # through several leases from the pool instead of one big lease.
       - label: ":pytest: pytest (Test Scheduler pool)"
         parallelism: 2
         commands:
           - cd pytest
           - pip install -e '.[dev]'
           - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
-          - bktec pool consume --pool-lease-max-attempts 3
+          - bktec pool consume --pool-lease-max-attempts 2
         soft_fail:
           - exit_status: 1
         plugins:
