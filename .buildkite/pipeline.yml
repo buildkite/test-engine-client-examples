@@ -284,6 +284,7 @@ steps:
         plugins:
           - tests#v1.0.1:
               test-runner: playwright
+              test-file-pattern: "tests/**/*.spec.js"
               result-path: tmp/playwright-results.json
               suite-slug: test-engine-client-examples
               upload-results: false
