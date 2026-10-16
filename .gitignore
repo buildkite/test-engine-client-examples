@@ -5,6 +5,7 @@ bktec
 # pytest
 *.egg*
 __pycache__
+.venv
 .tox
 .env*
 .direnv/*
