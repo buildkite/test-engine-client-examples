@@ -1,10 +1,10 @@
 GIT
   remote: https://github.com/buildkite/bktest.git
-  revision: 39e98290604af8e1703d26093d8bd33daee5fdec
-  ref: 39e98290604af8e1703d26093d8bd33daee5fdec
+  revision: 6fd154b5dbf124b3c00062baaca9d8b5ac7e1755
+  ref: 6fd154b5dbf124b3c00062baaca9d8b5ac7e1755
   glob: test-collector-ruby/*.gemspec
   specs:
-    buildkite-test_collector (2.15.0)
+    buildkite-test_collector (2.16.0)
       concurrent-ruby
 
 GEM
