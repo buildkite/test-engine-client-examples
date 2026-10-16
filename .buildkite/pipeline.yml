@@ -47,7 +47,7 @@ steps:
               result-path: tmp/rspec.json
               suite-slug: test-engine-client-examples
               upload-results: false
-              client-version: "v3.4.0-rc.2"
+              client-version: "v3.4.0-rc.3"
           - mise#v1.1.4:
               dir: rspec
 
@@ -396,10 +396,7 @@ steps:
           # cached from PyPI, which predates the buildkite-pytest runner.
           - pip install --force-reinstall 'buildkite-test-collector @ git+https://github.com/buildkite/bktest.git@b1dd38900fe381fe9d5cf29d757f0c7c9f7298ff#subdirectory=test-collector-python'
           - unset BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
-          # Workaround: take the runner's stdin off the tty (as `bktec run`
-          # already effectively does), so the terminal setup in the background
-          # group fails harmlessly with ENOTTY instead of stopping the process.
-          - bktec pool exec --pool-lease-max-attempts 2 -- buildkite-pytest < /dev/null
+          - bktec pool exec --pool-lease-max-attempts 2 -- buildkite-pytest
         soft_fail:
           - exit_status: 1
         plugins:
@@ -407,7 +404,7 @@ steps:
               test-runner: pytest
               suite-slug: test-engine-client-examples
               upload-results: false
-              client-version: "v3.4.0-rc.2"
+              client-version: "v3.4.0-rc.3"
           - mise#v1.1.4:
               dir: pytest
 
