@@ -1,0 +1,24 @@
+#!/usr/bin/env bash
+# Runs the swift-xctest example against an unreleased test-collector-swift
+# taken from buildkite/bktest at BKTEST_REF (a branch, tag or commit SHA).
+# SwiftPM cannot resolve a package in a repository subdirectory by URL, so the
+# collector is cloned locally and Package.swift reads BKTEST_COLLECTOR_PATH.
+set -euo pipefail
+cd "$(dirname "$0")/.."
+
+ref="${BKTEST_REF:?set BKTEST_REF to a bktest branch, tag or commit SHA}"
+
+echo "--- :git: Fetching buildkite/bktest at ${ref}"
+rm -rf .bktest
+git init -q .bktest
+git -C .bktest fetch -q --depth 1 https://github.com/buildkite/bktest "${ref}"
+git -C .bktest checkout -q FETCH_HEAD
+echo "test-collector-swift @ $(git -C .bktest rev-parse HEAD)"
+
+export BKTEST_COLLECTOR_PATH="${PWD}/.bktest/test-collector-swift"
+
+echo "--- :swift: swift package resolve"
+swift package resolve
+
+echo "+++ :swift: swift test"
+swift test --disable-swift-testing
