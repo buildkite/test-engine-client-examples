@@ -363,3 +363,20 @@ steps:
                 - "test.framework.name=go-test"
           - mise#v1.1.4:
               dir: go
+
+  # Verification steps for the unreleased test-collector-go OTel-only
+  # collector (buildkite/bktest branch otel-go-collector). Each step mints its
+  # own OIDC token and uses its own run key so the Test Engine run it produces
+  # can be checked in isolation. The control step runs the released Ruby
+  # collector the same way, proving the plumbing before the Go code is blamed.
+  - group: ":golang: OTel verification (test-collector-go)"
+    steps:
+      - label: ":rspec: Control: Ruby collector 2.17.0 OTel, OIDC, no bktec"
+        commands:
+          - cd rspec
+          - bin/otel-control
+        soft_fail:
+          - exit_status: 1
+        plugins:
+          - mise#v1.1.4:
+              dir: rspec
