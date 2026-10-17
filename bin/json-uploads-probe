@@ -1,11 +1,15 @@
 #!/usr/bin/env python
 """Print the /v1/uploads response for an empty payload (verifies the token)."""
 import os
+
+import buildkite_test_collector.pytest_plugin  # noqa: F401  (import order avoids a package import cycle)
 from buildkite_test_collector.collector.api import API
 from buildkite_test_collector.collector.payload import Payload
 from buildkite_test_collector.collector.run_env import RunEnvBuilder
 
-payload = Payload.init(RunEnvBuilder(os.environ).build())
+run_env = RunEnvBuilder(os.environ).build()
+print(f"uploads probe: run key={run_env.key!r} ci={run_env.ci!r}")
+payload = Payload.init(run_env)
 for response in API(os.environ).submit(payload, batch_size=1):
     status = getattr(response, "status_code", response)
     body = getattr(response, "text", "")[:300]
