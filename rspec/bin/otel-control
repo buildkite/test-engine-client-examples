@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Control step for the test-collector-go OTel verification. Runs the rspec
+# example with the released Ruby collector 2.17.0 in OTel-only mode, directly
+# (no bktec, no relay), authenticating with an ephemeral OIDC token minted for
+# the suite the way pytest-pants/bin/test does. Its own run key keeps the Test
+# Engine run separate from every other step in the build.
+
+SUITE_URL="https://buildkite.com/organizations/buildkite/analytics/suites/test-engine-client-examples"
+BUILDKITE_ANALYTICS_TOKEN="$(buildkite-agent oidc request-token --audience "${SUITE_URL}" --lifetime 1800)"
+export BUILDKITE_ANALYTICS_TOKEN
+export BUILDKITE_ANALYTICS_KEY="${BUILDKITE_BUILD_ID}-rspec-otel-control"
+export BUNDLE_GEMFILE="Gemfile.otel-control"
+
+echo "--- bundle install"
+bundle install
+
+echo "--- rspec (run key ${BUILDKITE_ANALYTICS_KEY})"
+bundle exec rspec

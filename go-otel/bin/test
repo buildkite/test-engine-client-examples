@@ -1,0 +1,52 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Verification step for the unreleased test-collector-go OTel-only collector
+# (buildkite/bktest branch otel-go-collector, pinned below). Runs go test
+# directly: no bktec, no JUnit, no /v1/uploads, so OTLP is the only path the
+# results can take. The token is an ephemeral OIDC token minted for the suite
+# the way pytest-pants/bin/test does; the run key is unique to this step so
+# its Test Engine run can be checked in isolation.
+#
+# Usage: bin/test [normal|no-token|closed-port]
+
+cd "$(dirname "$0")/.."
+
+COLLECTOR_SHA="${COLLECTOR_SHA:-f893fd6429062556c40d10cf299a739eb25134fd}"
+SUITE_URL="https://buildkite.com/organizations/buildkite/analytics/suites/test-engine-client-examples"
+mode="${1:-normal}"
+
+export BUILDKITE_ANALYTICS_KEY="${BUILDKITE_BUILD_ID}-go-otel-${mode}"
+export BUILDKITE_ANALYTICS_LOCATION_PREFIX="go-otel/"
+
+case "$mode" in
+  normal)
+    BUILDKITE_TESTS_OTLP_TOKEN="$(buildkite-agent oidc request-token --audience "${SUITE_URL}" --lifetime 1800)"
+    export BUILDKITE_TESTS_OTLP_TOKEN
+    ;;
+  no-token)
+    unset BUILDKITE_TESTS_OTLP_TOKEN BUILDKITE_ANALYTICS_TOKEN
+    ;;
+  closed-port)
+    BUILDKITE_TESTS_OTLP_TOKEN="$(buildkite-agent oidc request-token --audience "${SUITE_URL}" --lifetime 1800)"
+    export BUILDKITE_TESTS_OTLP_TOKEN
+    export BUILDKITE_ANALYTICS_OTLP_ENDPOINT="http://127.0.0.1:9/v1/traces"
+    ;;
+  *)
+    echo "unknown mode: $mode" >&2
+    exit 2
+    ;;
+esac
+
+echo "--- go get test-collector-go@${COLLECTOR_SHA}"
+go version
+GOFLAGS=-mod=mod GOPROXY=direct go get "github.com/buildkite/bktest/test-collector-go@${COLLECTOR_SHA}"
+go mod tidy
+
+echo "--- go test (mode ${mode}, run key ${BUILDKITE_ANALYTICS_KEY})"
+set +e
+go test -v -count=1 ./...
+status=$?
+set -e
+echo "go test exit status: ${status}"
+exit "${status}"
