@@ -201,7 +201,7 @@ steps:
         commands:
           - cd cypress
           - bin/setup
-          - ../bin/install-unreleased-js-collector ec801404c615a989b479cd882b6fa83288862cc5
+          - ../bin/install-unreleased-js-collector e9b647e6336d47f71b727c3c533e7e1f60c90285
           - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
           - export BUILDKITE_TESTS_OTLP_TOKEN="$(../bin/otel-oidc-token)"
           - export BUILDKITE_ANALYTICS_KEY="${BUILDKITE_BUILD_ID}-cypress-otel"
@@ -218,7 +218,7 @@ steps:
         commands:
           - cd cypress
           - bin/setup
-          - ../bin/install-unreleased-js-collector ec801404c615a989b479cd882b6fa83288862cc5
+          - ../bin/install-unreleased-js-collector e9b647e6336d47f71b727c3c533e7e1f60c90285
           - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN BUILDKITE_TESTS_OTLP_TOKEN
           - npx cypress run --config-file otel.config.js || test $? -eq 1
         env:
@@ -233,7 +233,7 @@ steps:
         commands:
           - cd cypress
           - bin/setup
-          - ../bin/install-unreleased-js-collector ec801404c615a989b479cd882b6fa83288862cc5
+          - ../bin/install-unreleased-js-collector e9b647e6336d47f71b727c3c533e7e1f60c90285
           - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
           - export BUILDKITE_TESTS_OTLP_TOKEN="$(../bin/otel-oidc-token)"
           - export BUILDKITE_ANALYTICS_KEY="${BUILDKITE_BUILD_ID}-cypress-otel-unreachable"
