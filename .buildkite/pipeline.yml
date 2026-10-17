@@ -273,6 +273,91 @@ steps:
           - mise#v1.1.4:
               dir: pytest
 
+      # OTel verification for test-collector-python (unreleased, pinned SHA from
+      # buildkite/bktest branch otel-python-pytest): OIDC token, direct export,
+      # no bktec. `tests/failed_test.py` is passed explicitly so the run has a
+      # failing test; exit status 1 (tests failed) is expected, anything else fails.
+      - label: ":pytest: pytest (OTel, unreleased collector)"
+        commands:
+          - cd pytest
+          - pip install -e '.[dev]'
+          - pip install "buildkite-test-collector[otel] @ git+https://github.com/buildkite/bktest.git@e1e5dcc04bca81f25780bdaee094939a594848db#subdirectory=test-collector-python"
+          - export BUILDKITE_TESTS_OTLP_TOKEN="$(../bin/otel-oidc-token)"
+          - export BUILDKITE_ANALYTICS_KEY="${BUILDKITE_BUILD_ID}-pytest-otel"
+          - pytest -v tests tests/failed_test.py --json=result.json || test $? -eq 1
+        artifact_paths:
+          - pytest/result.json
+        env:
+          BUILDKITE_ANALYTICS_OTEL_ENABLED: "true"
+        plugins:
+          - mise#v1.1.4:
+              dir: pytest
+
+      - label: ":pytest: pytest (OTel, unreleased collector, xdist)"
+        commands:
+          - cd pytest
+          - pip install -e '.[dev]'
+          - pip install "buildkite-test-collector[otel] @ git+https://github.com/buildkite/bktest.git@e1e5dcc04bca81f25780bdaee094939a594848db#subdirectory=test-collector-python"
+          - export BUILDKITE_TESTS_OTLP_TOKEN="$(../bin/otel-oidc-token)"
+          - export BUILDKITE_ANALYTICS_KEY="${BUILDKITE_BUILD_ID}-pytest-xdist-otel"
+          - pytest -v -n 3 tests tests/failed_test.py --json=result.json || test $? -eq 1
+        artifact_paths:
+          - pytest/result.json
+        env:
+          BUILDKITE_ANALYTICS_OTEL_ENABLED: "true"
+          PYTEST_XDIST_ENABLED: "true"
+        plugins:
+          - mise#v1.1.4:
+              dir: pytest
+
+      # Negative path: OTel on, no credential at all. Must stay silent about
+      # OTel, take the JSON path (which warns about the missing token), exit 1.
+      - label: ":pytest: pytest (OTel, no token)"
+        commands:
+          - cd pytest
+          - pip install -e '.[dev]'
+          - pip install "buildkite-test-collector[otel] @ git+https://github.com/buildkite/bktest.git@e1e5dcc04bca81f25780bdaee094939a594848db#subdirectory=test-collector-python"
+          - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TESTS_OTLP_TOKEN
+          - pytest -v tests tests/failed_test.py || test $? -eq 1
+        env:
+          BUILDKITE_ANALYTICS_OTEL_ENABLED: "true"
+        plugins:
+          - mise#v1.1.4:
+              dir: pytest
+
+      # Negative path: OTel on, SDK not installed, JSON token present. Must warn
+      # "OpenTelemetry span export disabled: ImportError" and upload as JSON.
+      - label: ":pytest: pytest (OTel, SDK missing, JSON fallback)"
+        commands:
+          - cd pytest
+          - pip install -e '.[dev]'
+          - pip install "buildkite-test-collector @ git+https://github.com/buildkite/bktest.git@e1e5dcc04bca81f25780bdaee094939a594848db#subdirectory=test-collector-python"
+          - export BUILDKITE_ANALYTICS_TOKEN="$(../bin/otel-oidc-token)"
+          - export BUILDKITE_ANALYTICS_KEY="${BUILDKITE_BUILD_ID}-pytest-otel-sdk-missing"
+          - pytest -v tests tests/failed_test.py || test $? -eq 1
+        env:
+          BUILDKITE_ANALYTICS_OTEL_ENABLED: "true"
+        plugins:
+          - mise#v1.1.4:
+              dir: pytest
+
+      # Negative path: unreachable endpoint. Must warn TEST RESULTS MISSING and
+      # still exit with pytest's own status (1: a test failed).
+      - label: ":pytest: pytest (OTel, unreachable endpoint)"
+        commands:
+          - cd pytest
+          - pip install -e '.[dev]'
+          - pip install "buildkite-test-collector[otel] @ git+https://github.com/buildkite/bktest.git@e1e5dcc04bca81f25780bdaee094939a594848db#subdirectory=test-collector-python"
+          - export BUILDKITE_TESTS_OTLP_TOKEN="$(../bin/otel-oidc-token)"
+          - export BUILDKITE_ANALYTICS_KEY="${BUILDKITE_BUILD_ID}-pytest-otel-unreachable"
+          - pytest -v tests tests/failed_test.py || test $? -eq 1
+        env:
+          BUILDKITE_ANALYTICS_OTEL_ENABLED: "true"
+          BUILDKITE_ANALYTICS_OTLP_ENDPOINT: "http://127.0.0.1:1/v1/traces"
+        plugins:
+          - mise#v1.1.4:
+              dir: pytest
+
       - label: ":pytest: pytest (tag filters)"
         parallelism: 2
         artifact_paths:
