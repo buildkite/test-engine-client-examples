@@ -8,6 +8,7 @@ const config = {
       tags: {
         "test.framework.name": "jest",
         "test.framework.version": require("jest/package.json").version,
+        "collector.mode": "otel",
       }
     }]
   ],
