@@ -380,3 +380,30 @@ steps:
         plugins:
           - mise#v1.1.4:
               dir: rspec
+
+      - label: ":golang: test-collector-go OTel, OIDC, no bktec"
+        commands:
+          - go-otel/bin/test normal
+        soft_fail:
+          - exit_status: 1
+        plugins:
+          - mise#v1.1.4:
+              dir: go-otel
+
+      - label: ":golang: test-collector-go negative: no token (must warn once and run as a no-op)"
+        commands:
+          - go-otel/bin/test no-token
+        soft_fail:
+          - exit_status: 1
+        plugins:
+          - mise#v1.1.4:
+              dir: go-otel
+
+      - label: ":golang: test-collector-go negative: closed port (must warn TEST RESULTS MISSING, exit as go test would)"
+        commands:
+          - go-otel/bin/test closed-port
+        soft_fail:
+          - exit_status: 1
+        plugins:
+          - mise#v1.1.4:
+              dir: go-otel
