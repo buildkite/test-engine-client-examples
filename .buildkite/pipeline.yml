@@ -25,6 +25,22 @@ steps:
           - mise#v1.1.4:
               dir: rspec
 
+      # Control for the JavaScript OTel verification: released Ruby collector,
+      # OTel mode, OIDC token, direct export to Test Engine (no bktec relay).
+      - label: ":rspec: RSpec (OTel control, released collector 2.17.0)"
+        commands:
+          - cd rspec
+          - export BUNDLE_GEMFILE=Gemfile.otel-control
+          - bundle install
+          - export BUILDKITE_ANALYTICS_TOKEN="$(../bin/otel-oidc-token)"
+          - export BUILDKITE_ANALYTICS_KEY="${BUILDKITE_BUILD_ID}-rspec-otel-control"
+          - bundle exec rspec
+        soft_fail:
+          - exit_status: 1
+        plugins:
+          - mise#v1.1.4:
+              dir: rspec
+
       - label: ":rspec: RSpec (OpenTelemetry setup in suite)"
         commands:
           - cd rspec-otel/suite-setup
@@ -177,6 +193,57 @@ steps:
               dir: jest
         env:
           BUILDKITE_ANALYTICS_LOCATION_PREFIX: jest
+
+      # OTel verification for test-collector-javascript (unreleased, pinned SHA
+      # from buildkite/bktest branch otel-javascript-core-jest): OIDC token,
+      # direct export, no bktec. Exit status 1 (tests failed) is expected.
+      - label: ":jest: Jest (OTel, unreleased collector)"
+        commands:
+          - cd jest
+          - npm install
+          - ../bin/install-unreleased-js-collector 4fffde110cffeaba67faf1221aeed7c28468c5ec
+          - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
+          - export BUILDKITE_TESTS_OTLP_TOKEN="$(../bin/otel-oidc-token)"
+          - export BUILDKITE_ANALYTICS_KEY="${BUILDKITE_BUILD_ID}-jest-otel"
+          - npx jest --config otel.config.js || test $? -eq 1
+        env:
+          BUILDKITE_ANALYTICS_LOCATION_PREFIX: jest
+        plugins:
+          - mise#v1.1.4:
+              dir: jest
+
+      # Negative path: OTel on, no credential at all. Must stay silent about
+      # OTel, take the JSON path (which warns about the missing token), exit 1.
+      - label: ":jest: Jest (OTel, no token)"
+        commands:
+          - cd jest
+          - npm install
+          - ../bin/install-unreleased-js-collector 4fffde110cffeaba67faf1221aeed7c28468c5ec
+          - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN BUILDKITE_TESTS_OTLP_TOKEN
+          - npx jest --config otel.config.js || test $? -eq 1
+        env:
+          BUILDKITE_ANALYTICS_LOCATION_PREFIX: jest
+        plugins:
+          - mise#v1.1.4:
+              dir: jest
+
+      # Negative path: unreachable endpoint. Must warn TEST RESULTS MISSING and
+      # still exit with Jest's own status (1: a test failed).
+      - label: ":jest: Jest (OTel, unreachable endpoint)"
+        commands:
+          - cd jest
+          - npm install
+          - ../bin/install-unreleased-js-collector 4fffde110cffeaba67faf1221aeed7c28468c5ec
+          - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
+          - export BUILDKITE_TESTS_OTLP_TOKEN="$(../bin/otel-oidc-token)"
+          - export BUILDKITE_ANALYTICS_KEY="${BUILDKITE_BUILD_ID}-jest-otel-unreachable"
+          - npx jest --config otel.config.js || test $? -eq 1
+        env:
+          BUILDKITE_ANALYTICS_LOCATION_PREFIX: jest
+          BUILDKITE_ANALYTICS_OTLP_ENDPOINT: "http://127.0.0.1:1/v1/traces"
+        plugins:
+          - mise#v1.1.4:
+              dir: jest
 
       - label: ":cypress: Cypress"
         parallelism: 2

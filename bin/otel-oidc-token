@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+# Mint a short-lived OIDC token for the Test Engine suite and print it.
+# The suite's OIDC policy must grant write_uploads to this pipeline.
+# See https://buildkite.com/docs/test-engine/test-collection/oidc
+set -euo pipefail
+
+SUITE_URL="https://buildkite.com/organizations/buildkite/analytics/suites/test-engine-client-examples"
+buildkite-agent oidc request-token --audience "${SUITE_URL}" --lifetime 1800
