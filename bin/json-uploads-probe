@@ -1,0 +1,12 @@
+#!/usr/bin/env python
+"""Print the /v1/uploads response for an empty payload (verifies the token)."""
+import os
+from buildkite_test_collector.collector.api import API
+from buildkite_test_collector.collector.payload import Payload
+from buildkite_test_collector.collector.run_env import RunEnvBuilder
+
+payload = Payload.init(RunEnvBuilder(os.environ).build())
+for response in API(os.environ).submit(payload, batch_size=1):
+    status = getattr(response, "status_code", response)
+    body = getattr(response, "text", "")[:300]
+    print(f"uploads probe: status={status} body={body!r}")
