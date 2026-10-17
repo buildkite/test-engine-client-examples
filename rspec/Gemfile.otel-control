@@ -1,0 +1,11 @@
+# frozen_string_literal: true
+
+# Control Gemfile for the OTel plumbing check: the released Ruby collector
+# with OTel mode on, exporting straight to Test Engine (no bktec relay).
+source "https://rubygems.org"
+
+gem "rspec", "~> 3.13"
+
+gem "buildkite-test_collector", "2.17.0"
+gem "opentelemetry-exporter-otlp", "~> 0.34", require: false
+gem "opentelemetry-sdk", "~> 1.13", require: false
