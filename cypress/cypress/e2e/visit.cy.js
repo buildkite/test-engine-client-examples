@@ -8,4 +8,6 @@ describe('Visit', () => {
 
     cy.contains('type')
   })
+
+  it.skip('skips a pending visit', () => {})
 })
