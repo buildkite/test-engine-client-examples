@@ -25,6 +25,22 @@ steps:
           - mise#v1.1.4:
               dir: rspec
 
+      # Control for the Python OTel verification: released Ruby collector,
+      # OTel mode, OIDC token, direct export to Test Engine (no bktec relay).
+      - label: ":rspec: RSpec (OTel control, released collector 2.17.0)"
+        commands:
+          - cd rspec
+          - export BUNDLE_GEMFILE=Gemfile.otel-control
+          - bundle install
+          - export BUILDKITE_ANALYTICS_TOKEN="$(../bin/otel-oidc-token)"
+          - export BUILDKITE_ANALYTICS_KEY="${BUILDKITE_BUILD_ID}-rspec-otel-control"
+          - bundle exec rspec
+        soft_fail:
+          - exit_status: 1
+        plugins:
+          - mise#v1.1.4:
+              dir: rspec
+
       - label: ":rspec: RSpec (OpenTelemetry setup in suite)"
         commands:
           - cd rspec-otel/suite-setup
