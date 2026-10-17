@@ -282,7 +282,7 @@ steps:
           - cd pytest
           - pip install -e '.[dev]'
           - pip uninstall -y buildkite-test-collector
-          - pip install "buildkite-test-collector[otel] @ git+https://github.com/buildkite/bktest.git@e1e5dcc04bca81f25780bdaee094939a594848db#subdirectory=test-collector-python"
+          - pip install "buildkite-test-collector[otel] @ git+https://github.com/buildkite/bktest.git@b6d64a22bf3e183663d052c629506e7fd7f2d19a#subdirectory=test-collector-python"
           - python -c 'import buildkite_test_collector.pytest_plugin.otel.plugin; print("unreleased collector importable")'
           - export BUILDKITE_TESTS_OTLP_TOKEN="$(../bin/otel-oidc-token)"
           - export BUILDKITE_ANALYTICS_KEY="${BUILDKITE_BUILD_ID}-pytest-otel"
@@ -300,7 +300,7 @@ steps:
           - cd pytest
           - pip install -e '.[dev]'
           - pip uninstall -y buildkite-test-collector
-          - pip install "buildkite-test-collector[otel] @ git+https://github.com/buildkite/bktest.git@e1e5dcc04bca81f25780bdaee094939a594848db#subdirectory=test-collector-python"
+          - pip install "buildkite-test-collector[otel] @ git+https://github.com/buildkite/bktest.git@b6d64a22bf3e183663d052c629506e7fd7f2d19a#subdirectory=test-collector-python"
           - python -c 'import buildkite_test_collector.pytest_plugin.otel.plugin; print("unreleased collector importable")'
           - export BUILDKITE_TESTS_OTLP_TOKEN="$(../bin/otel-oidc-token)"
           - export BUILDKITE_ANALYTICS_KEY="${BUILDKITE_BUILD_ID}-pytest-xdist-otel"
@@ -321,7 +321,7 @@ steps:
           - cd pytest
           - pip install -e '.[dev]'
           - pip uninstall -y buildkite-test-collector
-          - pip install "buildkite-test-collector[otel] @ git+https://github.com/buildkite/bktest.git@e1e5dcc04bca81f25780bdaee094939a594848db#subdirectory=test-collector-python"
+          - pip install "buildkite-test-collector[otel] @ git+https://github.com/buildkite/bktest.git@b6d64a22bf3e183663d052c629506e7fd7f2d19a#subdirectory=test-collector-python"
           - python -c 'import buildkite_test_collector.pytest_plugin.otel.plugin; print("unreleased collector importable")'
           - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TESTS_OTLP_TOKEN
           - pytest -v tests tests/failed_test.py || test $? -eq 1
@@ -338,7 +338,7 @@ steps:
           - cd pytest
           - pip install -e '.[dev]'
           - pip uninstall -y buildkite-test-collector
-          - pip install "buildkite-test-collector @ git+https://github.com/buildkite/bktest.git@e1e5dcc04bca81f25780bdaee094939a594848db#subdirectory=test-collector-python"
+          - pip install "buildkite-test-collector @ git+https://github.com/buildkite/bktest.git@b6d64a22bf3e183663d052c629506e7fd7f2d19a#subdirectory=test-collector-python"
           - python -c 'import buildkite_test_collector.pytest_plugin.otel.plugin; print("unreleased collector importable")'
           - python -c 'import opentelemetry.sdk' && exit 1 || echo "OpenTelemetry SDK absent as intended"
           - export BUILDKITE_ANALYTICS_TOKEN="$(../bin/otel-oidc-token)"
@@ -357,7 +357,7 @@ steps:
           - cd pytest
           - pip install -e '.[dev]'
           - pip uninstall -y buildkite-test-collector
-          - pip install "buildkite-test-collector[otel] @ git+https://github.com/buildkite/bktest.git@e1e5dcc04bca81f25780bdaee094939a594848db#subdirectory=test-collector-python"
+          - pip install "buildkite-test-collector[otel] @ git+https://github.com/buildkite/bktest.git@b6d64a22bf3e183663d052c629506e7fd7f2d19a#subdirectory=test-collector-python"
           - python -c 'import buildkite_test_collector.pytest_plugin.otel.plugin; print("unreleased collector importable")'
           - export BUILDKITE_TESTS_OTLP_TOKEN="$(../bin/otel-oidc-token)"
           - export BUILDKITE_ANALYTICS_KEY="${BUILDKITE_BUILD_ID}-pytest-otel-unreachable"
@@ -365,6 +365,7 @@ steps:
         env:
           BUILDKITE_ANALYTICS_OTEL_ENABLED: "true"
           BUILDKITE_ANALYTICS_OTLP_ENDPOINT: "http://127.0.0.1:1/v1/traces"
+          BUILDKITE_ANALYTICS_DEBUG_ENABLED: "1"
         plugins:
           - mise#v1.1.4:
               dir: pytest
