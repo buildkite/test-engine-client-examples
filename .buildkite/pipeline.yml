@@ -340,6 +340,9 @@ steps:
           - pip uninstall -y buildkite-test-collector
           - pip install "buildkite-test-collector @ git+https://github.com/buildkite/bktest.git@1540479108388302087a8665a14bc994f9c837eb#subdirectory=test-collector-python"
           - python -c 'import buildkite_test_collector.pytest_plugin.otel.plugin; print("unreleased collector importable")'
+          # The mise site-packages cache is shared between steps, so another OTel
+          # step may have left the SDK behind; remove it before checking.
+          - pip freeze | grep -i '^opentelemetry' | cut -d= -f1 | xargs -r pip uninstall -y
           - python -c 'import opentelemetry.sdk' && exit 1 || echo "OpenTelemetry SDK absent as intended"
           - export BUILDKITE_ANALYTICS_TOKEN="$(../bin/otel-oidc-token)"
           - export BUILDKITE_ANALYTICS_KEY="${BUILDKITE_BUILD_ID}-pytest-otel-sdk-missing"
