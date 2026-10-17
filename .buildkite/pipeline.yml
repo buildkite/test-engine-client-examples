@@ -216,6 +216,59 @@ steps:
         env:
           BUILDKITE_ANALYTICS_LOCATION_PREFIX: playwright
 
+      - label: ":playwright: Playwright (OTel, unreleased collector)"
+        agents:
+          queue: hosted
+        commands:
+          - cd playwright
+          - npm install
+          - ../bin/install-unreleased-js-collector f3a3e3daa7aea26c51f8edfc77c9c13ad4ca29b3
+          - npx playwright install --with-deps chromium
+          - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
+          - export BUILDKITE_TESTS_OTLP_TOKEN="$(../bin/otel-oidc-token)"
+          - export BUILDKITE_ANALYTICS_KEY="${BUILDKITE_BUILD_ID}-playwright-otel"
+          - npx playwright test --config otel.config.js || test $? -eq 1
+        env:
+          BUILDKITE_ANALYTICS_LOCATION_PREFIX: playwright
+        plugins:
+          - mise#v1.1.4:
+              dir: playwright
+
+      - label: ":playwright: Playwright (OTel, no token)"
+        agents:
+          queue: hosted
+        commands:
+          - cd playwright
+          - npm install
+          - ../bin/install-unreleased-js-collector f3a3e3daa7aea26c51f8edfc77c9c13ad4ca29b3
+          - npx playwright install --with-deps chromium
+          - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN BUILDKITE_TESTS_OTLP_TOKEN
+          - npx playwright test --config otel.config.js || test $? -eq 1
+        env:
+          BUILDKITE_ANALYTICS_LOCATION_PREFIX: playwright
+        plugins:
+          - mise#v1.1.4:
+              dir: playwright
+
+      - label: ":playwright: Playwright (OTel, unreachable endpoint)"
+        agents:
+          queue: hosted
+        commands:
+          - cd playwright
+          - npm install
+          - ../bin/install-unreleased-js-collector f3a3e3daa7aea26c51f8edfc77c9c13ad4ca29b3
+          - npx playwright install --with-deps chromium
+          - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
+          - export BUILDKITE_TESTS_OTLP_TOKEN="$(../bin/otel-oidc-token)"
+          - export BUILDKITE_ANALYTICS_KEY="${BUILDKITE_BUILD_ID}-playwright-otel-unreachable"
+          - npx playwright test --config otel.config.js || test $? -eq 1
+        env:
+          BUILDKITE_ANALYTICS_LOCATION_PREFIX: playwright
+          BUILDKITE_ANALYTICS_OTLP_ENDPOINT: "http://127.0.0.1:1/v1/traces"
+        plugins:
+          - mise#v1.1.4:
+              dir: playwright
+
   - group: ":python: Python"
     steps:
       - label: ":pytest: pytest"
