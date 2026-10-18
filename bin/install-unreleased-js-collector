@@ -1,0 +1,19 @@
+#!/usr/bin/env bash
+# Install the unreleased JavaScript collector from buildkite/bktest at a pinned
+# commit, plus the optional OpenTelemetry peer dependencies, into the example
+# directory this is run from.
+set -euo pipefail
+
+SHA="${1:?usage: install-unreleased-js-collector <bktest commit sha>}"
+WORKDIR="$(mktemp -d)"
+
+git -C "${WORKDIR}" init -q
+git -C "${WORKDIR}" fetch -q --depth 1 https://github.com/buildkite/bktest.git "${SHA}"
+git -C "${WORKDIR}" checkout -q FETCH_HEAD
+
+TARBALL="$(cd "${WORKDIR}/test-collector-javascript" && npm pack --silent)"
+npm install --no-save \
+  "${WORKDIR}/test-collector-javascript/${TARBALL}" \
+  @opentelemetry/api @opentelemetry/sdk-trace-base @opentelemetry/resources @opentelemetry/exporter-trace-otlp-proto
+
+node -e 'const p = require("buildkite-test-collector/package.json"); require("buildkite-test-collector/playwright/reporter"); console.log(`buildkite-test-collector ${p.version} with playwright/reporter installed`)'
