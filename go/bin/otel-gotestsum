@@ -6,9 +6,9 @@ set -euo pipefail
 # buildkite-test-collector command (buildkite/bktest branch otel-go-collector,
 # pinned below) reads the stream with -quiet, and the JUnit file goes up the
 # existing /v1/uploads JUnit path with the same form fields the
-# test-collector plugin sends. Each upload gets its own run key so the two
-# Test Engine runs can be compared: every test must resolve to the same test
-# ID in both.
+# test-collector plugin sends (plus a build.id tag so the run is listed under
+# this build). Each upload gets its own run key so the two Test Engine runs
+# can be compared: every test must resolve to the same test ID in both.
 
 cd "$(dirname "$0")/.."
 
@@ -62,6 +62,7 @@ curl -X POST --silent --show-error --fail --max-time 30 \
   --form "run_env[job_id]=${BUILDKITE_JOB_ID}" \
   --form "run_env[message]=${BUILDKITE_MESSAGE}" \
   --form "run_env[collector]=test-collector-buildkite-plugin" \
+  --form "tags[build.id]=${BUILDKITE_BUILD_ID}" \
   --form "tags[mode]=gotestsum-junit" \
   -H @<(printf 'Authorization: Token token="%s"\n' "${token}") \
   https://analytics-api.buildkite.com/v1/uploads
