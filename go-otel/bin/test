@@ -8,11 +8,17 @@ set -euo pipefail
 # the way pytest-pants/bin/test does; the run key is unique to this step so
 # its Test Engine run can be checked in isolation.
 #
-# Usage: bin/test [normal|no-token|closed-port]
+# Usage: bin/test [normal|no-token|closed-port|wrapper-parity]
+#
+# wrapper-parity pipes this library-mode suite through the
+# buildkite-test-collector command with the token given only to the command,
+# so the library warns and exports nothing and the command reports every
+# test. The run it produces must resolve each test to the same Test Engine
+# test ID as the library-mode run.
 
 cd "$(dirname "$0")/.."
 
-COLLECTOR_SHA="${COLLECTOR_SHA:-f893fd6429062556c40d10cf299a739eb25134fd}"
+COLLECTOR_SHA="${COLLECTOR_SHA:-87d80a3d10100d4402f2b766321a0dc039248320}"
 SUITE_URL="https://buildkite.com/organizations/buildkite/analytics/suites/test-engine-client-examples"
 mode="${1:-normal}"
 
@@ -32,6 +38,10 @@ case "$mode" in
     export BUILDKITE_TESTS_OTLP_TOKEN
     export BUILDKITE_ANALYTICS_OTLP_ENDPOINT="http://127.0.0.1:9/v1/traces"
     ;;
+  wrapper-parity)
+    token="$(buildkite-agent oidc request-token --audience "${SUITE_URL}" --lifetime 1800)"
+    unset BUILDKITE_TESTS_OTLP_TOKEN BUILDKITE_ANALYTICS_TOKEN
+    ;;
   *)
     echo "unknown mode: $mode" >&2
     exit 2
@@ -43,10 +53,31 @@ go version
 GOFLAGS=-mod=mod GOPROXY=direct go get "github.com/buildkite/bktest/test-collector-go@${COLLECTOR_SHA}"
 go mod tidy
 
+if [ "$mode" = "wrapper-parity" ]; then
+  echo "--- build buildkite-test-collector@${COLLECTOR_SHA}"
+  # go install pkg@sha cannot resolve an untagged module that only exists on a
+  # branch (it looks up @latest for deprecation notices), so build it from a
+  # scratch module instead. After the v0.1.0 tag this is one go install line.
+  bin_dir="$(mktemp -d)"
+  ( cd "$(mktemp -d)" && go mod init verify >/dev/null 2>&1 \
+    && GOFLAGS=-mod=mod GOPROXY=direct go get "github.com/buildkite/bktest/test-collector-go@${COLLECTOR_SHA}" \
+    && go build -o "${bin_dir}/buildkite-test-collector" github.com/buildkite/bktest/test-collector-go/cmd/buildkite-test-collector )
+  export PATH="${bin_dir}:${PATH}"
+  echo "--- go test -json | buildkite-test-collector (token on the command only, run key ${BUILDKITE_ANALYTICS_KEY})"
+  set +e
+  set -o pipefail
+  go test -json -count=1 ./... | BUILDKITE_TESTS_OTLP_TOKEN="${token}" buildkite-test-collector
+  status=$?
+  set -e
+  echo "pipeline exit status: ${status}"
+  exit "${status}"
+fi
+
 echo "--- go test (mode ${mode}, run key ${BUILDKITE_ANALYTICS_KEY})"
 set +e
+start=$(date +%s)
 go test -v -count=1 ./...
 status=$?
 set -e
-echo "go test exit status: ${status}"
+echo "go test exit status: ${status} after $(( $(date +%s) - start ))s"
 exit "${status}"

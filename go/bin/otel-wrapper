@@ -1,0 +1,72 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Verification step for the buildkite-test-collector command from the
+# unreleased test-collector-go (buildkite/bktest branch otel-go-collector,
+# pinned below). The example's test source is untouched (otelverify/ only
+# adds a failing, a skipped and a subtest-bearing test); results reach Test
+# Engine only through the pipe, so OTLP is the only path they can take. The
+# token is an OIDC token minted for the suite the way pytest-pants/bin/test
+# does; the run key is unique to this step.
+#
+# Usage: bin/otel-wrapper [normal|no-token|closed-port|no-json]
+
+cd "$(dirname "$0")/.."
+
+COLLECTOR_SHA="${COLLECTOR_SHA:-87d80a3d10100d4402f2b766321a0dc039248320}"
+SUITE_URL="https://buildkite.com/organizations/buildkite/analytics/suites/test-engine-client-examples"
+mode="${1:-normal}"
+
+export BUILDKITE_ANALYTICS_KEY="${BUILDKITE_BUILD_ID}-go-wrapper-${mode}"
+export BUILDKITE_ANALYTICS_LOCATION_PREFIX="go/"
+
+case "$mode" in
+  normal|no-json)
+    BUILDKITE_TESTS_OTLP_TOKEN="$(buildkite-agent oidc request-token --audience "${SUITE_URL}" --lifetime 1800)"
+    export BUILDKITE_TESTS_OTLP_TOKEN
+    ;;
+  no-token)
+    unset BUILDKITE_TESTS_OTLP_TOKEN BUILDKITE_ANALYTICS_TOKEN
+    ;;
+  closed-port)
+    BUILDKITE_TESTS_OTLP_TOKEN="$(buildkite-agent oidc request-token --audience "${SUITE_URL}" --lifetime 1800)"
+    export BUILDKITE_TESTS_OTLP_TOKEN
+    export BUILDKITE_ANALYTICS_OTLP_ENDPOINT="http://127.0.0.1:9/v1/traces"
+    ;;
+  *)
+    echo "unknown mode: $mode" >&2
+    exit 2
+    ;;
+esac
+
+echo "--- build buildkite-test-collector@${COLLECTOR_SHA}"
+go version
+# go install pkg@sha cannot resolve an untagged module that only exists on a
+# branch (it looks up @latest for deprecation notices), so build it from a
+# scratch module instead. After the v0.1.0 tag this is one go install line.
+bin_dir="$(mktemp -d)"
+( cd "$(mktemp -d)" && go mod init verify >/dev/null 2>&1 \
+  && GOFLAGS=-mod=mod GOPROXY=direct go get "github.com/buildkite/bktest/test-collector-go@${COLLECTOR_SHA}" \
+  && go build -o "${bin_dir}/buildkite-test-collector" github.com/buildkite/bktest/test-collector-go/cmd/buildkite-test-collector )
+export PATH="${bin_dir}:${PATH}"
+
+if [ "$mode" = "no-json" ]; then
+  echo "--- go test -v | buildkite-test-collector (forgot -json; expect exit 2)"
+  set +e
+  set -o pipefail
+  go test -v -count=1 ./... | buildkite-test-collector
+  status=$?
+  set -e
+  echo "pipeline exit status: ${status}"
+  exit "${status}"
+fi
+
+echo "--- go test -json | buildkite-test-collector (mode ${mode}, run key ${BUILDKITE_ANALYTICS_KEY})"
+set +e
+set -o pipefail
+start=$(date +%s)
+go test -json -count=1 ./... | buildkite-test-collector -tag mode="${mode}"
+status=$?
+set -e
+echo "pipeline exit status: ${status} after $(( $(date +%s) - start ))s"
+exit "${status}"

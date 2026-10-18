@@ -407,3 +407,48 @@ steps:
         plugins:
           - mise#v1.1.4:
               dir: go-otel
+
+      - label: ":golang: go test -json | buildkite-test-collector (untouched go example, OIDC)"
+        commands:
+          - go/bin/otel-wrapper normal
+        soft_fail:
+          - exit_status: 1
+        plugins:
+          - mise#v1.1.4:
+              dir: go
+
+      - label: ":golang: buildkite-test-collector negative: no token (must warn once, stream output, exit as go test would)"
+        commands:
+          - go/bin/otel-wrapper no-token
+        soft_fail:
+          - exit_status: 1
+        plugins:
+          - mise#v1.1.4:
+              dir: go
+
+      - label: ":golang: buildkite-test-collector negative: closed port (must warn TEST RESULTS MISSING, exit as go test would)"
+        commands:
+          - go/bin/otel-wrapper closed-port
+        soft_fail:
+          - exit_status: 1
+        plugins:
+          - mise#v1.1.4:
+              dir: go
+
+      - label: ":golang: buildkite-test-collector negative: stdin without -json (must exit 2 with one error line)"
+        commands:
+          - go/bin/otel-wrapper no-json
+        soft_fail:
+          - exit_status: 2
+        plugins:
+          - mise#v1.1.4:
+              dir: go
+
+      - label: ":golang: identity parity: go-otel suite through buildkite-test-collector, token on the command only"
+        commands:
+          - go-otel/bin/test wrapper-parity
+        soft_fail:
+          - exit_status: 1
+        plugins:
+          - mise#v1.1.4:
+              dir: go-otel

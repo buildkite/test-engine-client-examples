@@ -53,8 +53,8 @@ func TestDivideTable(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			t.Parallel()
-			ctx := bktest.Start(t)
-			bktest.Tag(ctx, "case", tc.name)
+			bktest.Start(t)
+			bktest.Tag(t, "case", tc.name)
 			if got, _ := Divide(tc.a, tc.b); got != tc.want {
 				t.Errorf("Divide(%d, %d) = %d, want %d", tc.a, tc.b, got, tc.want)
 			}
@@ -65,8 +65,8 @@ func TestDivideTable(t *testing.T) {
 // TestDeliberateFailure fails on purpose so the Test Engine run always
 // contains a failed execution.
 func TestDeliberateFailure(t *testing.T) {
-	ctx := bktest.Start(t)
-	bktest.Annotate(ctx, "this test fails on purpose")
+	bktest.Start(t)
+	bktest.Annotate(t, "this test fails on purpose")
 	if got := Add(2, 2); got != 5 {
 		t.Errorf("Add(2, 2) = %d, want 5 (deliberate failure)", got)
 	}
