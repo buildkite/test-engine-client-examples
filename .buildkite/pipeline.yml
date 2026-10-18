@@ -452,3 +452,12 @@ steps:
         plugins:
           - mise#v1.1.4:
               dir: go-otel
+
+      - label: ":golang: gotestsum first: results.json | buildkite-test-collector -quiet, junit.xml via /v1/uploads (test IDs must match)"
+        commands:
+          - go/bin/otel-gotestsum
+        soft_fail:
+          - exit_status: 1
+        plugins:
+          - mise#v1.1.4:
+              dir: go

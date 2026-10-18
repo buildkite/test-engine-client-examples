@@ -1,0 +1,70 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Verification step for the gotestsum-first pattern in the test-collector-go
+# README: gotestsum writes the go test -json stream and a JUnit file, the
+# buildkite-test-collector command (buildkite/bktest branch otel-go-collector,
+# pinned below) reads the stream with -quiet, and the JUnit file goes up the
+# existing /v1/uploads JUnit path with the same form fields the
+# test-collector plugin sends. Each upload gets its own run key so the two
+# Test Engine runs can be compared: every test must resolve to the same test
+# ID in both.
+
+cd "$(dirname "$0")/.."
+
+COLLECTOR_SHA="${COLLECTOR_SHA:-b52d239ccbd6a6adbb63cd118d4b0939e3e64212}"
+SUITE_URL="https://buildkite.com/organizations/buildkite/analytics/suites/test-engine-client-examples"
+
+token="$(buildkite-agent oidc request-token --audience "${SUITE_URL}" --lifetime 1800)"
+
+echo "--- build buildkite-test-collector@${COLLECTOR_SHA}"
+go version
+bin_dir="$(mktemp -d)"
+( cd "$(mktemp -d)" && go mod init verify >/dev/null 2>&1 \
+  && GOFLAGS=-mod=mod GOPROXY=direct go get "github.com/buildkite/bktest/test-collector-go@${COLLECTOR_SHA}" \
+  && go build -o "${bin_dir}/buildkite-test-collector" github.com/buildkite/bktest/test-collector-go/cmd/buildkite-test-collector )
+GOBIN="${bin_dir}" go install gotest.tools/gotestsum@v1.12.0
+export PATH="${bin_dir}:${PATH}"
+
+echo "--- gotestsum --jsonfile results.json --junitfile junit.xml ./..."
+set +e
+gotestsum --jsonfile results.json --junitfile junit.xml -- -count=1 ./...
+gotestsum_status=$?
+set -e
+echo "gotestsum exit status: ${gotestsum_status}"
+
+otel_key="${BUILDKITE_BUILD_ID}-go-gotestsum-otel"
+echo "--- buildkite-test-collector -quiet < results.json (run key ${otel_key})"
+set +e
+BUILDKITE_ANALYTICS_KEY="${otel_key}" \
+BUILDKITE_ANALYTICS_LOCATION_PREFIX="go/" \
+BUILDKITE_TESTS_OTLP_TOKEN="${token}" \
+  buildkite-test-collector -quiet -tag mode=gotestsum < results.json
+collector_status=$?
+set -e
+echo "buildkite-test-collector exit status: ${collector_status}"
+if [ "${collector_status}" != "${gotestsum_status}" ]; then
+  echo "exit status mismatch: gotestsum ${gotestsum_status}, buildkite-test-collector ${collector_status}" >&2
+  exit 3
+fi
+
+junit_key="${BUILDKITE_BUILD_ID}-go-gotestsum-junit"
+echo "--- upload junit.xml to /v1/uploads (run key ${junit_key})"
+curl -X POST --silent --show-error --fail --max-time 30 \
+  --form "format=junit" \
+  --form "data=@junit.xml" \
+  --form "run_env[CI]=buildkite" \
+  --form "run_env[key]=${junit_key}" \
+  --form "run_env[url]=${BUILDKITE_BUILD_URL}" \
+  --form "run_env[branch]=${BUILDKITE_BRANCH}" \
+  --form "run_env[commit_sha]=${BUILDKITE_COMMIT}" \
+  --form "run_env[number]=${BUILDKITE_BUILD_NUMBER}" \
+  --form "run_env[job_id]=${BUILDKITE_JOB_ID}" \
+  --form "run_env[message]=${BUILDKITE_MESSAGE}" \
+  --form "run_env[collector]=test-collector-buildkite-plugin" \
+  --form "tags[mode]=gotestsum-junit" \
+  -H @<(printf 'Authorization: Token token="%s"\n' "${token}") \
+  https://analytics-api.buildkite.com/v1/uploads
+echo
+
+exit "${collector_status}"
