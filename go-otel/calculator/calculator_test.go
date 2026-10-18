@@ -80,3 +80,15 @@ func TestDeliberateFailure(t *testing.T) {
 		t.Errorf("Add(2, 2) = %d, want 5 (deliberate failure)", got)
 	}
 }
+
+// TestCleanupFailure fails from a cleanup registered before Start, which
+// runs after Start's own cleanup; the reported result must still be fail.
+func TestCleanupFailure(t *testing.T) {
+	t.Cleanup(func() {
+		t.Error("failed in a cleanup registered before Start (deliberate failure)")
+	})
+	testhelper.Start(t)
+	if got := Add(1, 1); got != 2 {
+		t.Errorf("Add(1, 1) = %d, want 2", got)
+	}
+}

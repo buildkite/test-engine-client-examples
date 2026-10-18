@@ -13,7 +13,7 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-COLLECTOR_SHA="${COLLECTOR_SHA:-b52d239ccbd6a6adbb63cd118d4b0939e3e64212}"
+COLLECTOR_SHA="${COLLECTOR_SHA:-d35aed638125e04f2c0188ab4fe7754126211f8b}"
 SUITE_URL="https://buildkite.com/organizations/buildkite/analytics/suites/test-engine-client-examples"
 mode="${1:-normal}"
 
