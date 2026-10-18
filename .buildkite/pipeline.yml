@@ -222,7 +222,7 @@ steps:
         commands:
           - cd playwright
           - npm install
-          - ../bin/install-unreleased-js-collector 99dca72d609622b69386075473b59cebddbcc0cf
+          - ../bin/install-unreleased-js-collector b1e48238c3b86922d25577e500ef1b942b3d111c
           - npx playwright install --with-deps chromium
           - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
           - export BUILDKITE_TESTS_OTLP_TOKEN="$(../bin/otel-oidc-token)"
@@ -240,7 +240,7 @@ steps:
         commands:
           - cd playwright
           - npm install
-          - ../bin/install-unreleased-js-collector 99dca72d609622b69386075473b59cebddbcc0cf
+          - ../bin/install-unreleased-js-collector b1e48238c3b86922d25577e500ef1b942b3d111c
           - npx playwright install --with-deps chromium
           - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN BUILDKITE_TESTS_OTLP_TOKEN
           - npx playwright test --config otel.config.js || test $? -eq 1
@@ -256,7 +256,7 @@ steps:
         commands:
           - cd playwright
           - npm install
-          - ../bin/install-unreleased-js-collector 99dca72d609622b69386075473b59cebddbcc0cf
+          - ../bin/install-unreleased-js-collector b1e48238c3b86922d25577e500ef1b942b3d111c
           - npx playwright install --with-deps chromium
           - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
           - export BUILDKITE_TESTS_OTLP_TOKEN="$(../bin/otel-oidc-token)"
