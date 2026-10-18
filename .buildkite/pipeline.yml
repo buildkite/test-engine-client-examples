@@ -195,6 +195,56 @@ steps:
           - mise#v1.1.4:
               dir: cypress
 
+      - label: ":cypress: Cypress (OTel, unreleased collector)"
+        agents:
+          queue: hosted
+        commands:
+          - cd cypress
+          - bin/setup
+          - ../bin/install-unreleased-js-collector 396ec02d598d56d4080144d299c710c420fe3a7f
+          - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
+          - export BUILDKITE_TESTS_OTLP_TOKEN="$(../bin/otel-oidc-token)"
+          - export BUILDKITE_ANALYTICS_KEY="${BUILDKITE_BUILD_ID}-cypress-otel"
+          - npx cypress run --config-file otel.config.js || test $? -eq 1
+        env:
+          BUILDKITE_ANALYTICS_LOCATION_PREFIX: cypress
+        plugins:
+          - mise#v1.1.4:
+              dir: cypress
+
+      - label: ":cypress: Cypress (OTel, no token)"
+        agents:
+          queue: hosted
+        commands:
+          - cd cypress
+          - bin/setup
+          - ../bin/install-unreleased-js-collector 396ec02d598d56d4080144d299c710c420fe3a7f
+          - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN BUILDKITE_TESTS_OTLP_TOKEN
+          - npx cypress run --config-file otel.config.js || test $? -eq 1
+        env:
+          BUILDKITE_ANALYTICS_LOCATION_PREFIX: cypress
+        plugins:
+          - mise#v1.1.4:
+              dir: cypress
+
+      - label: ":cypress: Cypress (OTel, unreachable endpoint)"
+        agents:
+          queue: hosted
+        commands:
+          - cd cypress
+          - bin/setup
+          - ../bin/install-unreleased-js-collector 396ec02d598d56d4080144d299c710c420fe3a7f
+          - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
+          - export BUILDKITE_TESTS_OTLP_TOKEN="$(../bin/otel-oidc-token)"
+          - export BUILDKITE_ANALYTICS_KEY="${BUILDKITE_BUILD_ID}-cypress-otel-unreachable"
+          - npx cypress run --config-file otel.config.js || test $? -eq 1
+        env:
+          BUILDKITE_ANALYTICS_LOCATION_PREFIX: cypress
+          BUILDKITE_ANALYTICS_OTLP_ENDPOINT: "http://127.0.0.1:1/v1/traces"
+        plugins:
+          - mise#v1.1.4:
+              dir: cypress
+
       - label: ":playwright: Playwright"
         parallelism: 2
         commands:
