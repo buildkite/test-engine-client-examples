@@ -390,7 +390,7 @@ steps:
           - mise#v1.1.4:
               dir: go-otel
 
-      - label: ":golang: test-collector-go negative: no token (must warn once and run as a no-op)"
+      - label: ":golang: test-collector-go negative: no token (must stay silent and run as a no-op)"
         commands:
           - go-otel/bin/test no-token
         soft_fail:

@@ -10,6 +10,9 @@ set -euo pipefail
 #
 # Usage: bin/test [normal|no-token|closed-port|wrapper-parity]
 #
+# no-token proves the bktest package prints nothing and changes nothing when
+# no token is set, the way a developer's laptop runs it.
+#
 # wrapper-parity pipes this library-mode suite through the
 # buildkite-test-collector command with the token given only to the command,
 # so the library warns and exports nothing and the command reports every
@@ -18,7 +21,7 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-COLLECTOR_SHA="${COLLECTOR_SHA:-187cf372798bede8617a514150118c0f51601981}"
+COLLECTOR_SHA="${COLLECTOR_SHA:-6725030bcf49f2d2fc7c1d1a2f691e8a94dc01dd}"
 SUITE_URL="https://buildkite.com/organizations/buildkite/analytics/suites/test-engine-client-examples"
 mode="${1:-normal}"
 
@@ -74,10 +77,17 @@ if [ "$mode" = "wrapper-parity" ]; then
 fi
 
 echo "--- go test (mode ${mode}, run key ${BUILDKITE_ANALYTICS_KEY})"
+log="$(mktemp)"
 set +e
 start=$(date +%s)
-go test -v -count=1 ./...
-status=$?
+go test -v -count=1 ./... 2>&1 | tee "${log}"
+status=${PIPESTATUS[0]}
 set -e
 echo "go test exit status: ${status} after $(( $(date +%s) - start ))s"
+
+if [ "$mode" = "no-token" ] && grep -q "buildkite-test-collector" "${log}"; then
+  echo "^^^ +++"
+  echo "the bktest package must stay silent without a token" >&2
+  exit 3
+fi
 exit "${status}"

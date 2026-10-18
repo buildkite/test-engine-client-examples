@@ -3,7 +3,7 @@ module github.com/buildkite/test-engine-client-examples/go-otel
 go 1.24
 
 require (
-	github.com/buildkite/bktest/test-collector-go v0.0.0-20261018063625-187cf372798b
+	github.com/buildkite/bktest/test-collector-go v0.0.0-20261018074439-6725030bcf49
 	go.opentelemetry.io/otel v1.38.0
 )
 

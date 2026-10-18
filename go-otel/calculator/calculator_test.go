@@ -1,10 +1,12 @@
 package calculator
 
 import (
+	"context"
 	"os"
 	"testing"
 
 	bktest "github.com/buildkite/bktest/test-collector-go"
+	"github.com/buildkite/test-engine-client-examples/go-otel/internal/testhelper"
 	"go.opentelemetry.io/otel"
 )
 
@@ -33,11 +35,18 @@ func TestDivide(t *testing.T) {
 	}
 }
 
+// TestDivideByZero starts through the helper package, and its subtest is
+// created there too: both must still be reported under this package.
 func TestDivideByZero(t *testing.T) {
-	bktest.Start(t)
+	testhelper.Start(t)
 	if _, ok := Divide(12, 0); ok {
 		t.Fatal("Divide(12, 0) succeeded, want failure")
 	}
+	testhelper.RunCase(t, "negative", func(ctx context.Context, t *testing.T) {
+		if _, ok := Divide(-12, 0); ok {
+			t.Fatal("Divide(-12, 0) succeeded, want failure")
+		}
+	})
 }
 
 func TestDivideTable(t *testing.T) {
@@ -65,7 +74,7 @@ func TestDivideTable(t *testing.T) {
 // TestDeliberateFailure fails on purpose so the Test Engine run always
 // contains a failed execution.
 func TestDeliberateFailure(t *testing.T) {
-	bktest.Start(t)
+	testhelper.Start(t)
 	bktest.Annotate(t, "this test fails on purpose")
 	if got := Add(2, 2); got != 5 {
 		t.Errorf("Add(2, 2) = %d, want 5 (deliberate failure)", got)
