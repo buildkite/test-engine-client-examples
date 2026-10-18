@@ -388,6 +388,7 @@ steps:
         env:
           BUILDKITE_ANALYTICS_OTEL_ENABLED: "true"
           BUILDKITE_ANALYTICS_OTLP_ENDPOINT: "http://127.0.0.1:1/v1/traces"
+          BUILDKITE_ANALYTICS_DEBUG_ENABLED: "1"
           PYTEST_XDIST_ENABLED: "true"
         plugins:
           - mise#v1.1.4:
