@@ -1,5 +1,5 @@
-github.com/buildkite/bktest/test-collector-go v0.0.0-20261018060208-f2c83768d3d1 h1:WenYHGE7V617+ttdnYTLysvERjBYpz7tkBMwCvc1XFI=
-github.com/buildkite/bktest/test-collector-go v0.0.0-20261018060208-f2c83768d3d1/go.mod h1:WsdidP71w2R9icnTgXxdTnHUqNfLu6gXFFn4e++lL3c=
+github.com/buildkite/bktest/test-collector-go v0.0.0-20261018063625-187cf372798b h1:DOsx0YtGghj8bxoMBW6mmdqP/Ld6WQsi0bM6vCg9aYw=
+github.com/buildkite/bktest/test-collector-go v0.0.0-20261018063625-187cf372798b/go.mod h1:WsdidP71w2R9icnTgXxdTnHUqNfLu6gXFFn4e++lL3c=
 github.com/cenkalti/backoff/v5 v5.0.3 h1:ZN+IMa753KfX5hd8vVaMixjnqRZ3y8CuJKRKj1xcsSM=
 github.com/cenkalti/backoff/v5 v5.0.3/go.mod h1:rkhZdG3JZukswDf7f0cwqPNk4K0sa+F97BxZthm/crw=
 github.com/davecgh/go-spew v1.1.1 h1:vj9j/u1bqnvCEfJOwUhtlOARqs3+rkHYY13jYWTU97c=
