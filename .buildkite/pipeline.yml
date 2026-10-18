@@ -338,7 +338,7 @@ steps:
         soft_fail:
           - exit_status: 1
         env:
-          BKTEST_REF: 027ae332dbc7cfb2ea4439c0c08d6e4707e47380
+          BKTEST_REF: 20fc32c90fd22099c15dfbac9f898f483fa55180
           BUILDKITE_ANALYTICS_KEY: "${BUILDKITE_BUILD_ID}-swift-otel"
           BUILDKITE_ANALYTICS_DEBUG_ENABLED: "true"
           BUILDKITE_ANALYTICS_TAGS: '{"test.framework.name":"xctest","language.name":"swift","custom.tag.from":"upload"}'
@@ -365,7 +365,7 @@ steps:
         soft_fail:
           - exit_status: 1
         env:
-          BKTEST_REF: 027ae332dbc7cfb2ea4439c0c08d6e4707e47380
+          BKTEST_REF: 20fc32c90fd22099c15dfbac9f898f483fa55180
           BUILDKITE_ANALYTICS_KEY: "${BUILDKITE_BUILD_ID}-swift-otel-no-token"
           BUILDKITE_ANALYTICS_DEBUG_ENABLED: "true"
         plugins:
@@ -384,7 +384,7 @@ steps:
         soft_fail:
           - exit_status: 1
         env:
-          BKTEST_REF: 027ae332dbc7cfb2ea4439c0c08d6e4707e47380
+          BKTEST_REF: 20fc32c90fd22099c15dfbac9f898f483fa55180
           BUILDKITE_ANALYTICS_KEY: "${BUILDKITE_BUILD_ID}-swift-otel-unreachable"
           BUILDKITE_ANALYTICS_OTLP_ENDPOINT: "http://127.0.0.1:9/v1/traces"
           BUILDKITE_ANALYTICS_DEBUG_ENABLED: "true"
