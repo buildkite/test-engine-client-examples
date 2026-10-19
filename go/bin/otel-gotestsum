@@ -12,7 +12,7 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-COLLECTOR_SHA="${COLLECTOR_SHA:-63da77bc2bf3361996bc007884d59829826a9b00}"
+COLLECTOR_SHA="${COLLECTOR_SHA:-5d6f42aaed6c5422e6f6592084eec53f1c9a5116}"
 SUITE_URL="https://buildkite.com/organizations/buildkite/analytics/suites/test-engine-client-examples"
 
 token="$(buildkite-agent oidc request-token --audience "${SUITE_URL}" --lifetime 1800)"
