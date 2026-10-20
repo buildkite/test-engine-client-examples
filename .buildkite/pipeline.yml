@@ -363,3 +363,101 @@ steps:
                 - "test.framework.name=go-test"
           - mise#v1.1.4:
               dir: go
+
+  # Verification steps for the unreleased test-collector-go OTel-only
+  # collector (buildkite/bktest branch otel-go-collector). Each step mints its
+  # own OIDC token and uses its own run key so the Test Engine run it produces
+  # can be checked in isolation. The control step runs the released Ruby
+  # collector the same way, proving the plumbing before the Go code is blamed.
+  - group: ":golang: OTel verification (test-collector-go)"
+    steps:
+      - label: ":rspec: Control: Ruby collector 2.17.0 OTel, OIDC, no bktec"
+        commands:
+          - cd rspec
+          - bin/otel-control
+        soft_fail:
+          - exit_status: 1
+        plugins:
+          - mise#v1.1.4:
+              dir: rspec
+
+      - label: ":golang: test-collector-go OTel, OIDC, no bktec"
+        commands:
+          - go-otel/bin/test normal
+        soft_fail:
+          - exit_status: 1
+        plugins:
+          - mise#v1.1.4:
+              dir: go-otel
+
+      - label: ":golang: test-collector-go negative: no token (must stay silent and run as a no-op)"
+        commands:
+          - go-otel/bin/test no-token
+        soft_fail:
+          - exit_status: 1
+        plugins:
+          - mise#v1.1.4:
+              dir: go-otel
+
+      - label: ":golang: test-collector-go negative: closed port (must warn TEST RESULTS MISSING, exit as go test would)"
+        commands:
+          - go-otel/bin/test closed-port
+        soft_fail:
+          - exit_status: 1
+        plugins:
+          - mise#v1.1.4:
+              dir: go-otel
+
+      - label: ":golang: go test -json | buildkite-test-collector (untouched go example, OIDC)"
+        commands:
+          - go/bin/otel-wrapper normal
+        soft_fail:
+          - exit_status: 1
+        plugins:
+          - mise#v1.1.4:
+              dir: go
+
+      - label: ":golang: buildkite-test-collector negative: no token (must warn once, stream output, exit as go test would)"
+        commands:
+          - go/bin/otel-wrapper no-token
+        soft_fail:
+          - exit_status: 1
+        plugins:
+          - mise#v1.1.4:
+              dir: go
+
+      - label: ":golang: buildkite-test-collector negative: closed port (must warn TEST RESULTS MISSING, exit as go test would)"
+        commands:
+          - go/bin/otel-wrapper closed-port
+        soft_fail:
+          - exit_status: 1
+        plugins:
+          - mise#v1.1.4:
+              dir: go
+
+      - label: ":golang: buildkite-test-collector negative: stdin without -json (must exit 2 with one error line)"
+        commands:
+          - go/bin/otel-wrapper no-json
+        soft_fail:
+          - exit_status: 2
+        plugins:
+          - mise#v1.1.4:
+              dir: go
+
+      - label: ":golang: identity parity: go-otel suite through buildkite-test-collector, token on the command only"
+        commands:
+          - go-otel/bin/test wrapper-parity
+        soft_fail:
+          - exit_status: 1
+        plugins:
+          - mise#v1.1.4:
+              dir: go-otel
+
+      - label: ":golang: gotestsum first: results.json | buildkite-test-collector -quiet, junit.xml via /v1/uploads (test IDs must match)"
+        commands:
+          - go/bin/otel-gotestsum
+        soft_fail:
+          - exit_status: 1
+        plugins:
+          - mise#v1.1.4:
+              dir: go
