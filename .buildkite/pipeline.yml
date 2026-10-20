@@ -201,7 +201,7 @@ steps:
         commands:
           - cd jest
           - npm install
-          - ../bin/install-unreleased-js-collector 3bbff8f9adc4f56c15e23e377db04282d9c1a5dd
+          - ../bin/install-unreleased-js-collector e574586c002dc78c48c78fd4527544282f311007
           - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
           - export BUILDKITE_TESTS_OTLP_TOKEN="$(../bin/otel-oidc-token)"
           - export BUILDKITE_ANALYTICS_KEY="${BUILDKITE_BUILD_ID}-jest-otel"
@@ -218,7 +218,7 @@ steps:
         commands:
           - cd jest
           - npm install
-          - ../bin/install-unreleased-js-collector 3bbff8f9adc4f56c15e23e377db04282d9c1a5dd
+          - ../bin/install-unreleased-js-collector e574586c002dc78c48c78fd4527544282f311007
           - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN BUILDKITE_TESTS_OTLP_TOKEN
           - npx jest --config otel.config.js || test $? -eq 1
         env:
@@ -233,7 +233,7 @@ steps:
         commands:
           - cd jest
           - npm install
-          - ../bin/install-unreleased-js-collector 3bbff8f9adc4f56c15e23e377db04282d9c1a5dd
+          - ../bin/install-unreleased-js-collector e574586c002dc78c48c78fd4527544282f311007
           - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
           - export BUILDKITE_TESTS_OTLP_TOKEN="$(../bin/otel-oidc-token)"
           - export BUILDKITE_ANALYTICS_KEY="${BUILDKITE_BUILD_ID}-jest-otel-unreachable"
