@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# Run the pytest example under xdist with OTel mode pointed at an unreachable
+# endpoint, then check that pytest kept its own exit status and that the job
+# log names every lost result: the controller's per-worker
+# "TEST RESULTS MISSING ... did not upload N" lines must add up to all 7 tests.
+set -uo pipefail
+
+pytest -v -n 2 tests tests/failed_test.py 2>&1 | tee pytest-output.log
+status=${PIPESTATUS[0]}
+echo "pytest exit status: ${status}"
+test "${status}" -eq 1 || exit 1
+
+total=$(grep -o 'TEST RESULTS MISSING: OpenTelemetry on xdist worker gw[0-9]* did not upload [0-9]*' pytest-output.log \
+  | awk '{ total += $NF } END { print total + 0 }')
+echo "controller reported ${total} missing results (expected 7)"
+test "${total}" -eq 7
