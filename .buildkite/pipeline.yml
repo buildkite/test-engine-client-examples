@@ -25,6 +25,32 @@ steps:
           - mise#v1.1.4:
               dir: rspec
 
+      # bktec pool exec runs one persistent buildkite-rspec process that leases
+      # batches from a Test Scheduler pool shared by this step's jobs.
+      # --pool-lease-max-attempts 2 caps attempts per lease so jobs cycle
+      # through several leases from the pool instead of one big lease.
+      # Unlike pool consume, pool exec does not inject an upload token, so the
+      # BUILDKITE_ANALYTICS_TOKEN exported by the Tests plugin stays set for the
+      # collector running inside the persistent runner.
+      - label: ":rspec: RSpec (Test Scheduler pool exec)"
+        parallelism: 2
+        commands:
+          - cd rspec
+          - bundle install
+          - unset BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
+          - bktec pool exec --pool-lease-max-attempts 2 -- bundle exec buildkite-rspec
+        soft_fail:
+          - exit_status: 1
+        plugins:
+          - tests#v1.0.1:
+              test-runner: rspec
+              result-path: tmp/rspec.json
+              suite-slug: test-engine-client-examples
+              upload-results: false
+              client-version: "3.4.0"
+          - mise#v1.1.4:
+              dir: rspec
+
       - label: ":rspec: RSpec (OpenTelemetry setup in suite)"
         commands:
           - cd rspec-otel/suite-setup
@@ -182,6 +208,31 @@ steps:
         env:
           BUILDKITE_ANALYTICS_LOCATION_PREFIX: jest
 
+      # bktec pool consume starts a fresh Jest process for each leased batch,
+      # drawing from a Test Scheduler pool shared by this step's jobs.
+      # --pool-lease-max-attempts 2 caps attempts per lease so jobs cycle
+      # through several leases from the pool instead of one big lease.
+      - label: ":jest: Jest (Test Scheduler pool)"
+        parallelism: 2
+        commands:
+          - cd jest
+          - npm install
+          - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
+          - bktec pool consume --pool-lease-max-attempts 2
+        soft_fail:
+          - exit_status: 1
+        plugins:
+          - tests#v1.0.1:
+              test-runner: jest
+              result-path: jest-result.json
+              suite-slug: test-engine-client-examples
+              upload-results: false
+              client-version: "3.4.0"
+          - mise#v1.1.4:
+              dir: jest
+        env:
+          BUILDKITE_ANALYTICS_LOCATION_PREFIX: jest
+
       - label: ":cypress: Cypress"
         parallelism: 2
         commands:
@@ -213,6 +264,33 @@ steps:
         plugins:
           - tests#v1.0.0:
               test-runner: playwright
+              result-path: tmp/playwright-results.json
+              suite-slug: test-engine-client-examples
+              upload-results: false
+              client-version: "3.4.0"
+          - mise#v1.1.4:
+              dir: playwright
+        env:
+          BUILDKITE_ANALYTICS_LOCATION_PREFIX: playwright
+
+      # bktec pool consume starts a fresh Playwright process for each leased
+      # batch, drawing from a Test Scheduler pool shared by this step's jobs.
+      # --pool-lease-max-attempts 2 caps attempts per lease so jobs cycle
+      # through several leases from the pool instead of one big lease.
+      - label: ":playwright: Playwright (Test Scheduler pool)"
+        parallelism: 2
+        commands:
+          - cd playwright
+          - npm install
+          - npx playwright install --with-deps chromium
+          - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
+          - bktec pool consume --pool-lease-max-attempts 2
+        soft_fail:
+          - exit_status: 1
+        plugins:
+          - tests#v1.0.1:
+              test-runner: playwright
+              test-file-pattern: "tests/**/*.spec.js"
               result-path: tmp/playwright-results.json
               suite-slug: test-engine-client-examples
               upload-results: false
@@ -284,6 +362,60 @@ steps:
               client-version: "3.4.0"
           - mise#v1.1.4:
               dir: pytest-tag-filters
+
+      # bktec pool consume starts a fresh pytest process for each leased batch,
+      # drawing from a Test Scheduler pool shared by this step's jobs.
+      # --pool-lease-max-attempts 2 caps attempts per lease so jobs cycle
+      # through several leases from the pool instead of one big lease.
+      - label: ":pytest: pytest (Test Scheduler pool)"
+        parallelism: 2
+        commands:
+          - cd pytest
+          - pip install -e '.[dev]'
+          - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
+          - bktec pool consume --pool-lease-max-attempts 2
+        soft_fail:
+          - exit_status: 1
+        plugins:
+          - tests#v1.0.1:
+              test-runner: pytest
+              suite-slug: test-engine-client-examples
+              upload-results: false
+              client-version: "3.4.0"
+          - mise#v1.1.4:
+              dir: pytest
+
+      # bktec pool exec runs one persistent buildkite-pytest process that
+      # leases batches from a Test Scheduler pool shared by this step's jobs,
+      # so pytest startup and session fixtures run once per job.
+      # --pool-lease-max-attempts 2 caps attempts per lease so jobs cycle
+      # through several leases from the pool instead of one big lease.
+      # buildkite-test-collector is installed from GitHub because the release
+      # with the buildkite-pytest runner isn't published yet.
+      - label: ":pytest: pytest (Test Scheduler pool exec)"
+        parallelism: 2
+        env:
+          # Without a TTY, Python block-buffers the runner's stdout; keep it
+          # streaming so a silent or hung runner is visible in the job log.
+          PYTHONUNBUFFERED: "1"
+        commands:
+          - cd pytest
+          - pip install -e '.[dev]'
+          # --force-reinstall replaces the buildkite-test-collector already
+          # cached from PyPI, which predates the buildkite-pytest runner.
+          - pip install --force-reinstall 'buildkite-test-collector @ git+https://github.com/buildkite/bktest.git@b1dd38900fe381fe9d5cf29d757f0c7c9f7298ff#subdirectory=test-collector-python'
+          - unset BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
+          - bktec pool exec --pool-lease-max-attempts 2 -- buildkite-pytest
+        soft_fail:
+          - exit_status: 1
+        plugins:
+          - tests#v1.0.1:
+              test-runner: pytest
+              suite-slug: test-engine-client-examples
+              upload-results: false
+              client-version: "3.4.0"
+          - mise#v1.1.4:
+              dir: pytest
 
   - group: ":apple: iOS / macOS"
     steps:
