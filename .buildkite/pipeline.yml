@@ -47,7 +47,7 @@ steps:
               result-path: tmp/rspec.json
               suite-slug: test-engine-client-examples
               upload-results: false
-              client-version: "v3.4.0"
+              client-version: "3.4.0"
           - mise#v1.1.4:
               dir: rspec
 
@@ -227,7 +227,7 @@ steps:
               result-path: jest-result.json
               suite-slug: test-engine-client-examples
               upload-results: false
-              client-version: "v3.4.0"
+              client-version: "3.4.0"
           - mise#v1.1.4:
               dir: jest
         env:
@@ -294,7 +294,7 @@ steps:
               result-path: tmp/playwright-results.json
               suite-slug: test-engine-client-examples
               upload-results: false
-              client-version: "v3.4.0"
+              client-version: "3.4.0"
           - mise#v1.1.4:
               dir: playwright
         env:
@@ -381,7 +381,7 @@ steps:
               test-runner: pytest
               suite-slug: test-engine-client-examples
               upload-results: false
-              client-version: "v3.4.0"
+              client-version: "3.4.0"
           - mise#v1.1.4:
               dir: pytest
 
@@ -413,7 +413,7 @@ steps:
               test-runner: pytest
               suite-slug: test-engine-client-examples
               upload-results: false
-              client-version: "v3.4.0"
+              client-version: "3.4.0"
           - mise#v1.1.4:
               dir: pytest
 
