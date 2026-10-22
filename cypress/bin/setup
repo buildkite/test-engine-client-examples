@@ -10,9 +10,16 @@ set -euo pipefail
 # "no tasks defined ... are you in a project directory?". Install the
 # packages directly instead. See https://docs.cypress.io/app/get-started/install-cypress#Linux-Prerequisites
 apt-get update -qq
+
+# Ubuntu 24.04 renamed ALSA's package; older images still use libasound2.
+alsa_package=libasound2
+if apt-cache show libasound2t64 >/dev/null 2>&1; then
+  alsa_package=libasound2t64
+fi
+
 apt-get install -y --no-install-recommends \
   xvfb libgtk2.0-0 libgtk-3-0 libgbm-dev libnotify-dev libnss3 libxss1 \
-  libasound2 libxtst6 xauth
+  "$alsa_package" libxtst6 xauth
 
 # Install node packages
 npm install
