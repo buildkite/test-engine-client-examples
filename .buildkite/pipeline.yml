@@ -21,7 +21,7 @@ steps:
               result-path: tmp/rspec.json
               suite-slug: test-engine-client-examples
               upload-results: false
-              client-version: "v3.4.0"
+              client-version: "3.4.0"
           - mise#v1.1.4:
               dir: rspec
 
@@ -38,7 +38,7 @@ steps:
               result-path: tmp/rspec.json
               suite-slug: test-engine-client-examples
               upload-results: false
-              client-version: "v3.4.0"
+              client-version: "3.4.0"
           - mise#v1.1.4:
               dir: rspec-otel/suite-setup
 
@@ -55,7 +55,7 @@ steps:
               result-path: tmp/rspec.json
               suite-slug: test-engine-client-examples
               upload-results: false
-              client-version: "v3.4.0"
+              client-version: "3.4.0"
           - mise#v1.1.4:
               dir: rspec-otel/collector-setup
 
@@ -74,7 +74,7 @@ steps:
               test-file-pattern: "**/*_test.rb"
               suite-slug: test-engine-client-examples
               upload-results: false
-              client-version: "v3.4.0"
+              client-version: "3.4.0"
           - mise#v1.1.4:
               dir: ruby-minitest
         env:
@@ -95,7 +95,7 @@ steps:
               result-path: tmp/cucumber.json
               suite-slug: test-engine-client-examples
               upload-results: false
-              client-version: "v3.4.0"
+              client-version: "3.4.0"
           - mise#v1.1.4:
               dir: cucumber
         env:
@@ -154,7 +154,7 @@ steps:
               result-path: jest-result.json
               suite-slug: test-engine-client-examples
               upload-results: false
-              client-version: "v3.4.0"
+              client-version: "3.4.0"
           - mise#v1.1.4:
               dir: jest
         env:
@@ -176,7 +176,7 @@ steps:
               retry-cmd: "npx jest {{testExamples}} --testNamePattern '{{testNamePattern}}' --json --testLocationInResults --outputFile {{resultPath}}"
               suite-slug: test-engine-client-examples
               upload-results: false
-              client-version: "v3.4.0"
+              client-version: "3.4.0"
           - mise#v1.1.4:
               dir: jest
         env:
@@ -196,7 +196,7 @@ steps:
               test-runner: cypress
               suite-slug: test-engine-client-examples
               upload-results: false
-              client-version: "v3.4.0"
+              client-version: "3.4.0"
           - mise#v1.1.4:
               dir: cypress
 
@@ -216,7 +216,7 @@ steps:
               result-path: tmp/playwright-results.json
               suite-slug: test-engine-client-examples
               upload-results: false
-              client-version: "v3.4.0"
+              client-version: "3.4.0"
           - mise#v1.1.4:
               dir: playwright
         env:
@@ -239,7 +239,7 @@ steps:
               test-runner: pytest
               suite-slug: test-engine-client-examples
               upload-results: false
-              client-version: "v3.4.0"
+              client-version: "3.4.0"
           - mise#v1.1.4:
               dir: pytest
 
@@ -261,7 +261,7 @@ steps:
               test-runner: pytest
               suite-slug: test-engine-client-examples
               upload-results: false
-              client-version: "v3.4.0"
+              client-version: "3.4.0"
           - mise#v1.1.4:
               dir: pytest
 
@@ -281,7 +281,7 @@ steps:
               tag-filters: "component:frontend"
               suite-slug: test-engine-client-examples
               upload-results: false
-              client-version: "v3.4.0"
+              client-version: "3.4.0"
           - mise#v1.1.4:
               dir: pytest-tag-filters
 
@@ -367,7 +367,7 @@ steps:
               test-runner: gotest
               result-path: tmp/gotest-result.jsonl
               suite-slug: test-engine-client-examples
-              client-version: "v3.4.0"
+              client-version: "3.4.0"
               tags:
                 - "language.name=go"
                 - "test.framework.name=go-test"
