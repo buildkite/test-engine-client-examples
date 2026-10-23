@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# Run from jest-otel-children. Install a packed collector at the exact reviewed
+# commit without publishing it or resolving the npm beta/latest dist-tags.
+set -euo pipefail
+SHA="${1:?usage: bash run <bktest commit>}"
+WORKDIR="$(mktemp -d)"
+trap 'rm -rf "$WORKDIR"' EXIT
+git -C "$WORKDIR" init -q
+git -C "$WORKDIR" fetch -q --depth 1 https://github.com/buildkite/bktest.git "$SHA"
+git -C "$WORKDIR" checkout -q FETCH_HEAD
+TARBALL="$(cd "$WORKDIR/test-collector-javascript" && npm pack --silent)"
+npm ci
+npm install --no-save "$WORKDIR/test-collector-javascript/$TARBALL"
+node -p '"collector version: " + require("buildkite-test-collector/package.json").version'
+npm test
