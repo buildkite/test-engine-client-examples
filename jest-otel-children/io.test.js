@@ -1,6 +1,5 @@
 const http = require('http')
 const { trace } = require('@opentelemetry/api')
-const { buildSchema, graphql } = require('graphql')
 let server
 let url
 beforeAll(async () => {
@@ -30,10 +29,7 @@ test('HTTP I/O inside a manual span', async () => {
   })
 })
 
-test('GraphQL resolver does fetch I/O', async () => {
-  const result = await graphql({
-    schema: buildSchema('type Query { message: String }'), source: '{ message }',
-    rootValue: { message: async () => (await fetch(url)).text() },
-  })
-  expect(result).toEqual({ data: { message: 'real instrumented I/O' } })
+test('fetch I/O', async () => {
+  const response = await fetch(url)
+  expect(await response.text()).toBe('real instrumented I/O')
 })

@@ -2,9 +2,8 @@ module.exports = {
   reporters: ['default', ['buildkite-test-collector/jest/reporter', {
     otelEnabled: true,
     otelInstrumentations: [
-      '@opentelemetry/instrumentation-http',
-      '@opentelemetry/instrumentation-undici',
-      '@opentelemetry/instrumentation-graphql',
+      '@opentelemetry/instrumentation-http', // http and https
+      '@opentelemetry/instrumentation-undici', // fetch
     ],
     tags: { 'collector.mode': 'otel-children' },
   }]],
