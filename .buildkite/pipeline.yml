@@ -314,13 +314,17 @@ steps:
                 - BUILDKITE_ANALYTICS_TAGS
                 - BUILDKITE_ANALYTICS_DEBUG_ENABLED
 
-      - label: ":swift: Swift: XCUITest (test-collector-swift)"
+      - label: ":swift: Swift: XCUITest (direct OTLP, runner restart)"
         command: swift-xcuitest/bin/test
         agents:
           queue: macos
         artifact_paths:
           - swift-xcuitest/artifacts/SwiftXCUITest.xcresult/**/*
+          - swift-xcuitest/artifacts/xcodebuild.log
         env:
+          BUILDKITE_ANALYTICS_DEBUG_ENABLED: "true"
+          BUILDKITE_ANALYTICS_KEY: "${BUILDKITE_BUILD_ID}-swift-xcuitest-direct"
+          BUILDKITE_ANALYTICS_OTLP_ENDPOINT: "https://tests-otlp.buildkite.com/v1/traces"
           BUILDKITE_ANALYTICS_TAGS: '{"test.framework.name":"xcuitest","language.name":"swift","custom.tag.from":"upload"}'
         plugins:
           - tests#v1.0.0:
