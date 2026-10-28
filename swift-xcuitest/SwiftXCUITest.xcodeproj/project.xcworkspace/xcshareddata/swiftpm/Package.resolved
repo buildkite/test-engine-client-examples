@@ -1,5 +1,5 @@
 {
-  "originHash" : "70638e11aba3a1472dfd0d75666b7caef58756d280301136e8d429ecf34ce1b3",
+  "originHash" : "084f6cd8df12916c0b6136d30dfd8f4473d3a444d142470894d125555d5d7452",
   "pins" : [
     {
       "identity" : "grpc-swift",
@@ -215,6 +215,15 @@
       "state" : {
         "revision" : "0b30161977799fd949f7f6848586b82ff6764f73",
         "version" : "1.6.6"
+      }
+    },
+    {
+      "identity" : "test-collector-swift",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/buildkite/test-collector-swift",
+      "state" : {
+        "revision" : "6a061d63b705fcdc9b589bf67754c146397c0abd",
+        "version" : "2.0.0-beta.2"
       }
     },
     {

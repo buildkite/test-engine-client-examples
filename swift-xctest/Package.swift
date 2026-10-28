@@ -10,7 +10,7 @@ let package = Package(
         .library(name: "ExampleLib", targets: ["ExampleLib"])
     ],
     dependencies: [
-        .package(path: "../.bktest/test-collector-swift")
+        .package(url: "https://github.com/buildkite/test-collector-swift", exact: "2.0.0-beta.2")
     ],
     targets: [
         .target(

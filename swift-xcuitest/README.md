@@ -13,14 +13,12 @@ test cannot be emitted by an in-process collector because `SIGKILL` prevents
 XCTest's completion callback; recovering that execution would require durable
 start-state reconciliation outside the runner.
 
-This branch uses the Swift collector from the `swift-otel-executions` branch of
-[`buildkite/bktest`](https://github.com/buildkite/bktest). Check it out before
-running locally:
-
-```sh
-git clone --branch swift-otel-executions --depth 1 \
-  https://github.com/buildkite/bktest ../.bktest
-```
+The example uses the published `2.0.0-beta.2` collector from
+[`buildkite/test-collector-swift`](https://github.com/buildkite/test-collector-swift).
+Buildkite runs it through the bktec `3.4.1` OTLP relay. The verifier checks relay
+acceptance, not final Test Engine ingestion; confirm all four completed tests
+appear in Test Engine after the build. OTLP ingestion must be enabled for the
+organization when exporting directly without the relay.
 
 Run it with:
 

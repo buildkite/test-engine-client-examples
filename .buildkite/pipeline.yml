@@ -289,7 +289,6 @@ steps:
     steps:
       - label: ":swift: Swift: XCTest (test-collector-swift)"
         commands:
-          - git clone --branch swift-otel-executions --depth 1 https://github.com/buildkite/bktest .bktest
           - cd swift-xctest
           - swift package resolve
           # Run XCTest tests (which includes the BuildkiteTestCollector).
@@ -315,10 +314,8 @@ steps:
                 - BUILDKITE_ANALYTICS_TAGS
                 - BUILDKITE_ANALYTICS_DEBUG_ENABLED
 
-      - label: ":swift: Swift: XCUITest (test-collector-swift)"
-        commands:
-          - git clone --branch swift-otel-executions --depth 1 https://github.com/buildkite/bktest .bktest
-          - bktec run
+      - label: ":swift: Swift: XCUITest (collector 2.0.0-beta.2, runner restart)"
+        command: bktec run
         agents:
           queue: macos
         artifact_paths:
@@ -335,7 +332,7 @@ steps:
               test-file-pattern: swift-xcuitest/ExampleAppUITests/**/*.swift
               suite-slug: test-engine-client-examples
               upload-results: false
-              client-version: v3.1.0-rc.1
+              client-version: "3.4.1"
 
   - group: ":android: Android"
     steps:
