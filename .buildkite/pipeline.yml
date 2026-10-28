@@ -287,7 +287,7 @@ steps:
 
   - group: ":apple: iOS / macOS"
     steps:
-      - label: ":swift: Swift: XCTest (test-collector-swift)"
+      - label: ":swift: Swift: XCTest (collector 2.0.0-beta.2)"
         commands:
           - cd swift-xctest
           - swift package resolve
@@ -299,6 +299,8 @@ steps:
         soft_fail:
           - exit_status: 1
         env:
+          BUILDKITE_ANALYTICS_KEY: "${BUILDKITE_BUILD_ID}-swift-beta2"
+          BUILDKITE_ANALYTICS_DEBUG_ENABLED: "true"
           BUILDKITE_ANALYTICS_TAGS: '{"test.framework.name":"xctest","language.name":"swift","custom.tag.from":"upload"}'
         plugins:
           - tests#v1.0.0:
@@ -311,7 +313,54 @@ steps:
               propagate-environment: true
               environment:
                 - BUILDKITE_ANALYTICS_TOKEN
+                - BUILDKITE_ANALYTICS_KEY
                 - BUILDKITE_ANALYTICS_TAGS
+                - BUILDKITE_ANALYTICS_DEBUG_ENABLED
+
+      # Export stays disabled without a token; XCTest still runs normally.
+      - label: ":swift: Swift: XCTest (collector 2.0.0-beta.2, no token)"
+        commands:
+          - cd swift-xctest
+          - swift package resolve
+          - swift test --disable-swift-testing
+        soft_fail:
+          - exit_status: 1
+        env:
+          BUILDKITE_ANALYTICS_KEY: "${BUILDKITE_BUILD_ID}-swift-beta2-no-token"
+          BUILDKITE_ANALYTICS_DEBUG_ENABLED: "true"
+        plugins:
+          - docker#v5.11.0:
+              image: "swift:6.0-noble"
+              propagate-environment: true
+              environment:
+                - BUILDKITE_ANALYTICS_KEY
+                - BUILDKITE_ANALYTICS_DEBUG_ENABLED
+
+      # An unreachable endpoint must produce TEST RESULTS MISSING warnings.
+      - label: ":swift: Swift: XCTest (collector 2.0.0-beta.2, unreachable endpoint)"
+        commands:
+          - cd swift-xctest
+          - swift package resolve
+          - swift test --disable-swift-testing
+        soft_fail:
+          - exit_status: 1
+        env:
+          BUILDKITE_ANALYTICS_KEY: "${BUILDKITE_BUILD_ID}-swift-beta2-unreachable"
+          BUILDKITE_ANALYTICS_OTLP_ENDPOINT: "http://127.0.0.1:9/v1/traces"
+          BUILDKITE_ANALYTICS_DEBUG_ENABLED: "true"
+        plugins:
+          - tests#v1.0.0:
+              test-runner: custom
+              suite-slug: test-engine-client-examples
+              upload-results: false
+              install-client: false
+          - docker#v5.11.0:
+              image: "swift:6.0-noble"
+              propagate-environment: true
+              environment:
+                - BUILDKITE_ANALYTICS_TOKEN
+                - BUILDKITE_ANALYTICS_KEY
+                - BUILDKITE_ANALYTICS_OTLP_ENDPOINT
                 - BUILDKITE_ANALYTICS_DEBUG_ENABLED
 
       - label: ":swift: Swift: XCUITest (test-collector-swift)"
