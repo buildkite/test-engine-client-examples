@@ -1,17 +1,5 @@
-// swift-tools-version: 5.9
-import Foundation
+// swift-tools-version: 5.10
 import PackageDescription
-
-// BKTEST_COLLECTOR_PATH points at a local checkout of
-// buildkite/bktest/test-collector-swift so a build can exercise an unreleased
-// collector. SwiftPM cannot resolve a package in a repository subdirectory by
-// URL, so the pipeline clones bktest and sets this variable.
-let collector: Package.Dependency
-if let path = ProcessInfo.processInfo.environment["BKTEST_COLLECTOR_PATH"] {
-    collector = .package(path: path)
-} else {
-    collector = .package(url: "https://github.com/buildkite/test-collector-swift", from: "0.6.0")
-}
 
 let package = Package(
     name: "swift-xctest",
@@ -22,7 +10,7 @@ let package = Package(
         .library(name: "ExampleLib", targets: ["ExampleLib"])
     ],
     dependencies: [
-        collector
+        .package(url: "https://github.com/buildkite/test-collector-swift", exact: "2.0.0-beta.2")
     ],
     targets: [
         .target(

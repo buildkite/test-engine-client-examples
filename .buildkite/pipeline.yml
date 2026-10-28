@@ -287,7 +287,7 @@ steps:
 
   - group: ":apple: iOS / macOS"
     steps:
-      - label: ":swift: Swift: XCTest (test-collector-swift)"
+      - label: ":swift: Swift: XCTest (collector 2.0.0-beta.2)"
         commands:
           - cd swift-xctest
           - swift package resolve
@@ -299,31 +299,7 @@ steps:
         soft_fail:
           - exit_status: 1
         env:
-          BUILDKITE_ANALYTICS_TAGS: '{"test.framework.name":"xctest","language.name":"swift","custom.tag.from":"upload"}'
-        plugins:
-          - tests#v1.0.0:
-              test-runner: custom
-              suite-slug: test-engine-client-examples
-              upload-results: false
-              install-client: false
-          - docker#v5.11.0:
-              image: "swift:6.0-noble"
-              propagate-environment: true
-              environment:
-                - BUILDKITE_ANALYTICS_TOKEN
-                - BUILDKITE_ANALYTICS_TAGS
-                - BUILDKITE_ANALYTICS_DEBUG_ENABLED
-
-      # OTel conformance verification for buildkite/bktest/test-collector-swift.
-      # Each step runs the unreleased collector from a bktest ref with its own
-      # Test Engine run key so runs can be compared side by side.
-      - label: ":swift: Swift: XCTest (bktest baseline, collector @ main)"
-        command: swift-xctest/bin/test-bktest
-        soft_fail:
-          - exit_status: 1
-        env:
-          BKTEST_REF: main
-          BUILDKITE_ANALYTICS_KEY: "${BUILDKITE_BUILD_ID}-swift-otel-baseline"
+          BUILDKITE_ANALYTICS_KEY: "${BUILDKITE_BUILD_ID}-swift-beta2"
           BUILDKITE_ANALYTICS_DEBUG_ENABLED: "true"
           BUILDKITE_ANALYTICS_TAGS: '{"test.framework.name":"xctest","language.name":"swift","custom.tag.from":"upload"}'
         plugins:
@@ -336,65 +312,40 @@ steps:
               image: "swift:6.0-noble"
               propagate-environment: true
               environment:
-                - BKTEST_REF
                 - BUILDKITE_ANALYTICS_TOKEN
                 - BUILDKITE_ANALYTICS_KEY
                 - BUILDKITE_ANALYTICS_TAGS
                 - BUILDKITE_ANALYTICS_DEBUG_ENABLED
 
-      - label: ":swift: Swift: XCTest (bktest conformance, collector @ otel-swift-conformance)"
-        command: swift-xctest/bin/test-bktest
+      # Export stays disabled without a token; XCTest still runs normally.
+      - label: ":swift: Swift: XCTest (collector 2.0.0-beta.2, no token)"
+        commands:
+          - cd swift-xctest
+          - swift package resolve
+          - swift test --disable-swift-testing
         soft_fail:
           - exit_status: 1
         env:
-          BKTEST_REF: 6a7f52729e9201707a7555fac94dd796ca9e0909
-          BUILDKITE_ANALYTICS_KEY: "${BUILDKITE_BUILD_ID}-swift-otel"
-          BUILDKITE_ANALYTICS_DEBUG_ENABLED: "true"
-          BUILDKITE_ANALYTICS_TAGS: '{"test.framework.name":"xctest","language.name":"swift","custom.tag.from":"upload"}'
-        plugins:
-          - tests#v1.0.0:
-              test-runner: custom
-              suite-slug: test-engine-client-examples
-              upload-results: false
-              install-client: false
-          - docker#v5.11.0:
-              image: "swift:6.0-noble"
-              propagate-environment: true
-              environment:
-                - BKTEST_REF
-                - BUILDKITE_ANALYTICS_TOKEN
-                - BUILDKITE_ANALYTICS_KEY
-                - BUILDKITE_ANALYTICS_TAGS
-                - BUILDKITE_ANALYTICS_DEBUG_ENABLED
-
-      # Negative path: no credential. The collector must stay quiet and the
-      # process must exit with XCTest's own status (1: FailingTests fails).
-      - label: ":swift: Swift: XCTest (bktest conformance, no token)"
-        command: swift-xctest/bin/test-bktest
-        soft_fail:
-          - exit_status: 1
-        env:
-          BKTEST_REF: 6a7f52729e9201707a7555fac94dd796ca9e0909
-          BUILDKITE_ANALYTICS_KEY: "${BUILDKITE_BUILD_ID}-swift-otel-no-token"
+          BUILDKITE_ANALYTICS_KEY: "${BUILDKITE_BUILD_ID}-swift-beta2-no-token"
           BUILDKITE_ANALYTICS_DEBUG_ENABLED: "true"
         plugins:
           - docker#v5.11.0:
               image: "swift:6.0-noble"
               propagate-environment: true
               environment:
-                - BKTEST_REF
                 - BUILDKITE_ANALYTICS_KEY
                 - BUILDKITE_ANALYTICS_DEBUG_ENABLED
 
-      # Negative path: unreachable endpoint. The collector must warn that
-      # results are missing and the process must exit with XCTest's own status.
-      - label: ":swift: Swift: XCTest (bktest conformance, unreachable endpoint)"
-        command: swift-xctest/bin/test-bktest
+      # An unreachable endpoint must produce TEST RESULTS MISSING warnings.
+      - label: ":swift: Swift: XCTest (collector 2.0.0-beta.2, unreachable endpoint)"
+        commands:
+          - cd swift-xctest
+          - swift package resolve
+          - swift test --disable-swift-testing
         soft_fail:
           - exit_status: 1
         env:
-          BKTEST_REF: 6a7f52729e9201707a7555fac94dd796ca9e0909
-          BUILDKITE_ANALYTICS_KEY: "${BUILDKITE_BUILD_ID}-swift-otel-unreachable"
+          BUILDKITE_ANALYTICS_KEY: "${BUILDKITE_BUILD_ID}-swift-beta2-unreachable"
           BUILDKITE_ANALYTICS_OTLP_ENDPOINT: "http://127.0.0.1:9/v1/traces"
           BUILDKITE_ANALYTICS_DEBUG_ENABLED: "true"
         plugins:
@@ -407,7 +358,6 @@ steps:
               image: "swift:6.0-noble"
               propagate-environment: true
               environment:
-                - BKTEST_REF
                 - BUILDKITE_ANALYTICS_TOKEN
                 - BUILDKITE_ANALYTICS_KEY
                 - BUILDKITE_ANALYTICS_OTLP_ENDPOINT

@@ -14,6 +14,3 @@ __pycache__
 .pids
 dist/
 __pycache__/
-
-# bktest checkout used by swift-xctest/bin/test-bktest
-.bktest/
