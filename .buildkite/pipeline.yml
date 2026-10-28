@@ -11,16 +11,53 @@ steps:
           - cd rspec
           - bundle install
           - bktec run
+        env:
+          BUILDKITE_TESTS_OTLP_RELAY: "true"
         soft_fail:
           - exit_status: 1
         plugins:
-          - tests#v1.0.0:
+          - tests#v1.0.1:
               test-runner: rspec
               result-path: tmp/rspec.json
               suite-slug: test-engine-client-examples
               upload-results: false
+              client-version: "3.4.1"
           - mise#v1.1.4:
               dir: rspec
+
+      - label: ":rspec: RSpec (OpenTelemetry setup in suite)"
+        commands:
+          - cd rspec-otel/suite-setup
+          - bundle install
+          - bktec run
+        env:
+          BUILDKITE_TESTS_OTLP_RELAY: "true"
+        plugins:
+          - tests#v1.0.1:
+              test-runner: rspec
+              result-path: tmp/rspec.json
+              suite-slug: test-engine-client-examples
+              upload-results: false
+              client-version: "3.4.1"
+          - mise#v1.1.4:
+              dir: rspec-otel/suite-setup
+
+      - label: ":rspec: RSpec (OpenTelemetry setup by test collector)"
+        commands:
+          - cd rspec-otel/collector-setup
+          - bundle install
+          - bktec run
+        env:
+          BUILDKITE_TESTS_OTLP_RELAY: "true"
+        plugins:
+          - tests#v1.0.1:
+              test-runner: rspec
+              result-path: tmp/rspec.json
+              suite-slug: test-engine-client-examples
+              upload-results: false
+              client-version: "3.4.1"
+          - mise#v1.1.4:
+              dir: rspec-otel/collector-setup
 
       - label: ":ruby: Minitest"
         parallelism: 2
@@ -37,6 +74,7 @@ steps:
               test-file-pattern: "**/*_test.rb"
               suite-slug: test-engine-client-examples
               upload-results: false
+              client-version: "3.4.1"
           - mise#v1.1.4:
               dir: ruby-minitest
         env:
@@ -57,18 +95,56 @@ steps:
               result-path: tmp/cucumber.json
               suite-slug: test-engine-client-examples
               upload-results: false
+              client-version: "3.4.1"
           - mise#v1.1.4:
               dir: cucumber
         env:
           BUILDKITE_ANALYTICS_LOCATION_PREFIX: cucumber
 
+  # The tests plugin exports a short-lived token before setup. Unset it before
+  # bktec so long dependency installs cannot leave it with stale credentials.
   - group: ":javascript: JavaScript"
     steps:
+      - label: ":vitest: Vitest 4"
+        key: vitest-4
+        commands:
+          - cd vitest-4
+          - npm ci
+          - npm test
+        plugins:
+          - tests#v1.0.0:
+              test-runner: custom
+              suite-slug: test-engine-client-examples
+              upload-results: false
+              install-client: false
+          - mise#v1.1.4:
+              dir: vitest-4
+        env:
+          BUILDKITE_ANALYTICS_LOCATION_PREFIX: vitest-4
+
+      - label: ":vitest: Vitest"
+        key: vitest
+        commands:
+          - cd vitest
+          - npm ci
+          - npm test
+        plugins:
+          - tests#v1.0.0:
+              test-runner: custom
+              suite-slug: test-engine-client-examples
+              upload-results: false
+              install-client: false
+          - mise#v1.1.4:
+              dir: vitest
+        env:
+          BUILDKITE_ANALYTICS_LOCATION_PREFIX: vitest
+
       - label: ":jest: Jest"
         parallelism: 2
         commands:
           - cd jest
           - npm install
+          - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
           - bktec run
         soft_fail:
           - exit_status: 1
@@ -78,6 +154,7 @@ steps:
               result-path: jest-result.json
               suite-slug: test-engine-client-examples
               upload-results: false
+              client-version: "3.4.1"
           - mise#v1.1.4:
               dir: jest
         env:
@@ -87,6 +164,7 @@ steps:
         commands:
           - cd jest
           - npm install
+          - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
           - bktec run
         soft_fail:
           - exit_status: 1
@@ -98,6 +176,7 @@ steps:
               retry-cmd: "npx jest {{testExamples}} --testNamePattern '{{testNamePattern}}' --json --testLocationInResults --outputFile {{resultPath}}"
               suite-slug: test-engine-client-examples
               upload-results: false
+              client-version: "3.4.1"
           - mise#v1.1.4:
               dir: jest
         env:
@@ -108,6 +187,7 @@ steps:
         commands:
           - cd cypress
           - bin/setup
+          - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
           - bktec run
         soft_fail:
           - exit_status: 1
@@ -116,6 +196,7 @@ steps:
               test-runner: cypress
               suite-slug: test-engine-client-examples
               upload-results: false
+              client-version: "3.4.1"
           - mise#v1.1.4:
               dir: cypress
 
@@ -125,6 +206,7 @@ steps:
           - cd playwright
           - npm install
           - npx playwright install --with-deps chromium
+          - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
           - bktec run
         soft_fail:
           - exit_status: 1
@@ -134,6 +216,7 @@ steps:
               result-path: tmp/playwright-results.json
               suite-slug: test-engine-client-examples
               upload-results: false
+              client-version: "3.4.1"
           - mise#v1.1.4:
               dir: playwright
         env:
@@ -156,6 +239,7 @@ steps:
               test-runner: pytest
               suite-slug: test-engine-client-examples
               upload-results: false
+              client-version: "3.4.1"
           - mise#v1.1.4:
               dir: pytest
 
@@ -177,6 +261,7 @@ steps:
               test-runner: pytest
               suite-slug: test-engine-client-examples
               upload-results: false
+              client-version: "3.4.1"
           - mise#v1.1.4:
               dir: pytest
 
@@ -196,6 +281,7 @@ steps:
               tag-filters: "component:frontend"
               suite-slug: test-engine-client-examples
               upload-results: false
+              client-version: "3.4.1"
           - mise#v1.1.4:
               dir: pytest-tag-filters
 
@@ -289,6 +375,7 @@ steps:
               test-runner: gotest
               result-path: tmp/gotest-result.jsonl
               suite-slug: test-engine-client-examples
+              client-version: "3.4.1"
               tags:
                 - "language.name=go"
                 - "test.framework.name=go-test"
