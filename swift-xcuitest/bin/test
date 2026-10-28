@@ -5,6 +5,7 @@ set -euo pipefail
 root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 artifacts_dir="${XCUITEST_ARTIFACTS_DIR:-$root/artifacts}"
 result_bundle="$artifacts_dir/SwiftXCUITest.xcresult"
+test_log="$artifacts_dir/xcodebuild.log"
 
 for name in \
   BUILDKITE_ANALYTICS_BASE_URL \
@@ -34,6 +35,9 @@ do
   fi
 done
 
+run_id="${XCUITEST_RUN_ID:-${BUILDKITE_BUILD_ID:-local}-${BUILDKITE_JOB_ID:-$(date +%s)}}"
+export "TEST_RUNNER_XCUITEST_RUN_ID=$run_id"
+
 destination="${XCUITEST_DESTINATION:-}"
 if [[ -z "$destination" ]]; then
   device_id="$({
@@ -57,6 +61,7 @@ xcodebuild \
   -scheme SwiftXCUITest \
   -resolvePackageDependencies
 
+set +e
 xcodebuild \
   -project "$root/SwiftXCUITest.xcodeproj" \
   -scheme SwiftXCUITest \
@@ -64,4 +69,17 @@ xcodebuild \
   -destination "$destination" \
   -derivedDataPath "$artifacts_dir/DerivedData" \
   -resultBundlePath "$result_bundle" \
-  test
+  -retry-tests-on-failure \
+  -test-iterations 2 \
+  test 2>&1 | tee "$test_log"
+xcodebuild_status="${PIPESTATUS[0]}"
+set -e
+
+verification_status=0
+"$root/bin/verify-results" "$result_bundle" "$test_log" || verification_status="$?"
+
+if [[ "$xcodebuild_status" -ne 0 ]]; then
+  exit "$xcodebuild_status"
+fi
+
+exit "$verification_status"

@@ -1,0 +1,52 @@
+#!/bin/bash
+
+set -euo pipefail
+
+result_bundle="${1:?usage: verify-results RESULT_BUNDLE XCODEBUILD_LOG}"
+test_log="${2:?usage: verify-results RESULT_BUNDLE XCODEBUILD_LOG}"
+expected_count=5
+
+result_count="$({
+  xcrun xcresulttool get test-results summary --path "$result_bundle"
+} | plutil -extract totalTestCount raw -o - -)"
+uploaded_count="$(awk '
+  {
+    line = $0
+    while (match(line, /name: Optional\("test[^"]*"\)/)) {
+      names[substr(line, RSTART, RLENGTH)] = 1
+      line = substr(line, RSTART + RLENGTH)
+    }
+  }
+  END {
+    for (name in names) count++
+    print count + 0
+  }
+' "$test_log")"
+
+echo "Expected unique tests: $expected_count"
+echo ".xcresult unique tests: $result_count"
+echo "Collector unique tests recorded for upload: $uploaded_count"
+
+status=0
+
+if [[ "$result_count" -ne "$expected_count" ]]; then
+  echo "Expected .xcresult to retain all $expected_count tests" >&2
+  status=1
+fi
+
+if grep -Fq 'location: Optional("ExampleAppUITests.swift:' "$test_log" \
+  && grep -Fq 'failureExpanded: [Core.Trace.FailureExpanded' "$test_log" \
+  && grep -Fq 'tags: Optional(["runner.replacement": "true"])' "$test_log"
+then
+  echo "Collector retained the failure location, expanded backtrace, and execution tag"
+else
+  echo "Collector did not log all expected native failure metadata" >&2
+  status=1
+fi
+
+if [[ "$uploaded_count" -ne "$result_count" ]]; then
+  echo "Collector lost executions when the XCTest runner was replaced" >&2
+  status=1
+fi
+
+exit "$status"
