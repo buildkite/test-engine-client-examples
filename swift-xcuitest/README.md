@@ -25,5 +25,8 @@ bin/test
 
 The script selects the first available iPhone Simulator. Set
 `XCUITEST_DESTINATION` to pass a different `xcodebuild` destination.
-Set `BUILDKITE_ANALYTICS_TOKEN` and `BUILDKITE_ANALYTICS_DEBUG_ENABLED=true` when
-running locally; the verifier needs the collector's export log messages.
+When running locally, set `BUILDKITE_ANALYTICS_TOKEN`,
+`BUILDKITE_ANALYTICS_DEBUG_ENABLED=true`, and one `BUILDKITE_ANALYTICS_KEY`
+(e.g. `BUILDKITE_ANALYTICS_KEY="$(uuidgen)" bin/test`). The shared key keeps both
+runner processes in the same Test Engine run; debug logs let the verifier check
+exports.
