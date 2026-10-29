@@ -11,16 +11,15 @@ steps:
       - git clone https://github.com/buildkite/test-engine-client /tmp/relay-source
       - git -C /tmp/relay-source checkout "$$BKTEC_SHA"
       - mkdir -p bin
+      - checkout_dir="$$(pwd)"
       - cd /tmp/relay-source
-      - GOOS=darwin GOARCH=arm64 CGO_ENABLED=0 go build -o "$BUILDKITE_BUILD_CHECKOUT_PATH/bin/bktec-darwin-arm64" .
-      - git rev-parse HEAD > "$BUILDKITE_BUILD_CHECKOUT_PATH/bin/bktec-source.txt"
+      - GOOS=darwin GOARCH=arm64 CGO_ENABLED=0 go build -o "$$checkout_dir/bin/bktec-darwin-arm64" .
+      - git rev-parse HEAD > "$$checkout_dir/bin/bktec-source.txt"
     artifact_paths: "bin/*"
     plugins:
       - docker#v5.11.0:
           image: "golang:1.27.3"
           propagate-environment: true
-          volumes:
-            - "$BUILDKITE_BUILD_CHECKOUT_PATH:$BUILDKITE_BUILD_CHECKOUT_PATH"
 
   - label: ":swift: Direct runner restart %n"
     parallelism: 2
