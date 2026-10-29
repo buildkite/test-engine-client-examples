@@ -10,12 +10,13 @@ answered by an in-process HTTP server that continues the test's trace:
 - HTTP GET inside a manual active span.
 - Native `fetch` (undici).
 
-There is no setup file. `jest.config.js` names the instrumentation packages in
-the reporter's `otelInstrumentations` option and sets the collector's Jest
-`runtime`, which loads the OpenTelemetry API and SDK into each test file's
-sandbox. beta.2 supports manual spans and Node's built-in `http`, `https` and
-`fetch` instrumentation only; package instrumentation such as GraphQL is not
-supported in Jest yet.
+There is no setup file and no instrumentation option. `jest.config.js` sets
+the collector's Jest `runtime`, which loads the OpenTelemetry API and SDK into
+each test file's sandbox and turns on `@opentelemetry/instrumentation-http`
+and `@opentelemetry/instrumentation-undici`, which `package.json` installs.
+beta.2 supports manual spans and Node's built-in `http`, `https` and `fetch`
+instrumentation only; package instrumentation such as GraphQL is not supported
+in Jest yet.
 
 With the Node version in `mise.toml` active, from this directory:
 
