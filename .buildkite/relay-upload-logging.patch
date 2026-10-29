@@ -1,0 +1,11 @@
+diff --git a/internal/otlprelay/relay.go b/internal/otlprelay/relay.go
+--- a/internal/otlprelay/relay.go
++++ b/internal/otlprelay/relay.go
+@@ -578,6 +578,7 @@ func (r *Relay) deliver(queued *request, count int) (deliveryResult, time.Duration) {
+ 			resp, err = r.send(queued, token)
+ 			if err == nil {
+ 				status = resp.StatusCode
++				r.config.Logf("bktec OTLP upload: accepted_requests=%d encoding=%q bytes=%d status=%d", count, queued.contentEncoding, len(queued.body), status)
+ 				retryAfter, hasRetryAfter = parseRetryAfter(resp.Header.Get("Retry-After"), time.Now())
+ 				body, readErr := io.ReadAll(io.LimitReader(resp.Body, 4*1024+1))
+ 				_ = resp.Body.Close()

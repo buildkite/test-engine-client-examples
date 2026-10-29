@@ -3,7 +3,7 @@ env:
   BKTEC_SHA: "5327e1b9d384cb52ada8346aead351245f094dc1"
 
 steps:
-  - label: ":golang: Build PR relay for Darwin"
+  - label: ":golang: Build final relay with upload logging"
     key: relay-build
     agents:
       queue: hosted
@@ -12,7 +12,9 @@ steps:
       - git -C /tmp/relay-source checkout "$$BKTEC_SHA"
       - mkdir -p bin
       - checkout_dir="$$(pwd)"
+      - git -C /tmp/relay-source apply "$$checkout_dir/.buildkite/relay-upload-logging.patch"
       - cd /tmp/relay-source
+      - git diff > "$$checkout_dir/bin/relay-instrumentation.patch"
       - GOOS=darwin GOARCH=arm64 CGO_ENABLED=0 go build -o "$$checkout_dir/bin/bktec-darwin-arm64" .
       - git rev-parse HEAD > "$$checkout_dir/bin/bktec-source.txt"
     artifact_paths: "bin/*"
@@ -21,32 +23,7 @@ steps:
           image: "golang:1.27.3"
           propagate-environment: true
 
-  - label: ":swift: Direct final collector runner restart %n"
-    parallelism: 2
-    agents:
-      queue: macos
-    commands:
-      - bash swift-xcuitest/bin/install-pr-collector
-      - export BUILDKITE_ANALYTICS_KEY="$$BUILDKITE_BUILD_ID-direct-$$BUILDKITE_PARALLEL_JOB"
-      - swift-xcuitest/bin/test
-    artifact_paths:
-      - "swift-xcuitest/artifacts/SwiftXCUITest.xcresult/**/*"
-      - "swift-xcuitest/artifacts/*.log"
-      - "swift-xcuitest/artifacts/Package.resolved"
-      - "swift-xcuitest/artifacts/*.txt"
-      - "swift-xcuitest/artifacts/*.tar.gz"
-    env:
-      BUILDKITE_ANALYTICS_DEBUG_ENABLED: "true"
-      BUILDKITE_ANALYTICS_OTLP_ENDPOINT: "https://tests-otlp.buildkite.com/v1/traces"
-    plugins:
-      - tests#v1.0.1:
-          test-runner: custom
-          suite-slug: test-engine-client-examples
-          upload-results: false
-          install-client: false
-
-  - &relay-restart
-    label: ":swift: Relay runner restart 0"
+  - label: ":swift: Real receiver gzip request-merging demo (40 tests)"
     depends_on: relay-build
     agents:
       queue: macos
@@ -54,12 +31,17 @@ steps:
       - bash swift-xcuitest/bin/install-pr-collector
       - buildkite-agent artifact download "bin/*" . --step relay-build
       - chmod +x bin/bktec-darwin-arm64
-      - export BUILDKITE_ANALYTICS_KEY="$$BUILDKITE_BUILD_ID-relay-$$BUILDKITE_JOB_ID"
-      - bin/bktec-darwin-arm64 run
+      - bash swift-xctest/bin/prepare-merge-demo
+      - export BUILDKITE_ANALYTICS_KEY="$$BUILDKITE_BUILD_ID-merge-demo"
+      - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
+      - set -o pipefail
+      - bin/bktec-darwin-arm64 run 2>&1 | tee swift-xctest/artifacts/relay-demo.log
     artifact_paths:
-      - "swift-xcuitest/artifacts/SwiftXCUITest.xcresult/**/*"
-      - "swift-xcuitest/artifacts/*.log"
-      - "swift-xcuitest/artifacts/Package.resolved"
+      - "swift-xctest/artifacts/*.log"
+      - "swift-xctest/artifacts/*.txt"
+      - "swift-xctest/artifacts/Package.resolved"
+      - "swift-xctest/artifacts/merge-suite/Package.swift"
+      - "swift-xctest/artifacts/merge-suite/Tests/**/*.swift"
       - "swift-xcuitest/artifacts/*.txt"
       - "swift-xcuitest/artifacts/*.tar.gz"
     env:
@@ -68,11 +50,8 @@ steps:
     plugins:
       - tests#v1.0.1:
           test-runner: custom
-          test-cmd: swift-xcuitest/bin/test
-          test-file-pattern: swift-xcuitest/ExampleAppUITests/**/*.swift
+          test-cmd: swift test --package-path swift-xctest/artifacts/merge-suite --skip-build
+          test-file-pattern: swift-xctest/artifacts/merge-suite/Tests/**/*.swift
           suite-slug: test-engine-client-examples
           upload-results: false
           install-client: false
-
-  - <<: *relay-restart
-    label: ":swift: Relay runner restart 1"

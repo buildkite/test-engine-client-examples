@@ -1,0 +1,28 @@
+#!/bin/bash
+set -euo pipefail
+root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+suite="$root/artifacts/merge-suite"
+mkdir -p "$suite/Tests/MergeDemoTests"
+cat > "$suite/Package.swift" <<'SWIFT'
+// swift-tools-version: 5.10
+import PackageDescription
+let package = Package(
+    name: "RelayMergeDemo",
+    platforms: [.macOS(.v12)],
+    dependencies: [.package(path: "../../../swift-xcuitest/vendor/test-collector-swift")],
+    targets: [.testTarget(
+        name: "MergeDemoTests",
+        dependencies: [.product(name: "BuildkiteTestCollector", package: "test-collector-swift")]
+    )]
+)
+SWIFT
+{
+  printf 'import Core\nimport XCTest\nfinal class RelayMergeDemoTests: XCTestCase {\n'
+  for i in $(seq 1 40); do
+    printf '    func testBatch%02d() { tagExecution("merge.demo", "true"); XCTAssertEqual(%d * %d, %d) }\n' "$i" "$i" "$i" "$((i * i))"
+  done
+  printf '}\n'
+} > "$suite/Tests/MergeDemoTests/RelayMergeDemoTests.swift"
+printf '40\n' > "$root/artifacts/suite-size.txt"
+swift build --package-path "$suite" --build-tests 2>&1 | tee "$root/artifacts/swift-build.log"
+cp "$suite/Package.resolved" "$root/artifacts/Package.resolved"
