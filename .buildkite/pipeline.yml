@@ -114,7 +114,7 @@ steps:
           - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
           - export BUILDKITE_TESTS_OTLP_TOKEN="$(buildkite-agent oidc request-token --audience https://buildkite.com/organizations/buildkite/analytics/suites/test-engine-client-examples --lifetime 1800)"
           - export BUILDKITE_ANALYTICS_KEY="${BUILDKITE_BUILD_ID}-jest-otel-children"
-          - bash run df093d79ff123076055217bfc4cada8c3037d702
+          - bash run ba28d8af927e5d2b8c89c1f1a42e3e19604ea556
         env:
           BUILDKITE_ANALYTICS_LOCATION_PREFIX: jest-otel-children
           BUILDKITE_TEST_ENGINE_SUITE_SLUG: test-engine-client-examples
