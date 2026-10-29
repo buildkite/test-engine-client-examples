@@ -1,0 +1,10 @@
+#!/bin/bash
+set -euo pipefail
+root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+sha="${SWIFT_COLLECTOR_SHA:?Set the exact bktest PR head SHA}"
+mkdir -p "$root/artifacts" "$root/vendor/test-collector-swift"
+curl --fail --location --retry 3 "https://codeload.github.com/buildkite/bktest/tar.gz/$sha" \
+  -o "$root/artifacts/bktest-$sha.tar.gz"
+tar -xzf "$root/artifacts/bktest-$sha.tar.gz" -C "$root/vendor/test-collector-swift" \
+  --strip-components=2 "bktest-$sha/test-collector-swift"
+printf 'buildkite/bktest %s test-collector-swift/\n' "$sha" | tee "$root/artifacts/collector-source.txt"

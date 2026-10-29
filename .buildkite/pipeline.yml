@@ -1,379 +1,76 @@
-cache:
-  paths:
-    - "mise"
+env:
+  SWIFT_COLLECTOR_SHA: "8c48305e99deb2a30a7cd409439fa240be14658a"
+  BKTEC_SHA: "f7f59d8e8135deff250eb374cd9906e0cd75c3db"
 
 steps:
-  - group: ":ruby: Ruby"
-    steps:
-      - label: ":rspec: RSpec"
-        parallelism: 2
-        commands:
-          - cd rspec
-          - bundle install
-          - bktec run
-        env:
-          BUILDKITE_TESTS_OTLP_RELAY: "true"
-        soft_fail:
-          - exit_status: 1
-        plugins:
-          - tests#v1.0.1:
-              test-runner: rspec
-              result-path: tmp/rspec.json
-              suite-slug: test-engine-client-examples
-              upload-results: false
-              client-version: "3.4.1"
-          - mise#v1.1.4:
-              dir: rspec
+  - label: ":golang: Build PR relay for Darwin"
+    key: relay-build
+    agents:
+      queue: hosted
+    commands:
+      - git clone https://github.com/buildkite/test-engine-client /tmp/relay-source
+      - git -C /tmp/relay-source checkout "$$BKTEC_SHA"
+      - mkdir -p bin
+      - cd /tmp/relay-source
+      - GOOS=darwin GOARCH=arm64 CGO_ENABLED=0 go build -o "$BUILDKITE_BUILD_CHECKOUT_PATH/bin/bktec-darwin-arm64" .
+      - git rev-parse HEAD > "$BUILDKITE_BUILD_CHECKOUT_PATH/bin/bktec-source.txt"
+    artifact_paths: "bin/*"
+    plugins:
+      - docker#v5.11.0:
+          image: "golang:1.27.3"
+          propagate-environment: true
+          volumes:
+            - "$BUILDKITE_BUILD_CHECKOUT_PATH:$BUILDKITE_BUILD_CHECKOUT_PATH"
 
-      - label: ":rspec: RSpec (OpenTelemetry setup in suite)"
-        commands:
-          - cd rspec-otel/suite-setup
-          - bundle install
-          - bktec run
-        env:
-          BUILDKITE_TESTS_OTLP_RELAY: "true"
-        plugins:
-          - tests#v1.0.1:
-              test-runner: rspec
-              result-path: tmp/rspec.json
-              suite-slug: test-engine-client-examples
-              upload-results: false
-              client-version: "3.4.1"
-          - mise#v1.1.4:
-              dir: rspec-otel/suite-setup
+  - label: ":swift: Direct runner restart %n"
+    parallelism: 2
+    agents:
+      queue: macos
+    commands:
+      - bash swift-xcuitest/bin/install-pr-collector
+      - export BUILDKITE_ANALYTICS_KEY="$$BUILDKITE_BUILD_ID-direct-$$BUILDKITE_PARALLEL_JOB"
+      - swift-xcuitest/bin/test
+    artifact_paths:
+      - "swift-xcuitest/artifacts/SwiftXCUITest.xcresult/**/*"
+      - "swift-xcuitest/artifacts/*.log"
+      - "swift-xcuitest/artifacts/Package.resolved"
+      - "swift-xcuitest/artifacts/*.txt"
+      - "swift-xcuitest/artifacts/*.tar.gz"
+    env:
+      BUILDKITE_ANALYTICS_DEBUG_ENABLED: "true"
+      BUILDKITE_ANALYTICS_OTLP_ENDPOINT: "https://tests-otlp.buildkite.com/v1/traces"
+    plugins:
+      - tests#v1.0.1:
+          test-runner: custom
+          suite-slug: test-engine-client-examples
+          upload-results: false
+          install-client: false
 
-      - label: ":rspec: RSpec (OpenTelemetry setup by test collector)"
-        commands:
-          - cd rspec-otel/collector-setup
-          - bundle install
-          - bktec run
-        env:
-          BUILDKITE_TESTS_OTLP_RELAY: "true"
-        plugins:
-          - tests#v1.0.1:
-              test-runner: rspec
-              result-path: tmp/rspec.json
-              suite-slug: test-engine-client-examples
-              upload-results: false
-              client-version: "3.4.1"
-          - mise#v1.1.4:
-              dir: rspec-otel/collector-setup
-
-      - label: ":ruby: Minitest"
-        parallelism: 2
-        commands:
-          - cd ruby-minitest
-          - bundle install
-          - bktec run
-        soft_fail:
-          - exit_status: 1
-        plugins:
-          - tests#v1.0.0:
-              test-runner: custom
-              test-cmd: "bundle exec rake test TEST_FILES='{{testExamples}}'"
-              test-file-pattern: "**/*_test.rb"
-              suite-slug: test-engine-client-examples
-              upload-results: false
-              client-version: "3.4.1"
-          - mise#v1.1.4:
-              dir: ruby-minitest
-        env:
-          BUILDKITE_ANALYTICS_LOCATION_PREFIX: ruby-minitest
-
-      - label: ":cucumber: Cucumber"
-        parallelism: 2
-        commands:
-          - cd cucumber
-          - bundle install
-          - mkdir -p tmp
-          - bktec run
-        soft_fail:
-          - exit_status: 1
-        plugins:
-          - tests#v1.0.0:
-              test-runner: cucumber
-              result-path: tmp/cucumber.json
-              suite-slug: test-engine-client-examples
-              upload-results: false
-              client-version: "3.4.1"
-          - mise#v1.1.4:
-              dir: cucumber
-        env:
-          BUILDKITE_ANALYTICS_LOCATION_PREFIX: cucumber
-
-  # The tests plugin exports a short-lived token before setup. Unset it before
-  # bktec so long dependency installs cannot leave it with stale credentials.
-  - group: ":javascript: JavaScript"
-    steps:
-      - label: ":vitest: Vitest 4"
-        key: vitest-4
-        commands:
-          - cd vitest-4
-          - npm ci
-          - npm test
-        plugins:
-          - tests#v1.0.0:
-              test-runner: custom
-              suite-slug: test-engine-client-examples
-              upload-results: false
-              install-client: false
-          - mise#v1.1.4:
-              dir: vitest-4
-        env:
-          BUILDKITE_ANALYTICS_LOCATION_PREFIX: vitest-4
-
-      - label: ":vitest: Vitest"
-        key: vitest
-        commands:
-          - cd vitest
-          - npm ci
-          - npm test
-        plugins:
-          - tests#v1.0.0:
-              test-runner: custom
-              suite-slug: test-engine-client-examples
-              upload-results: false
-              install-client: false
-          - mise#v1.1.4:
-              dir: vitest
-        env:
-          BUILDKITE_ANALYTICS_LOCATION_PREFIX: vitest
-
-      - label: ":jest: Jest"
-        parallelism: 2
-        commands:
-          - cd jest
-          - npm install
-          - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
-          - bktec run
-        soft_fail:
-          - exit_status: 1
-        plugins:
-          - tests#v1.0.0:
-              test-runner: jest
-              result-path: jest-result.json
-              suite-slug: test-engine-client-examples
-              upload-results: false
-              client-version: "3.4.1"
-          - mise#v1.1.4:
-              dir: jest
-        env:
-          BUILDKITE_ANALYTICS_LOCATION_PREFIX: jest
-      - label: ":jest: Jest (Retry Enabled)"
-        parallelism: 2
-        commands:
-          - cd jest
-          - npm install
-          - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
-          - bktec run
-        soft_fail:
-          - exit_status: 1
-        plugins:
-          - tests#v1.0.0:
-              test-runner: jest
-              result-path: jest-result.json
-              retry-count: 3
-              retry-cmd: "npx jest {{testExamples}} --testNamePattern '{{testNamePattern}}' --json --testLocationInResults --outputFile {{resultPath}}"
-              suite-slug: test-engine-client-examples
-              upload-results: false
-              client-version: "3.4.1"
-          - mise#v1.1.4:
-              dir: jest
-        env:
-          BUILDKITE_ANALYTICS_LOCATION_PREFIX: jest
-
-      - label: ":cypress: Cypress"
-        parallelism: 2
-        commands:
-          - cd cypress
-          - bin/setup
-          - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
-          - bktec run
-        soft_fail:
-          - exit_status: 1
-        plugins:
-          - tests#v1.0.0:
-              test-runner: cypress
-              suite-slug: test-engine-client-examples
-              upload-results: false
-              client-version: "3.4.1"
-          - mise#v1.1.4:
-              dir: cypress
-
-      - label: ":playwright: Playwright"
-        parallelism: 2
-        commands:
-          - cd playwright
-          - npm install
-          - npx playwright install --with-deps chromium
-          - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
-          - bktec run
-        soft_fail:
-          - exit_status: 1
-        plugins:
-          - tests#v1.0.0:
-              test-runner: playwright
-              result-path: tmp/playwright-results.json
-              suite-slug: test-engine-client-examples
-              upload-results: false
-              client-version: "3.4.1"
-          - mise#v1.1.4:
-              dir: playwright
-        env:
-          BUILDKITE_ANALYTICS_LOCATION_PREFIX: playwright
-
-  - group: ":python: Python"
-    steps:
-      - label: ":pytest: pytest"
-        parallelism: 2
-        artifact_paths:
-          - pytest/result.json
-        commands:
-          - cd pytest
-          - pip install -e '.[dev]'
-          - bktec run
-        soft_fail:
-          - exit_status: 1
-        plugins:
-          - tests#v1.0.0:
-              test-runner: pytest
-              suite-slug: test-engine-client-examples
-              upload-results: false
-              client-version: "3.4.1"
-          - mise#v1.1.4:
-              dir: pytest
-
-      - label: ":pytest: pytest (with xdist)"
-        parallelism: 2
-        artifact_paths:
-          - pytest/result.json
-        commands:
-          - cd pytest
-          - pip install -e '.[dev]'
-          - bktec run
-        soft_fail:
-          - exit_status: 1
-        env:
-          PYTEST_XDIST_ENABLED: "true"
-          PYTEST_ADDOPTS: "-n 3 -o log_cli=true -o log_cli_level=DEBUG"
-        plugins:
-          - tests#v1.0.0:
-              test-runner: pytest
-              suite-slug: test-engine-client-examples
-              upload-results: false
-              client-version: "3.4.1"
-          - mise#v1.1.4:
-              dir: pytest
-
-      - label: ":pytest: pytest (tag filters)"
-        parallelism: 2
-        artifact_paths:
-          - pytest/result.json
-        commands:
-          - cd pytest-tag-filters
-          - pip install -e '.[dev]'
-          - bktec run
-        soft_fail:
-          - exit_status: 1
-        plugins:
-          - tests#v1.0.0:
-              test-runner: pytest
-              tag-filters: "component:frontend"
-              suite-slug: test-engine-client-examples
-              upload-results: false
-              client-version: "3.4.1"
-          - mise#v1.1.4:
-              dir: pytest-tag-filters
-
-  - group: ":apple: iOS / macOS"
-    steps:
-      - label: ":swift: Swift: XCTest (test-collector-swift)"
-        commands:
-          - cd swift-xctest
-          - swift package resolve
-          # Run XCTest tests (which includes the BuildkiteTestCollector).
-          # The collector auto-loads via XCTest observation and uploads results
-          # when BUILDKITE_ANALYTICS_TOKEN is set.
-          # Use --disable-swift-testing to only run XCTest (not Swift Testing).
-          - swift test --disable-swift-testing
-        soft_fail:
-          - exit_status: 1
-        env:
-          BUILDKITE_ANALYTICS_TAGS: '{"test.framework.name":"xctest","language.name":"swift","custom.tag.from":"upload"}'
-        plugins:
-          - tests#v1.0.0:
-              test-runner: custom
-              suite-slug: test-engine-client-examples
-              upload-results: false
-              install-client: false
-          - docker#v5.11.0:
-              image: "swift:6.0-noble"
-              propagate-environment: true
-              environment:
-                - BUILDKITE_ANALYTICS_TOKEN
-                - BUILDKITE_ANALYTICS_TAGS
-                - BUILDKITE_ANALYTICS_DEBUG_ENABLED
-
-      - label: ":swift: Swift: XCUITest (direct OTLP, runner restart)"
-        command: swift-xcuitest/bin/test
-        agents:
-          queue: macos
-        artifact_paths:
-          - swift-xcuitest/artifacts/SwiftXCUITest.xcresult/**/*
-          - swift-xcuitest/artifacts/xcodebuild.log
-        env:
-          BUILDKITE_ANALYTICS_DEBUG_ENABLED: "true"
-          BUILDKITE_ANALYTICS_KEY: "${BUILDKITE_BUILD_ID}-swift-xcuitest-direct"
-          BUILDKITE_ANALYTICS_OTLP_ENDPOINT: "https://tests-otlp.buildkite.com/v1/traces"
-          BUILDKITE_ANALYTICS_TAGS: '{"test.framework.name":"xcuitest","language.name":"swift","custom.tag.from":"upload"}'
-        plugins:
-          - tests#v1.0.0:
-              test-runner: custom
-              suite-slug: test-engine-client-examples
-              upload-results: false
-              install-client: false
-
-  - group: ":android: Android"
-    steps:
-      - label: ":android: Android"
-        commands:
-          - cd android
-          # Run Android unit tests
-          # The test-collector-android Gradle plugin uploads results to Test Engine automatically.
-          # No bktec client is needed for this example.
-          - ./gradlew --no-daemon :app:testDebugUnitTest
-        soft_fail:
-          - exit_status: 1
-        plugins:
-          - tests#v1.0.0:
-              test-runner: custom
-              suite-slug: test-engine-client-examples
-              upload-results: false
-              install-client: false
-          - docker#v5.11.0:
-              image: "ghcr.io/cirruslabs/android-sdk:34"
-              propagate-environment: true
-              environment:
-                - BUILDKITE_ANALYTICS_TOKEN
-
-  - group: ":golang: Go"
-    steps:
-      - label: ":golang: Go test"
-        parallelism: 2
-        commands:
-          - cd go
-          - go install gotest.tools/gotestsum@v1.12.0
-          - bktec run
-        soft_fail:
-          - exit_status: 1
-        plugins:
-          - tests#v1.0.0:
-              test-runner: gotest
-              result-path: tmp/gotest-result.jsonl
-              suite-slug: test-engine-client-examples
-              client-version: "3.4.1"
-              tags:
-                - "language.name=go"
-                - "test.framework.name=go-test"
-          - mise#v1.1.4:
-              dir: go
+  - label: ":swift: Relay runner restart %n"
+    depends_on: relay-build
+    parallelism: 2
+    agents:
+      queue: macos
+    commands:
+      - bash swift-xcuitest/bin/install-pr-collector
+      - buildkite-agent artifact download "bin/*" . --step relay-build
+      - chmod +x bin/bktec-darwin-arm64
+      - export BUILDKITE_ANALYTICS_KEY="$$BUILDKITE_BUILD_ID-relay-$$BUILDKITE_PARALLEL_JOB"
+      - bin/bktec-darwin-arm64 run
+    artifact_paths:
+      - "swift-xcuitest/artifacts/SwiftXCUITest.xcresult/**/*"
+      - "swift-xcuitest/artifacts/*.log"
+      - "swift-xcuitest/artifacts/Package.resolved"
+      - "swift-xcuitest/artifacts/*.txt"
+      - "swift-xcuitest/artifacts/*.tar.gz"
+    env:
+      BUILDKITE_ANALYTICS_DEBUG_ENABLED: "true"
+      BUILDKITE_TESTS_OTLP_RELAY: "true"
+    plugins:
+      - tests#v1.0.1:
+          test-runner: custom
+          test-cmd: swift-xcuitest/bin/test
+          test-file-pattern: swift-xcuitest/ExampleAppUITests/**/*.swift
+          suite-slug: test-engine-client-examples
+          upload-results: false
+          install-client: false

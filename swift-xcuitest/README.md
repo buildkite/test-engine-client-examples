@@ -1,32 +1,25 @@
-# Swift XCUITest example
+# Swift XCUITest PR-head restart harness
 
-This example uses the published `2.0.0-beta.2`
-[`test-collector-swift`](https://github.com/buildkite/test-collector-swift) to
-send XCUITest results directly to Test Engine, without bktec. The pipeline sets
-`BUILDKITE_ANALYTICS_OTLP_ENDPOINT` to
-`https://tests-otlp.buildkite.com/v1/traces`; the Tests plugin supplies the token
-but does not install bktec or upload results. OTLP ingestion must be enabled for
-the organization.
+This experimental branch runs the restart fixture twice directly against Test
+Engine and twice through the bktec OTLP relay. It leaves the original harness
+branches unchanged. Each job uses a fresh `BUILDKITE_ANALYTICS_KEY`.
 
-Two tests finish before a third test kills the runner. Xcode starts a replacement
-runner and completes the remaining tests. The verifier requires five records in
-the `.xcresult` (four passes and the runner crash), runner replacement, and four
-completed executions accepted over OTLP. Confirm those four tests also appear
-in Test Engine after the build: two from before the crash and two from after it.
+The pipeline pins `SWIFT_COLLECTOR_SHA` in buildkite/bktest and `BKTEC_SHA` in
+buildkite/test-engine-client. `bin/install-pr-collector` extracts the collector's
+monorepo subdirectory into the Xcode project's local package reference. The
+Linux build step cross-compiles the relay for Darwin arm64; the Tests plugin
+does not install a released client.
 
-The killed test has no XCTest completion callback, so the in-process collector
-cannot export its result.
+Two tests finish before test03 kills the runner. Xcode starts a replacement
+runner and completes two more. `bin/verify-results` checks five `.xcresult`
+records (four passes and the deliberate crash) and runner replacement. It does
+not infer export success from collector debug output: final acceptance requires
+four backend executions per run in Test Engine, with test03 absent.
 
-Run it with:
+Build artifacts retain the collector source archive and SHA, package resolution
+log and lockfile, xcodebuild log, and `.xcresult`. The relay build retains its
+binary and source SHA. Buildkite retains the job logs including relay counters.
 
-```sh
-bin/test
-```
-
-The script selects the first available iPhone Simulator. Set
-`XCUITEST_DESTINATION` to pass a different `xcodebuild` destination.
-When running locally, set `BUILDKITE_ANALYTICS_TOKEN`,
-`BUILDKITE_ANALYTICS_DEBUG_ENABLED=true`, and one `BUILDKITE_ANALYTICS_KEY`
-(e.g. `BUILDKITE_ANALYTICS_KEY="$(uuidgen)" bin/test`). The shared key keeps both
-runner processes in the same Test Engine run; debug logs let the verifier check
-exports.
+To repeat at new heads, update the two pinned SHAs and push this branch. The
+script selects the first available iPhone Simulator; `XCUITEST_DESTINATION` can
+override it.

@@ -33,7 +33,14 @@ for name in \
   BUILDKITE_ORGANIZATION_SLUG \
   BUILDKITE_STEP_ID \
   BUILDKITE_TAG \
-  BUILDKITE_TEST_ENGINE_SUITE_SLUG
+  BUILDKITE_TEST_ENGINE_SUITE_SLUG \
+  BUILDKITE_TESTS_OTLP_TOKEN \
+  OTEL_EXPORTER_OTLP_TRACES_ENDPOINT \
+  OTEL_EXPORTER_OTLP_TRACES_HEADERS \
+  OTEL_EXPORTER_OTLP_TRACES_PROTOCOL \
+  OTEL_RESOURCE_ATTRIBUTES \
+  TRACEPARENT \
+  TRACESTATE
 do
   if [[ -n "${!name:-}" ]]; then
     export "TEST_RUNNER_${name}=${!name}"
@@ -64,7 +71,8 @@ mkdir -p "$artifacts_dir"
 xcodebuild \
   -project "$root/SwiftXCUITest.xcodeproj" \
   -scheme SwiftXCUITest \
-  -resolvePackageDependencies
+  -resolvePackageDependencies 2>&1 | tee "$artifacts_dir/package-resolution.log"
+cp "$root/SwiftXCUITest.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved" "$artifacts_dir/Package.resolved"
 
 set +e
 xcodebuild \
