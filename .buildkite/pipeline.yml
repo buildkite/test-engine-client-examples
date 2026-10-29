@@ -1,6 +1,6 @@
 env:
-  SWIFT_COLLECTOR_SHA: "8c48305e99deb2a30a7cd409439fa240be14658a"
-  BKTEC_SHA: "f7f59d8e8135deff250eb374cd9906e0cd75c3db"
+  SWIFT_COLLECTOR_SHA: "833732e5e49c11520e782447c38f8f99a4321cdb"
+  BKTEC_SHA: "5327e1b9d384cb52ada8346aead351245f094dc1"
 
 steps:
   - label: ":golang: Build PR relay for Darwin"
@@ -36,7 +36,6 @@ steps:
       - "swift-xcuitest/artifacts/*.txt"
       - "swift-xcuitest/artifacts/*.tar.gz"
     env:
-      SWIFT_COLLECTOR_SHA: "833732e5e49c11520e782447c38f8f99a4321cdb"
       BUILDKITE_ANALYTICS_DEBUG_ENABLED: "true"
       BUILDKITE_ANALYTICS_OTLP_ENDPOINT: "https://tests-otlp.buildkite.com/v1/traces"
     plugins:
