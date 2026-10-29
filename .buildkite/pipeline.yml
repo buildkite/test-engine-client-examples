@@ -21,7 +21,7 @@ steps:
           image: "golang:1.27.3"
           propagate-environment: true
 
-  - label: ":swift: Direct runner restart %n"
+  - label: ":swift: Direct final collector runner restart %n"
     parallelism: 2
     agents:
       queue: macos
@@ -36,6 +36,7 @@ steps:
       - "swift-xcuitest/artifacts/*.txt"
       - "swift-xcuitest/artifacts/*.tar.gz"
     env:
+      SWIFT_COLLECTOR_SHA: "833732e5e49c11520e782447c38f8f99a4321cdb"
       BUILDKITE_ANALYTICS_DEBUG_ENABLED: "true"
       BUILDKITE_ANALYTICS_OTLP_ENDPOINT: "https://tests-otlp.buildkite.com/v1/traces"
     plugins:
@@ -45,16 +46,16 @@ steps:
           upload-results: false
           install-client: false
 
-  - label: ":swift: Relay runner restart %n"
+  - &relay-restart
+    label: ":swift: Relay runner restart 0"
     depends_on: relay-build
-    parallelism: 2
     agents:
       queue: macos
     commands:
       - bash swift-xcuitest/bin/install-pr-collector
       - buildkite-agent artifact download "bin/*" . --step relay-build
       - chmod +x bin/bktec-darwin-arm64
-      - export BUILDKITE_ANALYTICS_KEY="$$BUILDKITE_BUILD_ID-relay-$$BUILDKITE_PARALLEL_JOB"
+      - export BUILDKITE_ANALYTICS_KEY="$$BUILDKITE_BUILD_ID-relay-$$BUILDKITE_JOB_ID"
       - bin/bktec-darwin-arm64 run
     artifact_paths:
       - "swift-xcuitest/artifacts/SwiftXCUITest.xcresult/**/*"
@@ -73,3 +74,6 @@ steps:
           suite-slug: test-engine-client-examples
           upload-results: false
           install-client: false
+
+  - <<: *relay-restart
+    label: ":swift: Relay runner restart 1"
