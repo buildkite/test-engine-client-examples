@@ -24,7 +24,7 @@ diff --git a/internal/otlprelay/relay.go b/internal/otlprelay/relay.go
  			sendStart := time.Now()
  			var resp *http.Response
 +			if os.Getenv("BUILDKITE_ANALYTICS_DEBUG_ENABLED") == "true" {
-+				r.config.Logf("bktec OTLP upload start: at=%s stream=%q accepted_requests=%d encoding=%q bytes=%d queue_wait_ms=%.3f", sendStart.UTC().Format(time.RFC3339Nano), queued.spanStream, count, queued.contentEncoding, len(queued.body), float64(sendStart.Sub(queued.queuedAt))/float64(time.Millisecond))
++				r.config.Logf("bktec OTLP upload start: at=%s stream=%q accepted_requests=%d encoding=%q bytes=%d", sendStart.UTC().Format(time.RFC3339Nano), queued.spanStream, count, queued.contentEncoding, len(queued.body))
 +			}
  			resp, err = r.send(queued, token)
  			if err == nil {
