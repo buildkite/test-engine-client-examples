@@ -1,9 +1,9 @@
 env:
   SWIFT_COLLECTOR_SHA: "833732e5e49c11520e782447c38f8f99a4321cdb"
-  BKTEC_SHA: "5327e1b9d384cb52ada8346aead351245f094dc1"
+  BKTEC_SHA: "6d0bf53c634c9a740d41f23c709297c6c009d819"
 
 steps:
-  - label: ":golang: Build final relay with upload logging"
+  - label: ":golang: Build pinned relay with upload logging"
     key: relay-build
     agents:
       queue: hosted
@@ -16,6 +16,7 @@ steps:
       - cd /tmp/relay-source
       - git diff > "$$checkout_dir/bin/relay-instrumentation.patch"
       - GOOS=darwin GOARCH=arm64 CGO_ENABLED=0 go build -o "$$checkout_dir/bin/bktec-darwin-arm64" .
+      - GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o "$$checkout_dir/bin/bktec-linux-amd64" .
       - git rev-parse HEAD > "$$checkout_dir/bin/bktec-source.txt"
     artifact_paths: "bin/*"
     plugins:
@@ -23,7 +24,64 @@ steps:
           image: "golang:1.27.3"
           propagate-environment: true
 
-  - label: ":swift: Real receiver gzip request-merging demo (40 tests)"
+  - label: ":swift: Direct collector runner restart %n"
+    parallelism: 2
+    agents:
+      queue: macos
+    commands:
+      - bash swift-xcuitest/bin/install-pr-collector
+      - export BUILDKITE_ANALYTICS_KEY="$$BUILDKITE_BUILD_ID-direct-$$BUILDKITE_PARALLEL_JOB"
+      - swift-xcuitest/bin/test
+    artifact_paths:
+      - "swift-xcuitest/artifacts/SwiftXCUITest.xcresult/**/*"
+      - "swift-xcuitest/artifacts/*.log"
+      - "swift-xcuitest/artifacts/Package.resolved"
+      - "swift-xcuitest/artifacts/*.txt"
+      - "swift-xcuitest/artifacts/*.tar.gz"
+    env:
+      BUILDKITE_ANALYTICS_DEBUG_ENABLED: "true"
+      BUILDKITE_ANALYTICS_OTLP_ENDPOINT: "https://tests-otlp.buildkite.com/v1/traces"
+    plugins:
+      - tests#v1.0.1:
+          test-runner: custom
+          suite-slug: test-engine-client-examples
+          upload-results: false
+          install-client: false
+
+  - &relay-restart
+    label: ":swift: Relay runner restart 0"
+    depends_on: relay-build
+    agents:
+      queue: macos
+    commands:
+      - bash swift-xcuitest/bin/install-pr-collector
+      - buildkite-agent artifact download "bin/*" . --step relay-build
+      - chmod +x bin/bktec-darwin-arm64
+      - export BUILDKITE_ANALYTICS_KEY="$$BUILDKITE_BUILD_ID-relay-$$BUILDKITE_JOB_ID"
+      - set -o pipefail
+      - bin/bktec-darwin-arm64 run 2>&1 | tee swift-xcuitest/artifacts/relay.log
+    artifact_paths:
+      - "swift-xcuitest/artifacts/SwiftXCUITest.xcresult/**/*"
+      - "swift-xcuitest/artifacts/*.log"
+      - "swift-xcuitest/artifacts/Package.resolved"
+      - "swift-xcuitest/artifacts/*.txt"
+      - "swift-xcuitest/artifacts/*.tar.gz"
+    env:
+      BUILDKITE_ANALYTICS_DEBUG_ENABLED: "true"
+      BUILDKITE_TESTS_OTLP_RELAY: "true"
+    plugins:
+      - tests#v1.0.1:
+          test-runner: custom
+          test-cmd: swift-xcuitest/bin/test
+          test-file-pattern: swift-xcuitest/ExampleAppUITests/**/*.swift
+          suite-slug: test-engine-client-examples
+          upload-results: false
+          install-client: false
+
+  - <<: *relay-restart
+    label: ":swift: Relay runner restart 1"
+
+  - label: ":swift: Real receiver gzip request-merging demo (1000 tests)"
     depends_on: relay-build
     agents:
       queue: macos
@@ -55,3 +113,37 @@ steps:
           suite-slug: test-engine-client-examples
           upload-results: false
           install-client: false
+
+  - label: ":ruby: Relay sparse tests and unmerged child requests"
+    depends_on: relay-build
+    agents:
+      queue: hosted
+    commands:
+      - buildkite-agent artifact download "bin/*" . --step relay-build
+      - chmod +x bin/bktec-linux-amd64
+      - cd rspec-otel/relay-harness
+      - bundle install
+      - mkdir -p artifacts
+      - cp Gemfile.lock artifacts/Gemfile.lock
+      - bundle list > artifacts/gems.txt
+      - export BUILDKITE_ANALYTICS_KEY="$$BUILDKITE_BUILD_ID-ruby-relay"
+      - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
+      - set -o pipefail
+      - ../../bin/bktec-linux-amd64 run 2>&1 | tee artifacts/relay.log
+    artifact_paths:
+      - "rspec-otel/relay-harness/artifacts/*"
+    env:
+      BUILDKITE_ANALYTICS_DEBUG_ENABLED: "true"
+      BUILDKITE_TESTS_OTLP_RELAY: "true"
+      BUILDKITE_TESTS_OTEL_TEST_SPAN_BATCH_SIZE: "1"
+      BUILDKITE_TESTS_OTEL_CHILD_SPAN_BATCH_SIZE: "1"
+    plugins:
+      - tests#v1.0.1:
+          test-runner: custom
+          test-cmd: bundle exec rspec spec/relay_spec.rb --format documentation --format json --out artifacts/rspec.json
+          test-file-pattern: spec/relay_spec.rb
+          suite-slug: test-engine-client-examples
+          upload-results: false
+          install-client: false
+      - mise#v1.1.4:
+          dir: rspec-otel/relay-harness

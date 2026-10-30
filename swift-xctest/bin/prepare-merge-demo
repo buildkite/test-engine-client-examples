@@ -18,11 +18,11 @@ let package = Package(
 SWIFT
 {
   printf 'import Core\nimport XCTest\nfinal class RelayMergeDemoTests: XCTestCase {\n'
-  for i in $(seq 1 40); do
-    printf '    func testBatch%02d() { tagExecution("merge.demo", "true"); XCTAssertEqual(%d * %d, %d) }\n' "$i" "$i" "$i" "$((i * i))"
+  for i in $(seq 1 1000); do
+    printf '    func testBatch%04d() { tagExecution("merge.demo", "true"); XCTAssertEqual(%d * %d, %d) }\n' "$i" "$i" "$i" "$((i * i))"
   done
   printf '}\n'
 } > "$suite/Tests/MergeDemoTests/RelayMergeDemoTests.swift"
-printf '40\n' > "$root/artifacts/suite-size.txt"
+printf '1000\n' > "$root/artifacts/suite-size.txt"
 swift build --package-path "$suite" --build-tests 2>&1 | tee "$root/artifacts/swift-build.log"
 cp "$suite/Package.resolved" "$root/artifacts/Package.resolved"
