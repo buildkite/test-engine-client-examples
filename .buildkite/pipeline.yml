@@ -1,9 +1,10 @@
 env:
   SWIFT_COLLECTOR_SHA: "08918273c3ca442e42e51e855911e10c5133a45b"
-  BKTEC_SHA: "241034f50389ccf58618458da32287332f2aef95"
+  BKTEC_SHA: "e626e954a65cee1a86bfbd1dd13575eea751116c"
+  BUILDKITE_TESTS_OTLP_RELAY_BATCHING: "true"
 
 steps:
-  - label: ":golang: Build pinned relay with upload logging"
+  - label: ":golang: Build unmodified opaque-envelope relay"
     key: relay-build
     agents:
       queue: hosted
@@ -12,9 +13,8 @@ steps:
       - git -C /tmp/relay-source checkout "$$BKTEC_SHA"
       - mkdir -p bin
       - checkout_dir="$$(pwd)"
-      - git -C /tmp/relay-source apply "$$checkout_dir/.buildkite/relay-upload-logging.patch"
       - cd /tmp/relay-source
-      - git diff > "$$checkout_dir/bin/relay-instrumentation.patch"
+      - git status --porcelain > "$$checkout_dir/bin/bktec-source-state.txt"
       - GOOS=darwin GOARCH=arm64 CGO_ENABLED=0 go build -o "$$checkout_dir/bin/bktec-darwin-arm64" .
       - GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o "$$checkout_dir/bin/bktec-linux-amd64" .
       - git rev-parse HEAD > "$$checkout_dir/bin/bktec-source.txt"
@@ -23,30 +23,6 @@ steps:
       - docker#v5.11.0:
           image: "golang:1.27.3"
           propagate-environment: true
-
-  - label: ":swift: Direct collector runner restart %n"
-    parallelism: 2
-    agents:
-      queue: macos
-    commands:
-      - bash swift-xcuitest/bin/install-pr-collector
-      - export BUILDKITE_ANALYTICS_KEY="$$BUILDKITE_BUILD_ID-direct-$$BUILDKITE_PARALLEL_JOB"
-      - swift-xcuitest/bin/test
-    artifact_paths:
-      - "swift-xcuitest/artifacts/SwiftXCUITest.xcresult/**/*"
-      - "swift-xcuitest/artifacts/*.log"
-      - "swift-xcuitest/artifacts/Package.resolved"
-      - "swift-xcuitest/artifacts/*.txt"
-      - "swift-xcuitest/artifacts/*.tar.gz"
-    env:
-      BUILDKITE_ANALYTICS_DEBUG_ENABLED: "true"
-      BUILDKITE_ANALYTICS_OTLP_ENDPOINT: "https://tests-otlp.buildkite.com/v1/traces"
-    plugins:
-      - tests#v1.0.1:
-          test-runner: custom
-          suite-slug: test-engine-client-examples
-          upload-results: false
-          install-client: false
 
   - &relay-restart
     label: ":swift: Relay runner restart 0"
@@ -81,7 +57,7 @@ steps:
   - <<: *relay-restart
     label: ":swift: Relay runner restart 1"
 
-  - label: ":swift: Real receiver gzip request-merging demo (1000 tests)"
+  - label: ":swift: Opaque-envelope 415 fallback (1000 tests)"
     depends_on: relay-build
     agents:
       queue: macos
