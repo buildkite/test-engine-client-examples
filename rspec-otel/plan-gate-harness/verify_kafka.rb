@@ -1,6 +1,5 @@
 # Run through the receiver checkout's bin/rails runner after CI finishes.
-# HARNESS_JOURNAL is the narrow proxy's JSONL: run, stream, sha256, status,
-# request_id. Never include Authorization or request bodies in that journal.
+# Keep credentials and request bodies out of the proxy journal (HARNESS_JOURNAL).
 require "json"
 require "digest"
 require "zlib"
@@ -56,7 +55,7 @@ expected = requests.select { |request| request.fetch("status") == 200 }.map { |r
 actual = records.map { |record| record.fetch(:request).fetch("sha256") }.sort
 raise "Kafka record loss or duplication" unless actual == expected
 scenarios = %w[legacy entitled unlabelled]
-scenarios << "legacy-stock" if requests.any? { |request| request.fetch("run") == "#{prefix}legacy-stock" }
+scenarios << "legacy-stock" if mode == "fixed"
 scenarios.each do |scenario|
   sent = requests.select { |request| request.fetch("run") == "#{prefix}#{scenario}" }
   raise "Missing scenario #{scenario}" if sent.empty?
