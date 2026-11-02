@@ -1,41 +1,18 @@
 env:
-  SWIFT_COLLECTOR_SHA: "08918273c3ca442e42e51e855911e10c5133a45b"
-  BKTEC_SHA: "e626e954a65cee1a86bfbd1dd13575eea751116c"
+  SWIFT_COLLECTOR_SHA: "98aad621f2302f396485ef7298a90f4be718ac6f"
   BUILDKITE_TESTS_OTLP_RELAY_BATCHING: "true"
 
 steps:
-  - label: ":golang: Build unmodified opaque-envelope relay"
-    key: relay-build
-    agents:
-      queue: hosted
-    commands:
-      - git clone https://github.com/buildkite/test-engine-client /tmp/relay-source
-      - git -C /tmp/relay-source checkout "$$BKTEC_SHA"
-      - mkdir -p bin
-      - checkout_dir="$$(pwd)"
-      - cd /tmp/relay-source
-      - git status --porcelain > "$$checkout_dir/bin/bktec-source-state.txt"
-      - GOOS=darwin GOARCH=arm64 CGO_ENABLED=0 go build -o "$$checkout_dir/bin/bktec-darwin-arm64" .
-      - GOOS=linux GOARCH=amd64 CGO_ENABLED=0 go build -o "$$checkout_dir/bin/bktec-linux-amd64" .
-      - git rev-parse HEAD > "$$checkout_dir/bin/bktec-source.txt"
-    artifact_paths: "bin/*"
-    plugins:
-      - docker#v5.11.0:
-          image: "golang:1.27.3"
-          propagate-environment: true
-
   - &relay-restart
     label: ":swift: Relay runner restart 0"
-    depends_on: relay-build
     agents:
       queue: macos
     commands:
       - bash swift-xcuitest/bin/install-pr-collector
-      - buildkite-agent artifact download "bin/*" . --step relay-build
-      - chmod +x bin/bktec-darwin-arm64
       - export BUILDKITE_ANALYTICS_KEY="$$BUILDKITE_BUILD_ID-relay-$$BUILDKITE_JOB_ID"
       - set -o pipefail
-      - bin/bktec-darwin-arm64 run 2>&1 | tee swift-xcuitest/artifacts/relay.log
+      - '"$$BUILDKITE_TEST_ENGINE_CLIENT_PATH" --version'
+      - '"$$BUILDKITE_TEST_ENGINE_CLIENT_PATH" run 2>&1 | tee swift-xcuitest/artifacts/relay.log'
     artifact_paths:
       - "swift-xcuitest/artifacts/SwiftXCUITest.xcresult/**/*"
       - "swift-xcuitest/artifacts/*.log"
@@ -52,24 +29,22 @@ steps:
           test-file-pattern: swift-xcuitest/ExampleAppUITests/**/*.swift
           suite-slug: test-engine-client-examples
           upload-results: false
-          install-client: false
+          client-version: "3.5.0"
 
   - <<: *relay-restart
     label: ":swift: Relay runner restart 1"
 
-  - label: ":swift: Opaque-envelope 415 fallback (1000 tests)"
-    depends_on: relay-build
+  - label: ":swift: Production opaque-envelope batching (1000 tests)"
     agents:
       queue: macos
     commands:
       - bash swift-xcuitest/bin/install-pr-collector
-      - buildkite-agent artifact download "bin/*" . --step relay-build
-      - chmod +x bin/bktec-darwin-arm64
       - bash swift-xctest/bin/prepare-merge-demo
       - export BUILDKITE_ANALYTICS_KEY="$$BUILDKITE_BUILD_ID-merge-demo"
       - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
       - set -o pipefail
-      - bin/bktec-darwin-arm64 run 2>&1 | tee swift-xctest/artifacts/relay-demo.log
+      - '"$$BUILDKITE_TEST_ENGINE_CLIENT_PATH" --version'
+      - '"$$BUILDKITE_TEST_ENGINE_CLIENT_PATH" run 2>&1 | tee swift-xctest/artifacts/relay-demo.log'
     artifact_paths:
       - "swift-xctest/artifacts/*.log"
       - "swift-xctest/artifacts/*.txt"
@@ -88,15 +63,12 @@ steps:
           test-file-pattern: swift-xctest/artifacts/merge-suite/Tests/**/*.swift
           suite-slug: test-engine-client-examples
           upload-results: false
-          install-client: false
+          client-version: "3.5.0"
 
   - label: ":ruby: Relay sparse tests and unmerged child requests"
-    depends_on: relay-build
     agents:
       queue: hosted
     commands:
-      - buildkite-agent artifact download "bin/*" . --step relay-build
-      - chmod +x bin/bktec-linux-amd64
       - cd rspec-otel/relay-harness
       - bundle install
       - mkdir -p artifacts
@@ -105,7 +77,8 @@ steps:
       - export BUILDKITE_ANALYTICS_KEY="$$BUILDKITE_BUILD_ID-ruby-relay"
       - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
       - set -o pipefail
-      - ../../bin/bktec-linux-amd64 run 2>&1 | tee artifacts/relay.log
+      - '"$$BUILDKITE_TEST_ENGINE_CLIENT_PATH" --version'
+      - '"$$BUILDKITE_TEST_ENGINE_CLIENT_PATH" run 2>&1 | tee artifacts/relay.log'
     artifact_paths:
       - "rspec-otel/relay-harness/artifacts/*"
     env:
@@ -120,6 +93,6 @@ steps:
           test-file-pattern: spec/relay_spec.rb
           suite-slug: test-engine-client-examples
           upload-results: false
-          install-client: false
+          client-version: "3.5.0"
       - mise#v1.1.4:
           dir: rspec-otel/relay-harness
