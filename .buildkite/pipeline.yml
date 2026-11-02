@@ -9,6 +9,16 @@ steps:
       - mise#v1.1.4:
           dir: rspec-otel/plan-gate-harness
 
+  - label: "TE-7833: legacy plan, stock collector shutdown"
+    if: build.env("RECEIVER_MODE") == "fixed"
+    agents:
+      queue: hosted
+    command: "cd rspec-otel/plan-gate-harness && bundle install && bundle exec ruby run.rb legacy-stock"
+    artifact_paths: "rspec-otel/plan-gate-harness/artifacts/*"
+    plugins:
+      - mise#v1.1.4:
+          dir: rspec-otel/plan-gate-harness
+
   - label: "TE-7833: entitled control"
     if: build.env("RECEIVER_MODE") != null
     agents:

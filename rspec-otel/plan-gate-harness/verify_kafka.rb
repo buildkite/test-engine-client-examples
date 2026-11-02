@@ -55,7 +55,9 @@ end
 expected = requests.select { |request| request.fetch("status") == 200 }.map { |request| request.fetch("sha256") }.sort
 actual = records.map { |record| record.fetch(:request).fetch("sha256") }.sort
 raise "Kafka record loss or duplication" unless actual == expected
-%w[legacy entitled unlabelled].each do |scenario|
+scenarios = %w[legacy entitled unlabelled]
+scenarios << "legacy-stock" if requests.any? { |request| request.fetch("run") == "#{prefix}legacy-stock" }
+scenarios.each do |scenario|
   sent = requests.select { |request| request.fetch("run") == "#{prefix}#{scenario}" }
   raise "Missing scenario #{scenario}" if sent.empty?
   stored = records.select { |record| record.fetch(:request).fetch("run") == "#{prefix}#{scenario}" }

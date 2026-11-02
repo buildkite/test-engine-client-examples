@@ -7,8 +7,10 @@ Buildkite::TestCollector.configure(hook: :rspec, otel_enabled: true)
 RSpec.describe "TE-7833 plan gate", order: :defined do
   # Keep refused batches below the SDK's fail-fast flush boundary so even
   # the baseline attempts all 1,000 results, rather than abandoning its tail.
-  after do |example|
-    Buildkite::TestCollector::OTel.force_flush if (example.metadata.fetch(:harness_index) + 1) % 50 == 0
+  unless ENV.fetch("SCENARIO") == "legacy-stock"
+    after do |example|
+      Buildkite::TestCollector::OTel.force_flush if (example.metadata.fetch(:harness_index) + 1) % 50 == 0
+    end
   end
 
   1_000.times do |index|
