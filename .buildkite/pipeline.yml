@@ -315,19 +315,25 @@ steps:
                 - BUILDKITE_ANALYTICS_DEBUG_ENABLED
 
       - label: ":swift: Swift: XCUITest (test-collector-swift)"
-        command: swift-xcuitest/bin/test
+        command: bktec run
         agents:
           queue: macos
         artifact_paths:
           - swift-xcuitest/artifacts/SwiftXCUITest.xcresult/**/*
         env:
           BUILDKITE_ANALYTICS_TAGS: '{"test.framework.name":"xcuitest","language.name":"swift","custom.tag.from":"upload"}'
+          # Hand each finished test to bktec, which outlives the XCTest runner,
+          # and batch the relay's uploads to Test Engine.
+          BUILDKITE_TESTS_OTLP_RELAY: "true"
+          BUILDKITE_TESTS_OTLP_RELAY_BATCHING: "true"
         plugins:
-          - tests#v1.0.0:
+          - tests#v1.1.0:
               test-runner: custom
+              test-cmd: swift-xcuitest/bin/test
+              test-file-pattern: swift-xcuitest/ExampleAppUITests/**/*.swift
               suite-slug: test-engine-client-examples
               upload-results: false
-              install-client: false
+              client-version: "3.5.0"
 
   - group: ":android: Android"
     steps:
