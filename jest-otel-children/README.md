@@ -2,7 +2,7 @@
 
 Draft companion to [bktest#87](https://github.com/buildkite/bktest/pull/87),
 following [examples#86](https://github.com/buildkite/test-engine-client-examples/pull/86).
-The pipeline packs the exact collector commit `9046afc7539bad1433680fcadd5dcf466ae665b3` as `1.13.0-beta.2`, without
+The pipeline packs the exact collector commit `0d322c00ddb6703bafe10e8937d5e076c03a328d` as `1.13.0-beta.3`, without
 publishing anything. Do not merge this verification pin as a released example.
 
 Six deterministic passing tests exercise child instrumentation:
@@ -17,9 +17,10 @@ Six deterministic passing tests exercise child instrumentation:
   resolver case. A passing test alone does not prove instrumentation worked.
 
 There is no setup file and no instrumentation option. `jest.config.js` sets
-the collector's Jest `runtime`. This prototype adds package instrumentation to
-beta.2's manual/http/fetch support, selected by installed instrumentation and
-the standard `OTEL_NODE_*_INSTRUMENTATIONS` switches. No package is published.
+the collector's Jest `runtime`. Beta.3 adds package instrumentation to
+beta.2's manual/http/fetch support. Every installed 2.x SDK-line instrumentation
+is selected, narrowed by the standard `OTEL_NODE_*_INSTRUMENTATIONS` switches.
+No package is published.
 
 With the Node version in `mise.toml` active, from this directory:
 
@@ -37,7 +38,9 @@ middleware/handler, test → GraphQL execution → resolver, and three Redis spa
 directly under the Redis test. The alias should have the same Express spans
 as the direct import. `OTEL_PROOF` log lines contain the root span and trace
 IDs for correlating stored traces, not credentials. Build 1048 confirmed the
-old alias gap in production. This pin uses Jest's actual resolved module path;
-local OTLP regression tests now require the alias's three Express spans and
-verify that mapping Express to a local mock does not instrument the mock.
-The production rerun must verify stored children against these proof roots.
+old alias gap in production; build 1049 verified the resolver fix, with five
+children for both Express imports (two HTTP and three Express). This beta.3
+pin retains that fix. Local OTLP regressions also verify that mapping Express
+to a local mock does not instrument the mock, pg selection and late children
+under their original tests. The production rerun must verify stored children
+against these proof roots, not just a green build.
