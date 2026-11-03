@@ -100,6 +100,9 @@ xcrun xcresulttool get test-results tests --path "$result_bundle" > "$artifacts_
 if [[ "${ARLO_SCENARIO:-restart}" == parallel ]]; then
   [[ "$xcodebuild_status" -eq 0 ]]
   [[ "$(plutil -extract passedTests raw -o - "$artifacts_dir/summary.json")" -eq 3 ]]
+  clone_count="$(sed -nE "/Test case .* passed on 'Clone /s/.*passed on '(Clone [0-9]+).*/\1/p" "$test_log" | sort -u | wc -l | tr -d ' ')"
+  echo "Parallel runner clones used: $clone_count"
+  [[ "$clone_count" -ge 2 ]]
   exit 0
 fi
 

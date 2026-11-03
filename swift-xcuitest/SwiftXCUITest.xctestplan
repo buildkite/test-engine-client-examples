@@ -12,6 +12,7 @@
   },
   "testTargets" : [
     {
+      "parallelizable" : true,
       "target" : {
         "containerPath" : "container:SwiftXCUITest.xcodeproj",
         "identifier" : "736F5421D3126D489F8E0CFB",
