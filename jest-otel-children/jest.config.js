@@ -6,4 +6,6 @@ module.exports = {
   testEnvironment: 'buildkite-test-collector/jest/environment',
   runtime: 'buildkite-test-collector/jest/runtime',
   testLocationInResults: true,
+  // Adversarial resolver case: a valid Jest alias must still load Express.
+  moduleNameMapper: { '^@fixture/express$': 'express' },
 }
