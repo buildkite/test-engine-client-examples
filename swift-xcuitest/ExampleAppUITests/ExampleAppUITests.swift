@@ -72,6 +72,9 @@ private func parallelLaunch() {
     let app = XCUIApplication()
     app.launch()
     XCTAssertTrue(app.staticTexts["status"].waitForExistence(timeout: 5))
+    // Keep work available while the other simulator clones finish cold booting.
+    // Both the disabled baseline and enabled run include this fixture-only wait.
+    Thread.sleep(forTimeInterval: 45)
 }
 
 final class ParallelOne: XCTestCase {
