@@ -2,6 +2,10 @@
 set -euo pipefail
 cd "$(dirname "$0")/../.."
 
+if [[ "$ARLO_SCENARIO" == stub && "${ARLO_STUB_ACTIVE:-}" != true ]]; then
+  exec python3 swift-xcuitest/bin/refused-stub.py bash swift-xcuitest/bin/production-check
+fi
+
 # This queue has a recent image; fail rather than silently test Xcode 15 again.
 export DEVELOPER_DIR=/Applications/Xcode_26.2.app/Contents/Developer
 mkdir -p swift-xcuitest/artifacts
@@ -15,14 +19,9 @@ mkdir -p swift-xcuitest/artifacts
 
 export BUILDKITE_ANALYTICS_KEY="${BUILDKITE_BUILD_ID}-${ARLO_SCENARIO}-${BUILDKITE_JOB_ID}"
 export BUILDKITE_ANALYTICS_DEBUG_ENABLED=true
-unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
-
-if [[ "$ARLO_SCENARIO" == direct ]]; then
-  # Never echo the token. The secret must be provisioned by Matt in Buildkite.
-  export BUILDKITE_ANALYTICS_TOKEN="$(buildkite-agent secret get "$ARLO_SUITE_TOKEN_SECRET")"
-  export BUILDKITE_ORGANIZATION_SLUG="${ARLO_REFUSED_ORG:?}"
-  export BUILDKITE_TEST_ENGINE_SUITE_SLUG="${ARLO_REFUSED_SUITE:?}"
-  unset BUILDKITE_TESTS_OTLP_TOKEN OTEL_EXPORTER_OTLP_TRACES_HEADERS OTEL_EXPORTER_OTLP_TRACES_ENDPOINT
+unset BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
+if [[ "$ARLO_SCENARIO" != stub ]]; then
+  unset BUILDKITE_ANALYTICS_TOKEN
 fi
 
 if [[ "$ARLO_SCENARIO" == fast ]]; then
@@ -35,6 +34,13 @@ if [[ "$ARLO_SCENARIO" == fast ]]; then
   exit 0
 fi
 
+device_id="$(xcrun simctl list devices available -j | python3 -c '
+import json, sys
+devices = json.load(sys.stdin)["devices"]["com.apple.CoreSimulator.SimRuntime.iOS-26-2"]
+print(next(d["udid"] for d in devices if d["name"].startswith("iPhone")))')"
+export XCUITEST_DESTINATION="platform=iOS Simulator,id=$device_id"
+printf 'Destination: %s\n' "$XCUITEST_DESTINATION" | tee -a swift-xcuitest/artifacts/environment.txt
+
 # Baseline first on the same agent/simulator; compile separately from test timing.
 xcodebuild -project swift-xcuitest/SwiftXCUITest.xcodeproj -scheme SwiftXCUITest \
   -resolvePackageDependencies 2>&1 | tee swift-xcuitest/artifacts/resolve.log
@@ -43,10 +49,14 @@ export XCUITEST_ARTIFACTS_DIR="$PWD/swift-xcuitest/artifacts/disabled"
 export XCUITEST_RUN_ID="$BUILDKITE_ANALYTICS_KEY-disabled"
 /usr/bin/time -p bash swift-xcuitest/bin/test 2>&1 | tee swift-xcuitest/artifacts/disabled.log
 
+# Force a full installation, avoiding the failed delta-install seen in 1040.
+if [[ "$ARLO_SCENARIO" != parallel ]]; then
+  xcrun simctl uninstall "$device_id" com.buildkite.test-engine-client-examples.swift-xcuitest
+fi
 export BUILDKITE_ANALYTICS_ENABLED=true
 export XCUITEST_ARTIFACTS_DIR="$PWD/swift-xcuitest/artifacts/enabled"
 export XCUITEST_RUN_ID="$BUILDKITE_ANALYTICS_KEY-enabled"
-if [[ "$ARLO_SCENARIO" == direct ]]; then
+if [[ "$ARLO_SCENARIO" == stub ]]; then
   /usr/bin/time -p bash swift-xcuitest/bin/test 2>&1 | tee swift-xcuitest/artifacts/direct.log
 else
   "$BUILDKITE_TEST_ENGINE_CLIENT_PATH" --version

@@ -14,6 +14,7 @@ steps:
       - "swift-xcuitest/artifacts/**/*.json"
       - "swift-xcuitest/artifacts/**/*.log"
       - "swift-xcuitest/artifacts/**/*.txt"
+      - "swift-xcuitest/artifacts/**/*.pb"
       - "swift-xcuitest/artifacts/**/Package.resolved"
       - "swift-xcuitest/artifacts/**/*.xcresult/**/*"
       - "swift-xctest/artifacts/Package.resolved"
@@ -53,10 +54,9 @@ steps:
           client-version: "3.5.0"
 
   - <<: *ui
-    label: ":swift: Arlo direct refused org"
-    key: direct
-    if: build.env("ARLO_SUITE_TOKEN_SECRET") != null
+    label: ":swift: Arlo direct refusal (stub, not prod)"
+    key: stub
     env:
-      ARLO_SCENARIO: direct
+      ARLO_SCENARIO: stub
       BUILDKITE_TESTS_OTLP_RELAY: "false"
     plugins: []
