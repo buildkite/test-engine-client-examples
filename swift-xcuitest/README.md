@@ -5,6 +5,8 @@ results with [`test-collector-swift`](https://github.com/buildkite/test-collecto
 It uses a shared scheme, a lexical test plan, and an explicit `.xcresult`
 bundle so the same command works locally and on a macOS Buildkite agent.
 
+This example is tested on Xcode 26.2; Xcode 15.4 (Swift 5.10) cannot build beta.3's OpenTelemetry dependencies.
+
 Run it with:
 
 ```sh

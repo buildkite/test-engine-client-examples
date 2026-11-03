@@ -317,7 +317,7 @@ steps:
       - label: ":swift: Swift: XCUITest (test-collector-swift)"
         command: bktec run
         agents:
-          queue: macos
+          queue: swift-macos-15-xcode-26-2
         artifact_paths:
           - swift-xcuitest/artifacts/SwiftXCUITest.xcresult/**/*
         env:
