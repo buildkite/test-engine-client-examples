@@ -51,6 +51,8 @@ export XCUITEST_RUN_ID="$BUILDKITE_ANALYTICS_KEY-disabled"
 
 # Force a full installation, avoiding the failed delta-install seen in 1040.
 if [[ "$ARLO_SCENARIO" != parallel ]]; then
+  # Xcode shuts the destination down after the test run; uninstall needs it booted.
+  xcrun simctl bootstatus "$device_id" -b
   xcrun simctl uninstall "$device_id" com.buildkite.test-engine-client-examples.swift-xcuitest
 fi
 export BUILDKITE_ANALYTICS_ENABLED=true
