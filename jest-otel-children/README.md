@@ -2,7 +2,7 @@
 
 Draft companion to [bktest#87](https://github.com/buildkite/bktest/pull/87),
 following [examples#86](https://github.com/buildkite/test-engine-client-examples/pull/86).
-The pipeline packs the exact collector commit `d989492e85da1c526a73a2340cc732ec5fe07f4f` as `1.13.0-beta.3`, without
+The pipeline packs the exact collector commit `0956b09ee7994e323b7361b22c928a94390b30dd` as `1.13.0-beta.3`, without
 publishing anything. Do not merge this verification pin as a released example.
 
 Six deterministic passing tests exercise child instrumentation:
@@ -16,10 +16,12 @@ Six deterministic passing tests exercise child instrumentation:
 - Express loaded through a Jest `moduleNameMapper` alias, an adversarial
   resolver case. A passing test alone does not prove instrumentation worked.
 
-There is no setup file and no instrumentation option. `jest.config.js` sets
+There is no Jest setup file and no instrumentation option. `jest.config.js` sets
 the collector's Jest `runtime`. Beta.3 adds package instrumentation to
-beta.2's manual/http/fetch support. Every installed 2.x SDK-line instrumentation
-is selected, narrowed by the standard `OTEL_NODE_*_INSTRUMENTATIONS` switches.
+beta.2's manual/http/fetch support. Installed 2.x SDK-line instrumentations
+are selected except fs and host-metrics, which are off by default, and narrowed
+by the standard `OTEL_NODE_ENABLED_INSTRUMENTATIONS` and
+`OTEL_NODE_DISABLED_INSTRUMENTATIONS` switches.
 No package is published.
 
 With the Node version in `mise.toml` active, from this directory:
@@ -44,3 +46,13 @@ pin retains that fix. Local OTLP regressions also verify that mapping Express
 to a local mock does not instrument the mock, pg selection and late children
 under their original tests. The production rerun must verify stored children
 against these proof roots, not just a green build.
+
+`npm test` now also fails if successful OTLP exports do not contain exactly
+these children under the logged roots: direct Express 5, mapped Express 5,
+GraphQL 4, Redis 3, HTTP/manual 3 and fetch 2. The check validates operation
+names/scopes and the entire parent chain, not only counts. A preload observes
+the real exporter's successful callbacks without changing its destination;
+no relay, extra dependency or new credential is needed. `OTEL_EXPORT_VERIFIED`
+lines report each checked root and count. This detects instrumentation/export
+regressions automatically, but does not prove backend storage: production
+stored traces still need separate verification against `OTEL_PROOF`.

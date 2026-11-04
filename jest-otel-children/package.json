@@ -2,7 +2,7 @@
   "name": "jest-otel-children-example",
   "private": true,
   "scripts": {
-    "test": "jest --runInBand"
+    "test": "node verify.js"
   },
   "devDependencies": {
     "@opentelemetry/api": "1.9.1",
