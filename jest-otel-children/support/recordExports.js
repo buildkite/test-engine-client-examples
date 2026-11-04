@@ -13,6 +13,7 @@ OTLPTraceExporter.prototype.export = function (spans, callback) {
           parentSpanId: span.parentSpanContext?.spanId,
           name: span.name,
           scope: span.instrumentationScope.name,
+          scopeVersion: span.instrumentationScope.version,
           kind: span.kind,
           attributes: span.attributes,
         }) + '\n')

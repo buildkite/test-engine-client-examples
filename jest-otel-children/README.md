@@ -1,8 +1,8 @@
 # Customer-shaped Jest OTel harness
 
 Draft [examples#93](https://github.com/buildkite/test-engine-client-examples/pull/93)
-prepares the beta.4 production check. `collector.sha` pins beta.3 main,
-`d087b915c8e6d4024e679be86bd03e69cae83677`. `bash run` packs that exact Git
+prepares the beta.4 production check. `collector.sha` pins beta.4 candidate
+`3f17ffbe8a40f6f512642c333d7a267ba19414b9`. `bash run` packs that exact Git
 commit, installs it without publishing or resolving npm tags, and runs the
 selected control. Do not merge this verification pin as a released example.
 
@@ -22,13 +22,14 @@ Only existing suite-scoped short-lived OIDC credentials are used. No read
 credentials or new secrets are added. No bktec JSON upload duplicates OTel
 executions. The JSON control uses its own run key.
 
-Three Jest projects cover Node, jsdom and happy-dom. **This beta.3 dry-run
-configuration is deliberately legacy:** Node uses `jest/environment` plus
-`jest/runtime`; the DOM environments use beta.3's `extend()` adapters. When
-the beta.4 SHA arrives, delete those adapters and change each project to its
-plain environment (`node`, `jsdom`, `@happy-dom/jest-environment`), retaining
-only the collector reporter with `otelEnabled: true` and `jest/runtime`.
-That switch, not this legacy dry run, proves beta.4's new setup contract.
+The main Jest projects use their own plain environments: Node leaves Jest's
+default unchanged, jsdom uses `jsdom`, and happy-dom uses
+`@happy-dom/jest-environment`. OTel setup is only the collector reporter with
+`otelEnabled: true` plus `runtime: 'buildkite-test-collector/jest/runtime'`.
+There are no `extend()` adapters. One compatibility project keeps the existing
+pg file on the legacy collector `jest/environment` plus runtime, with the same
+span checks and no extra tests or changed totals. The JSON control disables
+OTel and uses plain environments in all projects.
 
 ## Cases and exact child expectations
 
@@ -74,7 +75,8 @@ to bktec's retry logic; unexpected failures fail the job.
 
 `verify.js` observes successful callbacks from the real OTLP exporter without
 changing its destination. It compares Jest's JSON attempt counts, root IDs,
-result statuses and complete child operation/scope/kind/parent paths. Missing,
+result statuses and complete child operation/scope/kind/parent paths. Every
+test root must report collector attribute and scope version `1.13.0-beta.4`. Missing,
 extra, duplicate or misparented children, duplicate roots, changed retry
 counts, unexpected collector warnings and JSON upload errors fail the job.
 The hook never reaches a test body, so its root is identified in the export

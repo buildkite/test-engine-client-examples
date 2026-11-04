@@ -106,6 +106,10 @@ if (mode === 'json') {
   assert.equal(spans.length, attempts.reduce((count, name) => count + expected[name].length + 1, 0), 'Unexpected exported spans')
   assert.equal(new Set(spans.map((span) => span.spanId)).size, spans.length, 'Duplicate exported span IDs')
   const roots = spans.filter((span) => span.name === 'test.execution')
+  for (const root of roots) {
+    assert.equal(root.attributes['buildkite.collector.version'], '1.13.0-beta.4', 'Unexpected collector version')
+    assert.equal(root.scopeVersion, '1.13.0-beta.4', 'Unexpected collector instrumentation scope version')
+  }
   assert.deepEqual(roots.map((span) => span.attributes['test.case.name']).sort(), [...attempts].sort(), 'One root required per Jest attempt')
   const retry = roots.filter((span) => span.attributes['test.case.name'] === 'retry fails once then passes')
   if (retry.length) assert.deepEqual(retry.map((span) => span.attributes['test.case.result.status']).sort(), ['fail', 'pass'])
@@ -138,7 +142,7 @@ if (mode === 'json') {
     }
     const children = trace.filter((span) => span.spanId !== proof.spanId).map((span) => childPath(span))
     assert.deepEqual(children.sort(), [...expected[proof.test]].sort(), `${proof.test}: missing, extra or misparented children`)
-    console.log('OTEL_EXPORT_VERIFIED', JSON.stringify({ test: proof.test, traceId: proof.traceId, rootSpanId: proof.spanId, children: children.length }))
+    console.log('OTEL_EXPORT_VERIFIED', JSON.stringify({ test: proof.test, traceId: proof.traceId, rootSpanId: proof.spanId, children: children.length, collectorVersion: byId.get(proof.spanId).attributes['buildkite.collector.version'] }))
   }
 }
 const summary = { mode, index, runKey: process.env.BUILDKITE_ANALYTICS_KEY, files: files.map((file) => path.relative(__dirname, file)), tests: assertions.length, attempts: attempts.length, attemptNames: attempts, milliseconds: Math.round(performance.now() - started), proofs }
