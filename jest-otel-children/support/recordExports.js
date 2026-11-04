@@ -14,6 +14,7 @@ OTLPTraceExporter.prototype.export = function (spans, callback) {
           name: span.name,
           scope: span.instrumentationScope.name,
           kind: span.kind,
+          attributes: span.attributes,
         }) + '\n')
       }
     }

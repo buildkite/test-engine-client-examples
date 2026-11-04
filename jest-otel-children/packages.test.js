@@ -10,7 +10,7 @@ const app = express()
 app.get('/package', (req, res) => res.send('express package'))
 const schema = buildSchema('type Query { message: String }')
 beforeEach(() => {
-  console.log('OTEL_PROOF', JSON.stringify({ test: expect.getState().currentTestName, ...trace.getActiveSpan().spanContext() }))
+  require('./support/proof')(expect.getState().currentTestName)
 })
 
 test('Express route registered at file load', async () => {

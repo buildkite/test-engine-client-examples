@@ -1,62 +1,103 @@
-# Jest OTel child-span verification
+# Customer-shaped Jest OTel harness
 
-Draft companion to [bktest#87](https://github.com/buildkite/bktest/pull/87),
-following [examples#86](https://github.com/buildkite/test-engine-client-examples/pull/86).
-The pipeline packs the exact collector commit `af5d8456835bf5ebb4bf5074461271fbb48c5871` as `1.13.0-beta.3`, without
-publishing anything. Do not merge this verification pin as a released example.
+Draft [examples#93](https://github.com/buildkite/test-engine-client-examples/pull/93)
+prepares the beta.4 production check. `collector.sha` pins beta.3 main,
+`d087b915c8e6d4024e679be86bd03e69cae83677`. `bash run` packs that exact Git
+commit, installs it without publishing or resolving npm tags, and runs the
+selected control. Do not merge this verification pin as a released example.
 
-Six deterministic passing tests exercise child instrumentation:
+## Execution and setup
 
-- HTTP GET inside a manual active span.
-- Native `fetch` (undici).
-- Express routes registered at file load.
-- An async GraphQL resolver.
-- A real node-redis client performing connect/SET/GET against an in-process
-  deterministic RESP peer (not a real Redis server).
-- Express loaded through a Jest `moduleNameMapper` alias, an adversarial
-  resolver case. A passing test alone does not prove instrumentation worked.
+The pipeline runs:
 
-There is no Jest setup file and no instrumentation option. `jest.config.js` sets
-the collector's Jest `runtime`. Beta.3 adds package instrumentation to
-beta.2's manual/http/fetch support. Discovery selects 2.x SDK-line instrumentations
-declared in project/workspace manifests, plus auto-instrumentations-node's bundle,
-not incidental hoisted dependencies. The default exclusions cover fs/host-metrics,
-net/dns, aws-sdk/kafkajs/amqplib, pino/winston/bunyan, metrics-only and browser
-instrumentations. Selection is narrowed by the standard
-`OTEL_NODE_ENABLED_INSTRUMENTATIONS` and `OTEL_NODE_DISABLED_INSTRUMENTATIONS`
-switches. This harness declares all five of its instrumentations directly;
-none are default-off, so it needs no selection overrides.
-No package is published.
+- Two parallel `bktec run` jobs, using the Tests plugin, file splitting,
+  `upload-results: false`, and bktec 3.5.0's OTLP relay **with batching**.
+  Both use `${BUILDKITE_BUILD_ID}-jest-otel-relay` as their run key.
+- One complete direct-export OTel control, with no relay or bktec.
+- One complete JSON-reporter control, with no OTel environment/runtime.
+- A dependent verification step that downloads the job artifacts, checks
+  split coverage/attempt counts and prints `OTEL_TIMING_COMPARISON`.
 
-With the Node version in `mise.toml` active, from this directory:
+Only existing suite-scoped short-lived OIDC credentials are used. No read
+credentials or new secrets are added. No bktec JSON upload duplicates OTel
+executions. The JSON control uses its own run key.
 
-```sh
-bash run <bktest commit>
-```
+Three Jest projects cover Node, jsdom and happy-dom. **This beta.3 dry-run
+configuration is deliberately legacy:** Node uses `jest/environment` plus
+`jest/runtime`; the DOM environments use beta.3's `extend()` adapters. When
+the beta.4 SHA arrives, delete those adapters and change each project to its
+plain environment (`node`, `jsdom`, `@happy-dom/jest-environment`), retaining
+only the collector reporter with `otelEnabled: true` and `jest/runtime`.
+That switch, not this legacy dry run, proves beta.4's new setup contract.
 
-Without `BUILDKITE_TESTS_OTLP_TOKEN`, OTel mode is off, so no test span is
-current and the `OTEL_PROOF` hook fails the tests. The Buildkite step mints a
-short-lived suite-scoped OIDC credential and uses a unique run key ending in
-`-jest-otel-children`. There is no Tests plugin or bktec upload: both
-`test.execution` roots and their children must arrive through the collector's
-direct OTLP path. Expected parentage is test → HTTP client → server → Express
-middleware/handler, test → GraphQL execution → resolver, and three Redis spans
-directly under the Redis test. The alias should have the same Express spans
-as the direct import. `OTEL_PROOF` log lines contain the root span and trace
-IDs for correlating stored traces, not credentials. Build 1048 confirmed the
-old alias gap in production; build 1049 verified the resolver fix, with five
-children for both Express imports (two HTTP and three Express). This beta.3
-pin retains that fix. Local OTLP regressions also verify that mapping Express
-to a local mock does not instrument the mock, pg selection and late children
-under their original tests. The production rerun must verify stored children
-against these proof roots, not just a green build.
+## Cases and exact child expectations
 
-`npm test` now also fails if successful OTLP exports do not contain exactly
-these children under the logged roots: direct Express 5, mapped Express 5,
-GraphQL 4, Redis 3, HTTP/manual 3 and fetch 2. The check validates operation
-names/scopes and the entire parent chain, not only counts. A preload observes
-the real exporter's successful callbacks without changing its destination;
-no relay, extra dependency or new credential is needed. `OTEL_EXPORT_VERIFIED`
-lines report each checked root and count. This detects instrumentation/export
-regressions automatically, but does not prove backend storage: production
-stored traces still need separate verification against `OTEL_PROOF`.
+There are 17 tests and 18 OTel attempt roots per complete run. The retry
+exports one failed and one passed attempt. Children exclude `test.execution`:
+
+| Case | Children per attempt | Parent paths |
+| --- | ---: | --- |
+| Direct Express | 5 | test → HTTP client → server → three Express operations |
+| Mapped Express (`moduleNameMapper`) | 5 | Same, including all three Express operations |
+| GraphQL async resolver | 4 | parse/validate/query under test; resolver under query |
+| Redis connect/SET/GET | 3 | Three direct children of test |
+| HTTP/manual round trip | 3 | test → manual → HTTP client → server |
+| Native fetch round trip | 2 | test → undici client → HTTP server |
+| pg connect/query | 2 | connect and SELECT query directly under test |
+| Nock-intercepted request | 1 | Exactly one HTTP client under test |
+| Plain file after nock | 2 | test → HTTP client → server |
+| `test.each` (two rows) | 1 each | Manual operation under its own root |
+| `jest.retryTimes` (two attempts) | 1 each | Manual operation under each distinct attempt root |
+| `test.concurrent` (two cases) | 1 each | Manual operation under its own root |
+| jsdom React Testing Library | 3 | test → manual → HTTP client → server |
+| happy-dom React Testing Library | 3 | Same |
+| Failing `beforeAll` | 0 | Failed root; test body never executes |
+
+Total: **18 roots + 39 children = 57 spans** through the relay, and another
+57 through the independent direct control. JSON stores final test results,
+not OTel spans or intermediate retry attempts.
+
+The Redis RESP and PostgreSQL wire peers are deterministic in-process
+protocol servers, **not real database services**. They exercise real clients,
+sockets, parsing and instrumentation. DOM tests use a React button, RTL,
+`cross-fetch` and an in-process HTTP server. Browser rendering is not claimed;
+the existing Node project separately exercises native fetch/undici.
+
+The split unit `nock.test.js` includes `plain.case.js` in the same runInBand
+process. A sequencer puts them consecutively; proofs verify their order and
+PID. The lifecycle split unit additionally runs `hook.case.js` separately,
+requiring exit 1 and the exact expected hook failure. It still exports and
+counts that failed root. It is not soft-failed, converted to a pass or exposed
+to bktec's retry logic; unexpected failures fail the job.
+
+## Automatic versus stored verification
+
+`verify.js` observes successful callbacks from the real OTLP exporter without
+changing its destination. It compares Jest's JSON attempt counts, root IDs,
+result statuses and complete child operation/scope/kind/parent paths. Missing,
+extra, duplicate or misparented children, duplicate roots, changed retry
+counts, unexpected collector warnings and JSON upload errors fail the job.
+The hook never reaches a test body, so its root is identified in the export
+and checked against the failed Jest assertion rather than an active-span log.
+`OTEL_PROOF` and `OTEL_EXPORT_VERIFIED` contain no credentials.
+
+`runRelay.js` requires bktec's zero-drop report and batching upload counts.
+The aggregate step checks both nonempty shards cover the complete direct
+control exactly once and use the same run key. Timings measure Jest plus
+export/verification, excluding dependency setup; split wall time is the
+maximum shard duration, not an equal-parallelism performance benchmark.
+
+**Successful exports and a shared run key do not prove backend storage.**
+After each production run, independently list executions and fetch every
+stored trace using the connected Buildkite read tools. Require 18 executions
+and 57 spans in one relay run, all matching the artifact proof roots and exact
+ancestry; repeat for the direct control. Check both retry attempts and the
+expected hook failure. CI does not have read credentials for those APIs.
+Keep the stored results in the thread's evidence report, not inferred from a
+green build. `tmp/<mode>-<shard>/` artifacts retain proofs, exports, reports,
+relay logs and timings for that comparison.
+
+With Node 24.19.0 from `mise.toml`, run `bash run` in this directory. Direct
+OTel needs `BUILDKITE_TESTS_OTLP_TOKEN` and a run key. Relay mode
+(`OTEL_PROOF_MODE=relay`) needs bktec and Buildkite's job/OIDC context; use the
+pipeline for production planning, batching and storage verification.

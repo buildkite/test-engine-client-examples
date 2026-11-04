@@ -1,0 +1,16 @@
+const assert = require('node:assert/strict')
+const { spawnSync } = require('node:child_process')
+const { mkdirSync, writeFileSync } = require('node:fs')
+const path = require('node:path')
+
+const result = spawnSync('bktec', ['run'], { encoding: 'utf8', maxBuffer: 10 * 1024 * 1024 })
+process.stdout.write(result.stdout || '')
+process.stderr.write(result.stderr || '')
+assert.equal(result.status, 0, 'bktec must pass')
+const log = `${result.stdout}\n${result.stderr}`
+assert.match(log, /bktec OTLP relay: [1-9]\d* request\(s\).*0 dropped permanently, 0 dropped at drain deadline, 0B dropped/, 'Missing zero-drop relay report')
+assert.match(log, /upstream upload attempt\(s\)/, 'Relay batching must be enabled')
+assert.doesNotMatch(log, /\[buildkite-test-collector\]/, 'Unexpected collector warning')
+const directory = path.join(__dirname, '..', 'tmp', `relay-${process.env.BUILDKITE_PARALLEL_JOB || '0'}`)
+mkdirSync(directory, { recursive: true })
+writeFileSync(path.join(directory, 'relay.log'), log)

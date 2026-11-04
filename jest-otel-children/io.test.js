@@ -10,8 +10,7 @@ beforeAll(async () => {
 afterAll(() => new Promise((resolve) => server.close(resolve)))
 
 beforeEach(() => {
-  const root = trace.getActiveSpan().spanContext()
-  console.log('OTEL_PROOF', JSON.stringify({ test: expect.getState().currentTestName, ...root }))
+  require('./support/proof')(expect.getState().currentTestName)
 })
 
 test('HTTP I/O inside a manual span', async () => {

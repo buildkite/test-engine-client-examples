@@ -6,7 +6,7 @@ const app = express()
 app.get('/alias', (req, res) => res.send('mapped express'))
 
 test('Express loaded through Jest moduleNameMapper', async () => {
-  console.log('OTEL_PROOF', JSON.stringify({ test: expect.getState().currentTestName, ...trace.getActiveSpan().spanContext() }))
+  require('./support/proof')(expect.getState().currentTestName)
   const server = await new Promise((resolve) => { const listening = app.listen(0, '127.0.0.1', () => resolve(listening)) })
   try {
     const response = await new Promise((resolve, reject) => {
