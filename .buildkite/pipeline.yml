@@ -113,7 +113,6 @@ steps:
           - cd jest-otel-children
           - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN BUILDKITE_TESTS_OTLP_TOKEN
           - export BUILDKITE_ANALYTICS_KEY="${BUILDKITE_BUILD_ID}-jest-otel-relay"
-          - export BUILDKITE_TEST_ENGINE_RESULT_PATH="tmp/relay-${BUILDKITE_PARALLEL_JOB}/results.json"
           - bash run
         artifact_paths: "jest-otel-children/tmp/relay-*/*"
         env:
