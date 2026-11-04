@@ -14,14 +14,9 @@ module.exports = {
     tags: { 'collector.mode': 'otel-children' },
   }]],
   projects: [
-    {
-      ...project('node', ['<rootDir>/*.test.js', '<rootDir>/*.case.js']),
-      testPathIgnorePatterns: ['<rootDir>/pg.test.js'],
-    },
+    project('node', ['<rootDir>/*.test.js', '<rootDir>/*.case.js']),
     project('jsdom', ['<rootDir>/jsdom/*.test.js'], 'jsdom'),
     project('happy-dom', ['<rootDir>/happy-dom/*.test.js'], '@happy-dom/jest-environment'),
-    // Keep one existing case on the old setup without changing coverage/counts.
-    project('legacy', ['<rootDir>/pg.test.js'], otel ? 'buildkite-test-collector/jest/environment' : 'node'),
   ],
   testSequencer: '<rootDir>/support/sequencer.js',
   testLocationInResults: true,

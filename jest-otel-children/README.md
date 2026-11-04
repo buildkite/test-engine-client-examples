@@ -2,7 +2,7 @@
 
 Draft [examples#93](https://github.com/buildkite/test-engine-client-examples/pull/93)
 prepares the beta.4 production check. `collector.sha` pins beta.4 candidate
-`70c1ffdec37a2fe2c37d01cd0330e572a4e582a8`. `bash run` packs that exact Git
+`db381a4ff2e0596eff282f334bfc09f2d7649572`. `bash run` packs that exact Git
 commit, installs it without publishing or resolving npm tags, and runs the
 selected control. Do not merge this verification pin as a released example.
 
@@ -26,10 +26,9 @@ The main Jest projects use their own plain environments: Node leaves Jest's
 default unchanged, jsdom uses `jsdom`, and happy-dom uses
 `@happy-dom/jest-environment`. OTel setup is only the collector reporter with
 `otelEnabled: true` plus `runtime: 'buildkite-test-collector/jest/runtime'`.
-There are no `extend()` adapters. One compatibility project keeps the existing
-pg file on the legacy collector `jest/environment` plus runtime, with the same
-span checks and no extra tests or changed totals. The JSON control disables
-OTel and uses plain environments in all projects.
+There are no `extend()` adapters or collector-environment projects. The pg
+file runs in the plain Node project, with unchanged counts and ancestry.
+The JSON control disables OTel and uses plain environments in all projects.
 
 ## Cases and exact child expectations
 
@@ -79,6 +78,9 @@ result statuses and complete child operation/scope/kind/parent paths. Every
 test root must report collector attribute and scope version `1.13.0-beta.4`. Missing,
 extra, duplicate or misparented children, duplicate roots, changed retry
 counts, unexpected collector warnings and JSON upload errors fail the job.
+Active-span proofs require the non-recording test-span wrapper; its IDs must
+still match the exported test root. Exact ancestry checks are independent of
+export order, including concurrent child/test flushes at teardown.
 The hook never reaches a test body, so its root is identified in the export
 and checked against the failed Jest assertion rather than an active-span log.
 `OTEL_PROOF` and `OTEL_EXPORT_VERIFIED` contain no credentials.
