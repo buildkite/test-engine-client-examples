@@ -2,7 +2,7 @@
 
 Draft companion to [bktest#87](https://github.com/buildkite/bktest/pull/87),
 following [examples#86](https://github.com/buildkite/test-engine-client-examples/pull/86).
-The pipeline packs the exact collector commit `0956b09ee7994e323b7361b22c928a94390b30dd` as `1.13.0-beta.3`, without
+The pipeline packs the exact collector commit `f4daf08b25ca4617fe72564f6c666ec68f1c10e8` as `1.13.0-beta.3`, without
 publishing anything. Do not merge this verification pin as a released example.
 
 Six deterministic passing tests exercise child instrumentation:
@@ -18,10 +18,14 @@ Six deterministic passing tests exercise child instrumentation:
 
 There is no Jest setup file and no instrumentation option. `jest.config.js` sets
 the collector's Jest `runtime`. Beta.3 adds package instrumentation to
-beta.2's manual/http/fetch support. Installed 2.x SDK-line instrumentations
-are selected except fs and host-metrics, which are off by default, and narrowed
-by the standard `OTEL_NODE_ENABLED_INSTRUMENTATIONS` and
-`OTEL_NODE_DISABLED_INSTRUMENTATIONS` switches.
+beta.2's manual/http/fetch support. Discovery selects 2.x SDK-line instrumentations
+declared in project/workspace manifests, plus auto-instrumentations-node's bundle,
+not incidental hoisted dependencies. The default exclusions cover fs/host-metrics,
+net/dns, aws-sdk/kafkajs/amqplib, pino/winston/bunyan, metrics-only and browser
+instrumentations. Selection is narrowed by the standard
+`OTEL_NODE_ENABLED_INSTRUMENTATIONS` and `OTEL_NODE_DISABLED_INSTRUMENTATIONS`
+switches. This harness declares all five of its instrumentations directly;
+none are default-off, so it needs no selection overrides.
 No package is published.
 
 With the Node version in `mise.toml` active, from this directory:
