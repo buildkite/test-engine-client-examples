@@ -2,7 +2,7 @@
 
 Draft companion to [bktest#87](https://github.com/buildkite/bktest/pull/87),
 following [examples#86](https://github.com/buildkite/test-engine-client-examples/pull/86).
-The pipeline packs the exact collector commit `c5021ef6f5778b0a85a183100cbf978fe59c9eba` as `1.13.0-beta.3`, without
+The pipeline packs the exact collector commit `af5d8456835bf5ebb4bf5074461271fbb48c5871` as `1.13.0-beta.3`, without
 publishing anything. Do not merge this verification pin as a released example.
 
 Six deterministic passing tests exercise child instrumentation:
