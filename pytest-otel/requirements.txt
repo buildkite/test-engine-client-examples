@@ -1,0 +1,5 @@
+pytest>=7.0.0
+pytest-xdist>=3.0.0
+opentelemetry-instrumentation-sqlite3>=0.66b0
+# PR #70's merge commit; the OTel collector has not been released to PyPI.
+buildkite-test-collector[otel] @ git+https://github.com/buildkite/bktest.git@14916efcc8f7aac009c482dd8db80343ded9b4b2#subdirectory=test-collector-python

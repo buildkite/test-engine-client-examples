@@ -416,6 +416,120 @@ steps:
           - mise#v1.1.4:
               dir: pytest
 
+  - group: ":python: Python OpenTelemetry (pinned collector)"
+    steps:
+      - label: ":pytest: pytest OTel contract check (loopback)"
+        key: pytest-otel-check
+        commands:
+          - cd pytest-otel
+          - pip install -r requirements.txt
+          - python check_otel.py --bktec "$$(command -v bktec)"
+        plugins:
+          - tests#v1.0.0:
+              test-runner: pytest
+              suite-slug: test-engine-client-examples
+              upload-results: false
+              client-version: "3.5.0"
+          - mise#v1.1.4:
+              dir: pytest-otel
+
+      - label: ":pytest: SQLite inventory (JSON control)"
+        key: pytest-otel-json
+        depends_on: pytest-otel-check
+        commands:
+          - cd pytest-otel
+          - pip install -r requirements.txt
+          - mkdir -p tmp
+          - export BUILDKITE_ANALYTICS_KEY="$$BUILDKITE_BUILD_ID-python-inventory-json-$$BUILDKITE_JOB_ID"
+          - pytest tests --json=tmp/json.json
+        artifact_paths: pytest-otel/tmp/json.json
+        soft_fail:
+          - exit_status: 1
+        env:
+          BUILDKITE_ANALYTICS_OTEL_ENABLED: "false"
+        plugins:
+          - tests#v1.0.0:
+              test-runner: pytest
+              suite-slug: test-engine-client-examples
+              upload-results: false
+              install-client: false
+          - mise#v1.1.4:
+              dir: pytest-otel
+
+      - label: ":pytest: pytest (OTel)"
+        key: pytest-otel
+        depends_on: pytest-otel-check
+        commands:
+          - cd pytest-otel
+          - pip install -r requirements.txt
+          - mkdir -p tmp
+          - export BUILDKITE_ANALYTICS_KEY="$$BUILDKITE_BUILD_ID-python-otel-$$BUILDKITE_JOB_ID"
+          - pytest tests --json=tmp/otel.json
+        artifact_paths: pytest-otel/tmp/otel.json
+        soft_fail:
+          - exit_status: 1
+        env:
+          BUILDKITE_ANALYTICS_OTEL_ENABLED: "true"
+        plugins:
+          - tests#v1.0.0:
+              test-runner: pytest
+              suite-slug: test-engine-client-examples
+              upload-results: false
+              install-client: false
+          - mise#v1.1.4:
+              dir: pytest-otel
+
+      - label: ":pytest: pytest (OTel, xdist)"
+        key: pytest-otel-xdist
+        depends_on: pytest-otel-check
+        commands:
+          - cd pytest-otel
+          - pip install -r requirements.txt
+          - mkdir -p tmp
+          - export BUILDKITE_ANALYTICS_KEY="$$BUILDKITE_BUILD_ID-python-otel-xdist-$$BUILDKITE_JOB_ID"
+          - pytest tests -n 3 --json=tmp/otel-xdist.json
+        artifact_paths: pytest-otel/tmp/otel-xdist.json
+        soft_fail:
+          - exit_status: 1
+        env:
+          BUILDKITE_ANALYTICS_OTEL_ENABLED: "true"
+          PYTEST_XDIST_ENABLED: "true"
+        plugins:
+          - tests#v1.0.0:
+              test-runner: pytest
+              suite-slug: test-engine-client-examples
+              upload-results: false
+              install-client: false
+          - mise#v1.1.4:
+              dir: pytest-otel
+
+      - label: ":pytest: pytest (OTel, xdist, bktec relay)"
+        key: pytest-otel-relay
+        depends_on: pytest-otel-check
+        commands:
+          - cd pytest-otel
+          - pip install -r requirements.txt
+          - mkdir -p tmp
+          - export BUILDKITE_ANALYTICS_KEY="$$BUILDKITE_BUILD_ID-python-otel-relay-$$BUILDKITE_JOB_ID"
+          - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
+          - bktec run --result-path tmp/otel-relay.json
+        artifact_paths: pytest-otel/tmp/otel-relay.json
+        soft_fail:
+          - exit_status: 1
+        env:
+          BUILDKITE_ANALYTICS_OTEL_ENABLED: "true"
+          BUILDKITE_TESTS_OTLP_RELAY: "true"
+          PYTEST_XDIST_ENABLED: "true"
+          PYTEST_ADDOPTS: "-n 3"
+        plugins:
+          - tests#v1.0.0:
+              test-runner: pytest
+              suite-slug: test-engine-client-examples
+              upload-results: false
+              client-version: "3.5.0"
+          - mise#v1.1.4:
+              dir: pytest-otel
+
   - group: ":apple: iOS / macOS"
     steps:
       - label: ":swift: Swift: XCTest (test-collector-swift)"

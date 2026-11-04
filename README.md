@@ -20,8 +20,8 @@ Configure one method to upload results from each test run:
   `upload-results: false`. bktec can still discover, split, run, and retry the
   tests. The Ruby, JavaScript, and Python examples use this configuration.
 - **Collector upload without bktec:** Let the collector upload results, set
-  `upload-results: false`, and set `install-client: false`. The Vitest, Swift,
-  and Android examples use this configuration.
+  `upload-results: false`, and set `install-client: false`. The direct Python,
+  Vitest, Swift, and Android examples use this configuration.
 
 > [!IMPORTANT]
 > If bktec and a Buildkite Test Collector both upload results from the same test
@@ -30,6 +30,31 @@ Configure one method to upload results from each test run:
 A Buildkite Test Collector is not a general prerequisite for using bktec. Some
 examples also demonstrate OpenTelemetry collection. Check the matching pipeline
 step for the complete configuration.
+
+## Python OpenTelemetry dogfooding
+
+[`pytest-otel`](./pytest-otel) demonstrates application and automatically
+instrumented SQL spans using an in-memory SQLite inventory service. No external
+service is needed. The existing [`pytest`](./pytest) examples remain JSON controls.
+
+[`pytest-otel/requirements.txt`](./pytest-otel/requirements.txt) pins
+`buildkite-test-collector[otel]` to the `test-collector-python` subdirectory of
+[`buildkite/bktest` commit 14916efcc8f7aac009c482dd8db80343ded9b4b2](https://github.com/buildkite/bktest/commit/14916efcc8f7aac009c482dd8db80343ded9b4b2),
+since this collector change has not been released to PyPI.
+
+Use the Python version in `pytest-otel/mise.toml` in an activated virtual
+environment to run the local checks without uploading to Test Engine:
+
+```sh
+pip install -r pytest-otel/requirements.txt
+python pytest-otel/check_otel.py
+# Optionally include the bktec 3.5.0 relay:
+python pytest-otel/check_otel.py --bktec /path/to/bktec
+```
+
+The inventory suite deliberately has four passing tests and one uncaught
+missing-product failure. The checker succeeds only when those expected results
+and their traces match; live ingestion must be verified separately in CI.
 
 ## Vitest examples
 
