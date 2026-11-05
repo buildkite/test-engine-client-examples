@@ -416,49 +416,7 @@ steps:
           - mise#v1.1.4:
               dir: pytest
 
-  - group: ":python: Python OpenTelemetry"
-    steps:
       - label: ":pytest: pytest (OTel setup by collector)"
-        key: pytest-otel
-        commands:
-          - cd pytest-otel/collector-setup
-          - pip install -r requirements.txt
-          - export BUILDKITE_ANALYTICS_KEY="$$BUILDKITE_BUILD_ID-python-otel-$$BUILDKITE_JOB_ID"
-          - pytest
-        soft_fail:
-          - exit_status: 1
-        env:
-          BUILDKITE_ANALYTICS_OTEL_ENABLED: "true"
-        plugins:
-          - tests#v1.0.0:
-              test-runner: pytest
-              suite-slug: test-engine-client-examples
-              upload-results: false
-              install-client: false
-          - mise#v1.1.4:
-              dir: pytest-otel/collector-setup
-
-      - label: ":pytest: pytest (OTel setup by collector, xdist)"
-        key: pytest-otel-xdist
-        commands:
-          - cd pytest-otel/collector-setup
-          - pip install -r requirements.txt
-          - export BUILDKITE_ANALYTICS_KEY="$$BUILDKITE_BUILD_ID-python-otel-xdist-$$BUILDKITE_JOB_ID"
-          - pytest -n 3
-        soft_fail:
-          - exit_status: 1
-        env:
-          BUILDKITE_ANALYTICS_OTEL_ENABLED: "true"
-        plugins:
-          - tests#v1.0.0:
-              test-runner: pytest
-              suite-slug: test-engine-client-examples
-              upload-results: false
-              install-client: false
-          - mise#v1.1.4:
-              dir: pytest-otel/collector-setup
-
-      - label: ":pytest: pytest (OTel setup by collector, xdist, bktec relay)"
         key: pytest-otel-relay
         commands:
           - cd pytest-otel/collector-setup
@@ -466,7 +424,7 @@ steps:
           - mkdir -p tmp
           - export BUILDKITE_ANALYTICS_KEY="$$BUILDKITE_BUILD_ID-python-otel-relay-$$BUILDKITE_JOB_ID"
           - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
-          - bktec run --result-path tmp/otel-relay.json
+          - bktec run
         artifact_paths: pytest-otel/collector-setup/tmp/otel-relay.json
         soft_fail:
           - exit_status: 1
@@ -477,13 +435,13 @@ steps:
         plugins:
           - tests#v1.0.0:
               test-runner: pytest
-              suite-slug: test-engine-client-examples
+              result-path: tmp/otel-relay.json
               upload-results: false
               client-version: "3.5.0"
           - mise#v1.1.4:
               dir: pytest-otel/collector-setup
 
-      - label: ":pytest: pytest (OTel setup in suite, xdist, bktec relay)"
+      - label: ":pytest: pytest (OTel setup in suite)"
         key: pytest-otel-suite-relay
         commands:
           - cd pytest-otel/suite-setup
@@ -491,7 +449,7 @@ steps:
           - mkdir -p tmp
           - export BUILDKITE_ANALYTICS_KEY="$$BUILDKITE_BUILD_ID-python-otel-suite-$$BUILDKITE_JOB_ID"
           - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
-          - bktec run --result-path tmp/otel-relay.json
+          - bktec run
         artifact_paths: pytest-otel/suite-setup/tmp/otel-relay.json
         soft_fail:
           - exit_status: 1
@@ -502,7 +460,7 @@ steps:
         plugins:
           - tests#v1.0.0:
               test-runner: pytest
-              suite-slug: test-engine-client-examples
+              result-path: tmp/otel-relay.json
               upload-results: false
               client-version: "3.5.0"
           - mise#v1.1.4:
