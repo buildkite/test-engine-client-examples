@@ -165,6 +165,31 @@ steps:
         env:
           BUILDKITE_ANALYTICS_LOCATION_PREFIX: vitest
 
+      - label: ":vitest: Vitest (OpenTelemetry)"
+        key: vitest-otel-relay
+        commands:
+          - cd vitest-otel
+          - bash install-collector
+          - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN BUILDKITE_TESTS_OTLP_TOKEN
+          - export BUILDKITE_ANALYTICS_KEY="$$BUILDKITE_BUILD_ID-vitest-otel-$$BUILDKITE_JOB_ID"
+          - bktec run
+        env:
+          BUILDKITE_TESTS_OTLP_RELAY: "true"
+          BUILDKITE_TESTS_OTLP_RELAY_BATCHING: "true"
+          BUILDKITE_ANALYTICS_LOCATION_PREFIX: vitest-otel
+          OTEL_PROOF: "true"
+        plugins:
+          - tests#v1.0.1:
+              test-runner: vitest
+              # CLI --reporter replaces configured reporters; keep the collector.
+              test-cmd: "npx vitest run {{testExamples}} --outputFile {{resultPath}}"
+              result-path: tmp/vitest-results.json
+              suite-slug: test-engine-client-examples
+              upload-results: false
+              client-version: "3.5.0"
+          - mise#v1.1.4:
+              dir: vitest-otel
+
       - label: ":jest: Jest"
         parallelism: 2
         commands:
