@@ -1,8 +1,8 @@
 # Customer-shaped Jest OTel harness
 
 Draft [examples#93](https://github.com/buildkite/test-engine-client-examples/pull/93)
-prepares the beta.4 production check. `collector.sha` pins beta.4 candidate
-`7e704144398ec7aa57590eaf6b3edc8b4ea8f144`. `bash run` packs that exact Git
+prepares the 1.13.0 stable production check. `collector.sha` pins the candidate
+`d374d6052c97beb1ec12076ec501888679dae6ad`. `bash run` packs that exact Git
 commit, installs it without publishing or resolving npm tags, and runs the
 selected control. Do not merge this verification pin as a released example.
 
@@ -29,6 +29,10 @@ default unchanged, jsdom uses `jsdom`, and happy-dom uses
 There are no `extend()` adapters or collector-environment projects. The pg
 file runs in the plain Node project, with unchanged counts and ancestry.
 The JSON control disables OTel and uses plain environments in all projects.
+
+The npm project declares SDK `sdk-trace-base@^2`, `context-async-hooks@^2`
+and `exporter-trace-otlp-proto@<0.300`. npm installs their API peer dependency;
+pnpm or Yarn projects should also declare `@opentelemetry/api@~1.9.0`.
 
 ## Cases and exact child expectations
 
@@ -75,7 +79,7 @@ to bktec's retry logic; unexpected failures fail the job.
 `verify.js` observes successful callbacks from the real OTLP exporter without
 changing its destination. It compares Jest's JSON attempt counts, root IDs,
 result statuses and complete child operation/scope/kind/parent paths. Every
-test root must report collector attribute and scope version `1.13.0-beta.4`. Missing,
+test root must report collector attribute and scope version `1.13.0`. Missing,
 extra, duplicate or misparented children, duplicate roots, changed retry
 counts, unexpected collector warnings and JSON upload errors fail the job.
 Active-span proofs require the non-recording test-span wrapper; its IDs must

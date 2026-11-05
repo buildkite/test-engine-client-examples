@@ -107,8 +107,8 @@ if (mode === 'json') {
   assert.equal(new Set(spans.map((span) => span.spanId)).size, spans.length, 'Duplicate exported span IDs')
   const roots = spans.filter((span) => span.name === 'test.execution')
   for (const root of roots) {
-    assert.equal(root.attributes['buildkite.collector.version'], '1.13.0-beta.4', 'Unexpected collector version')
-    assert.equal(root.scopeVersion, '1.13.0-beta.4', 'Unexpected collector instrumentation scope version')
+    assert.equal(root.attributes['buildkite.collector.version'], '1.13.0', 'Unexpected collector version')
+    assert.equal(root.scopeVersion, '1.13.0', 'Unexpected collector instrumentation scope version')
   }
   assert.deepEqual(roots.map((span) => span.attributes['test.case.name']).sort(), [...attempts].sort(), 'One root required per Jest attempt')
   const retry = roots.filter((span) => span.attributes['test.case.name'] === 'retry fails once then passes')
