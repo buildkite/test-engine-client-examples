@@ -1,0 +1,16 @@
+{
+  "name": "buildkite-test-engine-client-jest-otel-example",
+  "private": true,
+  "scripts": {
+    "test": "jest"
+  },
+  "devDependencies": {
+    "@opentelemetry/api": "~1.9.0",
+    "@opentelemetry/context-async-hooks": "^2.0.0",
+    "@opentelemetry/exporter-trace-otlp-proto": ">=0.200.0 <0.300.0",
+    "@opentelemetry/instrumentation-http": ">=0.200.0 <0.300.0",
+    "@opentelemetry/sdk-trace-base": "^2.0.0",
+    "buildkite-test-collector": "1.13.0",
+    "jest": "^29.7.0"
+  }
+}
