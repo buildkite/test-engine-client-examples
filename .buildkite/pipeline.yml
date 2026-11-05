@@ -390,8 +390,6 @@ steps:
       # so pytest startup and session fixtures run once per job.
       # --pool-lease-max-attempts 2 caps attempts per lease so jobs cycle
       # through several leases from the pool instead of one big lease.
-      # buildkite-test-collector is installed from GitHub because the release
-      # with the buildkite-pytest runner isn't published yet.
       - label: ":pytest: pytest (Test Scheduler pool exec)"
         parallelism: 2
         env:
@@ -401,9 +399,10 @@ steps:
         commands:
           - cd pytest
           - pip install -e '.[dev]'
-          # --force-reinstall replaces the buildkite-test-collector already
-          # cached from PyPI, which predates the buildkite-pytest runner.
-          - pip install --force-reinstall 'buildkite-test-collector @ git+https://github.com/buildkite/bktest.git@b1dd38900fe381fe9d5cf29d757f0c7c9f7298ff#subdirectory=test-collector-python'
+          # 1.10.0b1 is the first release with the buildkite-pytest runner;
+          # --force-reinstall replaces the older buildkite-test-collector
+          # already installed by `pip install -e '.[dev]'`.
+          - pip install --force-reinstall 'buildkite-test-collector==1.10.0b1'
           - unset BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
           - bktec pool exec --pool-lease-max-attempts 2 -- buildkite-pytest
         soft_fail:
