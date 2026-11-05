@@ -55,9 +55,10 @@ const files = args.length ? args.map((file) => path.resolve(file)) : [__dirname,
 if (files.some((file) => file.endsWith('/nock.test.js'))) files.push(path.join(__dirname, 'plain.case.js'))
 const proofs = []
 const assertions = []
+const parents = new Set()
 const started = performance.now()
-const invoke = (selected, outputFile, expectedExit) => {
-  const result = spawnSync(process.execPath, [require.resolve('jest/bin/jest'), '--runInBand', '--runTestsByPath', ...selected, '--json', '--outputFile', outputFile], {
+const invoke = (selected, outputFile, expectedExit, inBand = false) => {
+  const result = spawnSync(process.execPath, [require.resolve('jest/bin/jest'), inBand ? '--runInBand' : '--maxWorkers=2', '--runTestsByPath', ...selected, '--json', '--outputFile', outputFile], {
     cwd: __dirname,
     encoding: 'utf8',
     maxBuffer: 10 * 1024 * 1024,
@@ -69,16 +70,29 @@ const invoke = (selected, outputFile, expectedExit) => {
   })
   process.stdout.write(result.stdout || '')
   process.stderr.write(result.stderr || '')
+  parents.add(result.pid)
   assert.equal(result.status, expectedExit, `Jest failed: ${result.error || result.signal || result.status}`)
   const log = `${result.stdout}\n${result.stderr}`
-  assert.doesNotMatch(log, /\[buildkite-test-collector\]|Missing BUILDKITE_ANALYTICS_TOKEN|⚠️ Test Engine/, 'Unexpected collector warning or upload failure')
-  proofs.push(...[...log.matchAll(/\bOTEL_PROOF (\{[^\r\n]+\})/g)].map((match) => JSON.parse(match[1])))
+  assert.doesNotMatch(log, /\[buildkite-test-collector\]|Missing BUILDKITE_ANALYTICS_TOKEN|⚠️ Test Engine|OTEL_JSON_UPLOAD/, 'Unexpected collector warning or upload failure')
+  const active = [...log.matchAll(/\bOTEL_PROOF (\{[^\r\n]+\})/g)].map((match) => JSON.parse(match[1]))
+  if (mode !== 'json' && !inBand && selected.length > 1) {
+    assert.ok(active.every((proof) => proof.pid !== result.pid), 'Tests must run outside the uploading parent')
+    assert.ok(new Set(active.map((proof) => proof.pid)).size >= 2, 'Expected at least two actual Jest workers')
+  }
+  proofs.push(...active)
   const report = JSON.parse(readFileSync(outputFile, 'utf8'))
   assert.equal(report.numRuntimeErrorTestSuites, 0, 'Unexpected suite load failure')
   for (const file of report.testResults) assertions.push(...file.assertionResults)
   return report
 }
-const report = invoke(files, resultPath, 0)
+// Keep the cross-file nock cleanup control in one process. All other normal
+// cases use real workers, with exports observed in their parent reporter.
+const isNockPair = (file) => /\/(nock.test|plain.case)\.js$/.test(file)
+const groups = [files.filter((file) => !isNockPair(file)), files.filter(isNockPair)].filter((group) => group.length)
+const reports = groups.map((group, i) => invoke(group, path.join(directory, `results-${i}.json`), 0, group.every(isNockPair)))
+const report = { ...reports[0], testResults: reports.flatMap((part) => part.testResults) }
+for (const key of Object.keys(report).filter((key) => key.startsWith('num'))) report[key] = reports.reduce((sum, part) => sum + part[key], 0)
+writeFileSync(resultPath, JSON.stringify(report))
 assert.equal(report.numFailedTests, 0)
 // Keep the intentional hook failure outside bktec's passing result report.
 // It is still exported, counted and checked, not hidden by soft_fail.
@@ -103,12 +117,14 @@ if (mode === 'json') {
     assert.equal(proofs[nockIndex + 1].pid, proofs[nockIndex].pid, 'Nock and plain files must share a worker')
   }
   const spans = readFileSync(exportsFile, 'utf8').trim().split('\n').map((line) => JSON.parse(line))
+  assert.ok(spans.every((span) => parents.has(span.exporterPid)), 'Only parent reporters may upload spans')
+  console.log('OTEL_PARENT_EXPORTS', JSON.stringify({ parents: [...parents], exporters: [...new Set(spans.map((span) => span.exporterPid))], workerPids: [...new Set(proofs.map((proof) => proof.pid))].filter((pid) => !parents.has(pid)), spans: spans.length, jsonUploads: 0 }))
   assert.equal(spans.length, attempts.reduce((count, name) => count + expected[name].length + 1, 0), 'Unexpected exported spans')
   assert.equal(new Set(spans.map((span) => span.spanId)).size, spans.length, 'Duplicate exported span IDs')
   const roots = spans.filter((span) => span.name === 'test.execution')
   for (const root of roots) {
-    assert.equal(root.attributes['buildkite.collector.version'], '1.13.0', 'Unexpected collector version')
-    assert.equal(root.scopeVersion, '1.13.0', 'Unexpected collector instrumentation scope version')
+    assert.equal(root.attributes['buildkite.collector.version'], '1.13.0-beta.5', 'Unexpected collector version')
+    assert.equal(root.scopeVersion, '1.13.0-beta.5', 'Unexpected collector instrumentation scope version')
   }
   assert.deepEqual(roots.map((span) => span.attributes['test.case.name']).sort(), [...attempts].sort(), 'One root required per Jest attempt')
   const retry = roots.filter((span) => span.attributes['test.case.name'] === 'retry fails once then passes')

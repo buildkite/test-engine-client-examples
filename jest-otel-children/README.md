@@ -1,8 +1,8 @@
 # Customer-shaped Jest OTel harness
 
 Draft [examples#93](https://github.com/buildkite/test-engine-client-examples/pull/93)
-prepares the 1.13.0 stable production check. `collector.sha` pins the candidate
-`d374d6052c97beb1ec12076ec501888679dae6ad`. `bash run` packs that exact Git
+prepares the 1.13.0-beta.5 production check. `collector.sha` pins the candidate
+`299eb8fc50b16131c9555ba30f155083b6b01bca`. `bash run` packs that exact Git
 commit, installs it without publishing or resolving npm tags, and runs the
 selected control. Do not merge this verification pin as a released example.
 
@@ -67,19 +67,25 @@ sockets, parsing and instrumentation. DOM tests use a React button, RTL,
 `cross-fetch` and an in-process HTTP server. Browser rendering is not claimed;
 the existing Node project separately exercises native fetch/undici.
 
-The split unit `nock.test.js` includes `plain.case.js` in the same runInBand
-process. A sequencer puts them consecutively; proofs verify their order and
-PID. The lifecycle split unit additionally runs `hook.case.js` separately,
+The normal cases use `--maxWorkers=2`; proofs require at least two actual
+worker PIDs, distinct from the uploading parent. The split unit `nock.test.js`
+additionally runs `plain.case.js` in a separate, small `--runInBand` control.
+A sequencer puts those files consecutively; proofs verify their order and
+PID. Its JSON report is combined with the worker report for bktec.
+The lifecycle split unit additionally runs `hook.case.js` separately,
 requiring exit 1 and the exact expected hook failure. It still exports and
 counts that failed root. It is not soft-failed, converted to a pass or exposed
 to bktec's retry logic; unexpected failures fail the job.
 
 ## Automatic versus stored verification
 
-`verify.js` observes successful callbacks from the real OTLP exporter without
-changing its destination. It compares Jest's JSON attempt counts, root IDs,
+`verify.js` preloads its observer in the parent Jest process and workers via
+`NODE_OPTIONS`. It observes successful callbacks from the stock OTLP exporter
+without changing its destination, records the exporter PID and requires every
+upload to come from a parent reporter, never a worker. An Axios request guard
+rejects any JSON result upload in OTel mode. It compares Jest's JSON attempt counts, root IDs,
 result statuses and complete child operation/scope/kind/parent paths. Every
-test root must report collector attribute and scope version `1.13.0`. Missing,
+test root must report collector attribute and scope version `1.13.0-beta.5`. Missing,
 extra, duplicate or misparented children, duplicate roots, changed retry
 counts, unexpected collector warnings and JSON upload errors fail the job.
 Active-span proofs require the non-recording test-span wrapper; its IDs must
