@@ -582,3 +582,41 @@ steps:
                 - "test.framework.name=go-test"
           - mise#v1.1.4:
               dir: go
+
+  # Verification-only draft branch. All modes/pairs run sequentially on the
+  # same agent; the intentionally failed tests remain failed in Test Engine.
+  - label: ":vitest: Vitest OTel scale and paired performance (do not merge)"
+    key: vitest-otel-harness
+    branches: vitest-otel-harness
+    timeout_in_minutes: 30
+    commands:
+      - cd vitest-otel-harness
+      - bash install-collector
+      - node production.mjs
+    artifact_paths:
+      - vitest-otel-harness/tmp/*/summary.json
+      - vitest-otel-harness/tmp/*/warnings.json
+      - vitest-otel-harness/tmp/*/exports.jsonl
+      - vitest-otel-harness/tmp/*/uploads.jsonl
+      - vitest-otel-harness/tmp/*/proofs.jsonl
+      - vitest-otel-harness/tmp/performance.json
+      - vitest-otel-harness/tmp/relay.log
+      - vitest-otel-harness/tmp/*/runner.log
+    env:
+      BUILDKITE_TEST_ENGINE_SUITE_SLUG: test-engine-client-examples
+      BUILDKITE_ANALYTICS_LOCATION_PREFIX: vitest-otel-harness
+      BUILDKITE_TESTS_OTLP_RELAY: "true"
+      BUILDKITE_TESTS_OTLP_RELAY_BATCHING: "true"
+    plugins:
+      - tests#v1.0.1:
+          test-runner: vitest
+          test-file-pattern: "generated/*.test.js"
+          # bktec's default --reporter flags replace config reporters.
+          test-cmd: "node run.mjs --result {{resultPath}} {{testExamples}}"
+          result-path: tmp/relay-forks-large/results.json
+          suite-slug: test-engine-client-examples
+          upload-results: false
+          retry-count: 0
+          client-version: "3.5.0"
+      - mise#v1.1.4:
+          dir: vitest-otel-harness

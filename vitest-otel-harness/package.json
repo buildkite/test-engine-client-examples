@@ -1,0 +1,21 @@
+{
+  "name": "vitest-otel-scale-verification",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "generate": "node generate.mjs",
+    "test": "node run.mjs",
+    "performance": "node performance.mjs"
+  },
+  "devDependencies": {
+    "@opentelemetry/api": "~1.9.0",
+    "@opentelemetry/context-async-hooks": "^2.0.0",
+    "@opentelemetry/exporter-trace-otlp-proto": "^0.223.0",
+    "@opentelemetry/instrumentation-http": "^0.223.0",
+    "@opentelemetry/instrumentation-undici": "^0.33.0",
+    "@opentelemetry/sdk-trace-base": "^2.0.0",
+    "buildkite-test-collector": "1.13.0",
+    "buildkite-test-collector-json": "npm:buildkite-test-collector@1.13.0",
+    "vitest": "4.1.11"
+  }
+}
