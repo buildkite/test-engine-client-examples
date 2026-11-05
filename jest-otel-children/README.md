@@ -2,7 +2,7 @@
 
 Draft [examples#93](https://github.com/buildkite/test-engine-client-examples/pull/93)
 prepares the 1.13.0-beta.5 production check. `collector.sha` pins the candidate
-`f60dcc9f36899f2313e53a1d5c45be4deb57e380`. `bash run` packs that exact Git
+`bcad0daa8e9e1bf2c3a8ee3b6a24c69f3f11727e`. `bash run` packs that exact Git
 commit, installs it without publishing or resolving npm tags, and runs the
 selected control. Do not merge this verification pin as a released example.
 
