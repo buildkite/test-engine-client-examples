@@ -74,7 +74,8 @@ export function verify(dir, mode, size, parentPid) {
   return { executed: 30 * (pass + fail), passed: 30 * pass, failed: 30 * fail, skipped: 30,
     roots: spans.filter((s) => s.name === 'test.execution').length,
     children: spans.filter((s) => s.name !== 'test.execution').length,
-    uploads: mode === 'json' ? json.filter((r) => r.type === 'request').map(({ bytes }) => ({ bytes })) : requests.filter((r) => r.type === 'upload'),
+    uploads: mode === 'json' ? json.filter((r) => r.type === 'request').map(({ bytes, runEnv, tags }) => ({ bytes, runEnv, tags,
+      responses: json.filter((r) => r.type === 'response') })) : requests.filter((r) => r.type === 'upload'),
     proofs: mode === 'json' ? [] : proofs.filter((p) => /pass [01]$/.test(p.name)).map((proof) => {
       const tree = spans.filter((s) => s.traceId === proof.traceId)
       return { ...proof, rootSpanId: tree.find((s) => s.name === 'test.execution').spanId,

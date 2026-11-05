@@ -12,7 +12,8 @@ const run = (script, env) => {
   const result = spawnSync(process.execPath, [script], { stdio: 'inherit', env: { ...process.env, ...env } })
   assert.equal(result.status, 0, script)
 }
-for (const mode of ['json', 'direct', 'relay']) {
+for (const mode of process.env.HARNESS_ONLY ? [process.env.HARNESS_ONLY] : ['json', 'direct', 'relay']) {
+  assert.ok(['json', 'direct', 'relay'].includes(mode))
   const credential = mode === 'relay' ? '' : token()
   run(mode === 'relay' ? 'relay.mjs' : 'run.mjs', {
     HARNESS_MODE: mode, HARNESS_RUN: `${mode}-forks-large`, HARNESS_POOL: 'forks', HARNESS_SIZE: 'large',
@@ -22,8 +23,10 @@ for (const mode of ['json', 'direct', 'relay']) {
     BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN: '',
   })
 }
-const credential = token()
-run('performance.mjs', { BUILDKITE_ANALYTICS_TOKEN: credential, BUILDKITE_TESTS_OTLP_TOKEN: credential,
-  BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN: '' })
+if (!process.env.HARNESS_ONLY) {
+  const credential = token()
+  run('performance.mjs', { BUILDKITE_ANALYTICS_TOKEN: credential, BUILDKITE_TESTS_OTLP_TOKEN: credential,
+    BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN: '' })
+}
 console.log('HARNESS_JOB_WALL', JSON.stringify({ measuredMs: performance.now() - jobStarted,
-  includes: 'JSON, direct, relay, 24 paired performance runs; excludes dependency installation' }))
+  includes: process.env.HARNESS_ONLY || 'JSON, direct, relay, 24 paired performance runs; excludes dependency installation' }))

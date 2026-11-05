@@ -15,11 +15,22 @@ const axios = require('axios')
 axios.interceptors.request.use((config) => {
   if (config.method !== 'post' || config.url !== (process.env.BUILDKITE_ANALYTICS_BASE_URL || 'https://analytics-api.buildkite.com/v1/uploads')) return config
   if (process.env.HARNESS_MODE !== 'json') throw Error('OTEL_JSON_UPLOAD')
-  record('json', { type: 'request', bytes: Buffer.byteLength(JSON.stringify(config.data)), data: config.data.data })
+  const { key, ci, url, collector, version, job_id } = config.data.run_env
+  record('json', { type: 'request', bytes: Buffer.byteLength(JSON.stringify(config.data)), data: config.data.data,
+    runEnv: { key, ci, url, collector, version, job_id }, tags: config.data.tags })
   return config
 })
 axios.interceptors.response.use((response) => {
-  if (process.env.HARNESS_MODE === 'json') record('json', { type: 'response', status: response.status })
+  if (process.env.HARNESS_MODE === 'json') {
+    // Full collector debug logs include Authorization headers. Whitelist only
+    // public upload/run identifiers instead, never request headers or tokens.
+    const metadata = Object.fromEntries(['id', 'run_id', 'run_url', 'url'].filter((key) =>
+      typeof response.data?.[key] === 'string').map((key) => [key, response.data[key]]))
+    const recordValue = { type: 'response', status: response.status,
+      responseKeys: Object.keys(response.data || {}), metadata }
+    record('json', recordValue)
+    console.log('HARNESS_JSON_RESPONSE', JSON.stringify(recordValue))
+  }
   return response
 }, (error) => {
   record('json', { type: 'error', status: error.response?.status, code: error.code })

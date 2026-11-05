@@ -70,14 +70,32 @@ no missing/unknown/duplicate names and matching statuses. Keep modes separate;
 performance runs use distinct run keys and tags. Confirm each mode's Test Engine
 run ID via build runs/failed executions. Never add read credentials to CI.
 
-Use per-test execution reads to resolve the rich/concurrent `OTEL_PROOF` names;
-fetch `read_execution_trace` for each and compare trace/root IDs and the complete
-span ID/parent ID/name/scope/kind tree in the proof line. No `slowest(limit:100)`
-claim can establish exhaustive coverage of this workload. Also check empty plain,
-failure and skipped traces for root-only results. Stored labels can have leading
-whitespace; IDs and parents must still match exactly. Retain evidence separately
-from local/export verification and explicitly name any unverified gap.
+Sample execution IDs from `slowest_executions_for_build` and paged
+`get_failed_executions`, then use `read_execution_trace` to compare proof IDs and
+every returned span ID/parent/name/scope/kind. This API returns only ten slowest
+spans, even when `span_count` is larger. Neither that endpoint nor the
+slowest-100 execution list can establish exhaustive tree coverage. Check
+root-only failure traces too. Stored display labels can have leading whitespace;
+IDs and parents must still match exactly.
 
-Results on initial collector `18366b44` are rehearsals only. Final production
-numbers must be rerun on the rebased collector head supplied by the command
-thread. Do not merge or mark this PR ready, publish packages or post in Slack.
+`audit.sql` audits all roots, per-test child counts against the verified export
+contract, parents, orphans and empty phases for both exact build-1088 OTel run
+IDs. Matt runs it read-only after checking the production schema with DESCRIBE;
+production SQL has not run. Query behavior was validated with real local export
+fixtures in ClickHouse and a missing-child negative control. No CI read secrets.
+
+## Measured evidence
+
+[Full counts, request sizes, sampled stored edges, performance and limitations](https://ampcode.com/artifacts/te-7948-vitest-scale-harness-evidence-2072ebd7-bbb8-4c60-8028-5c113290b2f3).
+[Build 1088](https://buildkite.com/buildkite/test-engine-client-examples/builds/1088)
+passed on the rebased `c604e8f1` collector. Direct and relay each stored the exact
+1,680 executions across 17 pages. JSON's same exact results were independently
+found through suite-wide tag/time pagination, but were not returned by the
+build-scoped API query after ten minutes. Report this JSON-path association gap
+separately; do not attribute it to OTel or invent missing results.
+
+Safe JSON response metadata is recorded without enabling collector debug logs,
+which contain Authorization headers. To repeat only one ingestion mode, set
+`HARNESS_ONLY=json` (or `direct`/`relay`) on a new build; otherwise all modes and
+paired timings run. Results on initial collector `18366b44` were rehearsals only.
+Do not merge or mark this PR ready, publish packages or post in Slack.
