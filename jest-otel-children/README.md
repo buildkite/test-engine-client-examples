@@ -1,8 +1,8 @@
 # Customer-shaped Jest OTel harness
 
 Draft [examples#93](https://github.com/buildkite/test-engine-client-examples/pull/93)
-prepares the 1.13.0-beta.5 production check. `collector.sha` pins the candidate
-`bcad0daa8e9e1bf2c3a8ee3b6a24c69f3f11727e`. `bash run` packs that exact Git
+prepares the 1.13.0 production check. `collector.sha` pins the candidate
+`021e1c8a6a2a0c57a46e374f5bec68907d902d9e`. `bash run` packs that exact Git
 commit, installs it without publishing or resolving npm tags, and runs the
 selected control. Do not merge this verification pin as a released example.
 
@@ -85,7 +85,7 @@ without changing its destination, records the exporter PID and requires every
 upload to come from a parent reporter, never a worker. An Axios request guard
 rejects any JSON result upload in OTel mode. It compares Jest's JSON attempt counts, root IDs,
 result statuses and complete child operation/scope/kind/parent paths. Every
-test root must report collector attribute and scope version `1.13.0-beta.5`. Missing,
+test root must report collector attribute and scope version `1.13.0`. Missing,
 extra, duplicate or misparented children, duplicate roots, changed retry
 counts, unexpected collector warnings and JSON upload errors fail the job.
 Active-span proofs require the non-recording test-span wrapper; its IDs must

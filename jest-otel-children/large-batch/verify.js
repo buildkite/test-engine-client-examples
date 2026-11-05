@@ -49,8 +49,8 @@ for (const span of spans) {
   assert.ok(!span.parentSpanId)
   assert.equal(span.exporterPid, result.pid, 'Exports must come from the Jest parent')
   assert.equal(span.attributes['test.case.result.status'], expected.get(span.attributes['test.case.name']))
-  assert.equal(span.attributes['buildkite.collector.version'], '1.13.0-beta.5')
-  assert.equal(span.scopeVersion, '1.13.0-beta.5')
+  assert.equal(span.attributes['buildkite.collector.version'], '1.13.0')
+  assert.equal(span.scopeVersion, '1.13.0')
   assert.equal(span.attributes['buildkite.run_key'], process.env.BUILDKITE_ANALYTICS_KEY)
 }
 const records = readLines('uploads.jsonl')
