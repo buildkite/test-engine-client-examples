@@ -3,7 +3,6 @@ import pytest
 pytestmark = pytest.mark.execution_tag("component", "inventory")
 
 
-@pytest.mark.execution_tag("custom.tag.from", "test decorator")
 @pytest.mark.parametrize("sku,quantity,remaining", [("widget", 3, 4), ("bolt", 11, 0)])
 def test_reserve_stock(inventory, sku, quantity, remaining):
     assert inventory.reserve(sku, quantity) == remaining
@@ -22,5 +21,5 @@ def test_invalid_reservation(inventory, quantity):
 
 
 def test_missing_product(inventory):
-    # Deliberately uncaught: compare a real application failure in JSON and OTel.
+    # Deliberate failure to demonstrate error reporting in Test Engine.
     inventory.reserve("missing", 1)

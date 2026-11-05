@@ -31,28 +31,31 @@ A Buildkite Test Collector is not a general prerequisite for using bktec. Some
 examples also demonstrate OpenTelemetry collection. Check the matching pipeline
 step for the complete configuration.
 
-## Python OpenTelemetry dogfooding
+## Python OpenTelemetry example
 
-[`pytest-otel`](./pytest-otel) demonstrates application and automatically
-instrumented SQL spans using an in-memory SQLite inventory service. No external
-service is needed. The existing [`pytest`](./pytest) examples remain JSON controls.
+Both examples use the same in-memory SQLite inventory application and tests:
 
-[`pytest-otel/requirements.txt`](./pytest-otel/requirements.txt) pins
-`buildkite-test-collector[otel]==1.10.0b1`, the released OpenTelemetry beta.
+- [`collector-setup`](./pytest-otel/collector-setup): the collector creates the
+  tracing provider; the suite enables SQLite instrumentation.
+- [`suite-setup`](./pytest-otel/suite-setup): the suite creates its own provider
+  in the root `conftest.py`, before pytest session start. The collector attaches
+  to it rather than replacing it. No additional exporter is needed for Test Engine.
 
-Use the Python version in `pytest-otel/mise.toml` in an activated virtual
-environment to run the local checks without uploading to Test Engine:
+Use the Python version in the chosen example's `mise.toml` in an activated
+virtual environment:
 
 ```sh
-pip install -r pytest-otel/requirements.txt
-python pytest-otel/check_otel.py
-# Optionally include the bktec 3.5.0 relay:
-python pytest-otel/check_otel.py --bktec /path/to/bktec
+cd pytest-otel/collector-setup # or pytest-otel/suite-setup
+pip install -r requirements.txt
+BUILDKITE_ANALYTICS_OTEL_ENABLED=true pytest
+# To run with xdist:
+BUILDKITE_ANALYTICS_OTEL_ENABLED=true pytest -n 3
 ```
 
-The inventory suite deliberately has four passing tests and one uncaught
-missing-product failure. The checker succeeds only when those expected results
-and their traces match; live ingestion must be verified separately in CI.
+Each suite has four passing cases and one deliberate missing-product failure.
+No external service is needed. Uploads require `BUILDKITE_ANALYTICS_TOKEN`;
+the pipeline supplies it and demonstrates the bktec OTLP relay for both setups.
+The existing [`pytest`](./pytest) examples use JSON uploads.
 
 ## Vitest examples
 
