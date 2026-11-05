@@ -133,6 +133,49 @@ steps:
           - mise#v1.1.4:
               dir: jest-otel-children
 
+      - label: ":jest: Jest OTel large batch direct"
+        key: jest-otel-large-direct
+        commands:
+          - cd jest-otel-children
+          - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
+          - export BUILDKITE_TESTS_OTLP_TOKEN="$(buildkite-agent oidc request-token --audience https://buildkite.com/organizations/buildkite/analytics/suites/test-engine-client-examples --lifetime 1800)"
+          - export BUILDKITE_ANALYTICS_KEY="${BUILDKITE_BUILD_ID}-jest-large-direct"
+          - bash run
+        artifact_paths: "jest-otel-children/tmp/large-direct/*"
+        env:
+          OTEL_PROOF_MODE: large-direct
+          BUILDKITE_ANALYTICS_LOCATION_PREFIX: jest-otel-children
+          BUILDKITE_TEST_ENGINE_SUITE_SLUG: test-engine-client-examples
+        plugins:
+          - mise#v1.1.4:
+              dir: jest-otel-children
+
+      - label: ":jest: Jest OTel large batch relay"
+        key: jest-otel-large-relay
+        commands:
+          - cd jest-otel-children
+          - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN BUILDKITE_TESTS_OTLP_TOKEN
+          - export BUILDKITE_ANALYTICS_KEY="${BUILDKITE_BUILD_ID}-jest-large-relay"
+          - bash run
+        artifact_paths: "jest-otel-children/tmp/large-relay/*"
+        env:
+          OTEL_PROOF_MODE: large-relay
+          BUILDKITE_TESTS_OTLP_RELAY: "true"
+          BUILDKITE_TESTS_OTLP_RELAY_BATCHING: "true"
+          BUILDKITE_ANALYTICS_LOCATION_PREFIX: jest-otel-children
+        plugins:
+          - tests#v1.0.1:
+              test-runner: jest
+              test-file-pattern: "large-batch/*.test.js"
+              test-cmd: "node large-batch/verify.js --result {{resultPath}} {{testExamples}}"
+              result-path: tmp/large-relay/results.json
+              suite-slug: test-engine-client-examples
+              upload-results: false
+              retry-count: 0
+              client-version: "3.5.0"
+          - mise#v1.1.4:
+              dir: jest-otel-children
+
       # No Tests plugin or relay: independent direct-export control.
       - label: ":jest: Jest OTel direct control"
         key: jest-otel-children

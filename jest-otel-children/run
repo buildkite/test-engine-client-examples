@@ -14,5 +14,7 @@ npm install --no-save "$WORKDIR/test-collector-javascript/$TARBALL"
 node -p '"collector version: " + require("buildkite-test-collector/package.json").version'
 case "${OTEL_PROOF_MODE:-direct}" in
   relay) node support/runRelay.js ;;
+  large-direct) node large-batch/verify.js ;;
+  large-relay) node large-batch/runRelay.js ;;
   *) npm test ;;
 esac

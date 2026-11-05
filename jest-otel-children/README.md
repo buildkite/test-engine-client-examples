@@ -115,3 +115,37 @@ With Node 24.19.0 from `mise.toml`, run `bash run` in this directory. Direct
 OTel needs `BUILDKITE_TESTS_OTLP_TOKEN` and a run key. Relay mode
 (`OTEL_PROOF_MODE=relay`) needs bktec and Buildkite's job/OIDC context; use the
 pipeline for production planning, batching and storage verification.
+
+## Large-batch ingestion controls
+
+Two additional, unsplit jobs run the same separate `large-batch/` project:
+`OTEL_PROOF_MODE=large-direct` exports directly to production, and
+`large-relay` uses bktec 3.5.0 with relay batching and `upload-results: false`.
+Each uses two real Jest workers, one file of 1,500 passing tests and one of
+150 intentionally failing tests with large, repetitive CJK exception messages.
+The original jobs, discovery patterns and assertions remain unchanged.
+
+The parent preload observes each real stock exporter call, measures its
+uncompressed protobuf using that exporter's serializer, and correlates actual
+HTTP responses through async context. It requires at most 1,000 test spans
+and 750 KiB per upload, at least one upload of 550 KiB or more, and only 2xx
+responses. It checks all 1,650 distinct active roots against exports, statuses,
+collector versions and parent/worker PIDs, retaining the existing JSON guard.
+The 750 KiB cap can split even 1,000 passing spans when CI metadata makes them
+too large; this fixture does not strip metadata or override the collector cap
+to force a full 1,000-span upload.
+
+Expected failures are not converted into passes or soft-failed: the direct
+verifier requires precisely 1,500 passes and 150 named failures. The relay
+wrapper additionally requires bktec to report those failures, the verifier's
+success marker, batching and zero permanent/deadline/byte drops, with no
+collector warnings or HTTP 413/429. Artifacts under `tmp/large-{direct,relay}/`
+contain every exported ID, proof, upload size/response, actual failed Jest
+report and relay log. Builds fail on any mismatch.
+
+HTTP success does not prove ingestion: independently verify each production
+run stores exactly 1,650 executions (1,500 passed, 150 failed), one execution
+per distinct test. Use the job's `large-batch.build` and `large-batch.mode`
+execution tags with the connected Test Engine read tools; keep read secrets
+out of CI. The evidence report includes both stored run IDs and deferred
+ClickHouse SQL, beginning with `DESCRIBE TABLE test_engine_otel.otel_spans`.
