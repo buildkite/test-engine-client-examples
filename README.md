@@ -33,10 +33,10 @@ step for the complete configuration.
 
 ## Python OpenTelemetry example
 
-Both examples use the same in-memory SQLite inventory application and tests:
+Both examples exercise in-memory SQLite queries and a local HTTP request:
 
 - [`collector-setup`](./pytest-otel/collector-setup): the collector creates the
-  tracing provider; the suite enables SQLite instrumentation.
+  tracing provider; the suite enables SQLite and urllib instrumentation.
 - [`suite-setup`](./pytest-otel/suite-setup): the suite creates its own provider
   in the root `conftest.py`, before pytest session start. The collector attaches
   to it rather than replacing it. No additional exporter is needed for Test Engine.
@@ -52,7 +52,7 @@ BUILDKITE_ANALYTICS_OTEL_ENABLED=true pytest
 BUILDKITE_ANALYTICS_OTEL_ENABLED=true pytest -n 3
 ```
 
-Each suite has four passing cases and one deliberate missing-product failure.
+Each suite has two passing tests and one deliberate SQL-query failure.
 No external service is needed. Uploads require `BUILDKITE_ANALYTICS_TOKEN`;
 the pipeline supplies it and demonstrates the bktec OTLP relay for both setups.
 The existing [`pytest`](./pytest) examples use JSON uploads.

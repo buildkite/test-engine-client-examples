@@ -1,4 +1,5 @@
 pytest>=7.0.0
 pytest-xdist>=3.0.0
 opentelemetry-instrumentation-sqlite3>=0.66b0
+opentelemetry-instrumentation-urllib>=0.66b0
 buildkite-test-collector[otel]==1.10.0b1
