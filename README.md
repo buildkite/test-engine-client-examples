@@ -20,8 +20,8 @@ Configure one method to upload results from each test run:
   `upload-results: false`. bktec can still discover, split, run, and retry the
   tests. The Ruby, JavaScript, and Python examples use this configuration.
 - **Collector upload without bktec:** Let the collector upload results, set
-  `upload-results: false`, and set `install-client: false`. The direct Python,
-  Vitest, Swift, and Android examples use this configuration.
+  `upload-results: false`, and set `install-client: false`. The Vitest, Swift,
+  and Android examples use this configuration.
 
 > [!IMPORTANT]
 > If bktec and a Buildkite Test Collector both upload results from the same test
@@ -30,32 +30,6 @@ Configure one method to upload results from each test run:
 A Buildkite Test Collector is not a general prerequisite for using bktec. Some
 examples also demonstrate OpenTelemetry collection. Check the matching pipeline
 step for the complete configuration.
-
-## Python OpenTelemetry example
-
-Both examples exercise in-memory SQLite queries and a local HTTP request:
-
-- [`collector-setup`](./pytest-otel/collector-setup): the collector creates the
-  tracing provider; the suite enables SQLite and urllib instrumentation.
-- [`suite-setup`](./pytest-otel/suite-setup): the suite creates its own provider
-  in the root `conftest.py`, before pytest session start. The collector attaches
-  to it rather than replacing it. No additional exporter is needed for Test Engine.
-
-Use the Python version in the chosen example's `mise.toml` in an activated
-virtual environment:
-
-```sh
-cd pytest-otel/collector-setup # or pytest-otel/suite-setup
-pip install -r requirements.txt
-BUILDKITE_ANALYTICS_OTEL_ENABLED=true pytest
-# To run with xdist:
-BUILDKITE_ANALYTICS_OTEL_ENABLED=true pytest -n 3
-```
-
-Each suite has two passing tests and one deliberate SQL-query failure.
-No external service is needed. Uploads require `BUILDKITE_ANALYTICS_TOKEN`;
-the pipeline supplies it and demonstrates the bktec OTLP relay for both setups.
-The existing [`pytest`](./pytest) examples use JSON uploads.
 
 ## Vitest examples
 
