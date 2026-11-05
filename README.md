@@ -38,9 +38,7 @@ instrumented SQL spans using an in-memory SQLite inventory service. No external
 service is needed. The existing [`pytest`](./pytest) examples remain JSON controls.
 
 [`pytest-otel/requirements.txt`](./pytest-otel/requirements.txt) pins
-`buildkite-test-collector[otel]` to the `test-collector-python` subdirectory of
-[`buildkite/bktest` commit 14916efcc8f7aac009c482dd8db80343ded9b4b2](https://github.com/buildkite/bktest/commit/14916efcc8f7aac009c482dd8db80343ded9b4b2),
-since this collector change has not been released to PyPI.
+`buildkite-test-collector[otel]==1.10.0b1`, the released OpenTelemetry beta.
 
 Use the Python version in `pytest-otel/mise.toml` in an activated virtual
 environment to run the local checks without uploading to Test Engine:
