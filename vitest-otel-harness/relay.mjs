@@ -11,4 +11,5 @@ assert.equal(result.status, 1, 'Real intentional Vitest failures must reach bkte
 assert.match(log, /HARNESS_VERIFIED /, 'Full export verification required')
 assert.match(log, /bktec OTLP relay: [1-9]\d* request\(s\).*0 dropped permanently, 0 dropped at drain deadline, 0B dropped/)
 assert.match(log, /upstream upload attempt\(s\)/)
-assert.doesNotMatch(log, /\[buildkite-test-collector\]|\b(?:413|429)\b/)
+// Actual response codes are checked by run.mjs; bare numbers also match queue-wait timings.
+assert.doesNotMatch(log, /\[buildkite-test-collector\]/)
