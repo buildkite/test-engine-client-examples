@@ -55,7 +55,7 @@ OTLPTraceExporter.prototype.export = function (spans, callback) {
     if (result.code === 0) for (const span of spans) record('exports', {
       ...span.spanContext(), parentSpanId: span.parentSpanContext?.spanId,
       name: span.name, scope: span.instrumentationScope.name, scopeVersion: span.instrumentationScope.version,
-      kind: span.kind, status: span.status, attributes: span.attributes, exporterPid: process.pid,
+      kind: span.kind, status: span.status, events: span.events, attributes: span.attributes, exporterPid: process.pid,
     })
     callback(result)
   }))

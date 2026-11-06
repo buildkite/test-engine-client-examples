@@ -47,14 +47,14 @@ export function verify(dir, mode, size, parentPid) {
       const name = root.attributes['test.case.name']
       assert.ok(!root.parentSpanId)
       assert.equal(root.exporterPid, parentPid)
-      assert.equal(root.scopeVersion, '1.14.0-beta.1')
-      assert.equal(root.attributes['buildkite.collector.version'], '1.14.0-beta.1')
+      assert.equal(root.scopeVersion, '1.14.0')
+      assert.equal(root.attributes['buildkite.collector.version'], '1.14.0')
       assert.equal(root.attributes['test.case.result.status'], { passed: 'pass', failed: 'fail', skipped: 'skipped' }[expected.get(name)])
     }
     for (const proof of proofs) {
       const root = byName.get(proof.name)
       assert.equal(proof.traceId, root.traceId, proof.name)
-      if (/pass [01]$/.test(proof.name)) {
+      if (/pass [01]$|fail \d+$/.test(proof.name)) {
         const callback = spans.find((s) => s.traceId === root.traceId && s.scope === 'vitest' && s.name.endsWith('.callback'))
         assert.equal(proof.spanId, callback?.spanId, `${proof.name}: active callback`)
       }
@@ -74,12 +74,18 @@ export function verify(dir, mode, size, parentPid) {
   return { executed: 30 * (pass + fail), passed: 30 * pass, failed: 30 * fail, skipped: 30,
     roots: spans.filter((s) => s.name === 'test.execution').length,
     children: spans.filter((s) => s.name !== 'test.execution').length,
+    phases: spans.filter((s) => s.scope === 'vitest').length,
+    errorPhases: spans.filter((s) => s.scope === 'vitest' && s.status.code === 2).length,
+    phaseExceptionEvents: spans.filter((s) => s.scope === 'vitest').flatMap((s) => s.events).filter((e) => e.name === 'exception').length,
     uploads: mode === 'json' ? json.filter((r) => r.type === 'request').map(({ bytes, runEnv, tags }) => ({ bytes, runEnv, tags,
       responses: json.filter((r) => r.type === 'response') })) : requests.filter((r) => r.type === 'upload'),
-    proofs: mode === 'json' ? [] : proofs.filter((p) => /pass [01]$/.test(p.name)).map((proof) => {
+    proofs: mode === 'json' ? [] : proofs.filter((p) => /pass [01]$|fail \d+$/.test(p.name)).map((proof) => {
       const tree = spans.filter((s) => s.traceId === proof.traceId)
       return { ...proof, rootSpanId: tree.find((s) => s.name === 'test.execution').spanId,
-        tree: tree.map(({ spanId, parentSpanId, name, scope, kind, status }) => ({ spanId, parentSpanId, name, scope, kind, status })) }
+        // Full events remain in exports.jsonl; keep large failure messages out of proof logs.
+        tree: tree.map(({ spanId, parentSpanId, name, scope, kind, status, events }) => ({
+          spanId, parentSpanId, name, scope, kind, status: { code: status.code }, events: events.map(({ name }) => ({ name })),
+        })) }
     }),
   }
 }
@@ -90,7 +96,16 @@ export function verifyTree(root, spans) {
   const name = root.attributes['test.case.name']
   const rich = /pass 0$/.test(name)
   const concurrent = /pass 1$/.test(name)
-  assert.equal(children.length, rich ? 12 : concurrent ? 2 : 0, `${name}: exact child count`)
+  const failed = /fail \d+$/.test(name)
+  // The suite throws only in failed test bodies: one error callback with one exception.
+  assert.equal(children.length, rich ? 12 : concurrent ? 2 : failed ? 1 : 0, `${name}: exact child count`)
+  if (failed) {
+    assert.equal(children[0].status.code, 2, `${name}: error callback`)
+    assert.deepEqual(children[0].events.map((event) => event.name), ['exception'])
+    assert.equal(children[0].events[0].attributes['exception.type'], 'Error')
+    assert.equal(children[0].events[0].attributes['exception.message'],
+      `EXPECTED_SCALE_FAILURE ${name}\n${'漢字の失敗消息。'.repeat(3000)}`)
+  }
   const paths = children.map((span) => {
     const parts = []
     let current = span
@@ -104,7 +119,8 @@ export function verifyTree(root, spans) {
       current = byId.get(current.parentSpanId)
       assert.ok(current, `Missing parent of ${span.name}`)
     }
-    if (span.scope === 'vitest') assert.ok(children.some((s) => s.parentSpanId === span.spanId), `Empty phase ${span.name}`)
+    if (span.scope === 'vitest') assert.ok(children.some((s) => s.parentSpanId === span.spanId)
+      || span.status.code === 2 || span.events.length > 0, `Empty phase ${span.name}`)
     return parts.join('/')
   }).sort()
   const expected = rich ? [
@@ -113,7 +129,7 @@ export function verifyTree(root, spans) {
     'phase:callback', 'phase:callback/body-manual',
     'phase:callback/http:2', 'phase:callback/http:2/http:1', 'phase:callback/http:2/http:1/server-handler',
     'phase:callback/fetch:2', 'phase:callback/fetch:2/http:1', 'phase:callback/fetch:2/http:1/server-handler',
-  ] : concurrent ? ['phase:callback', 'phase:callback/concurrent-manual'] : []
+  ] : concurrent ? ['phase:callback', 'phase:callback/concurrent-manual'] : failed ? ['phase:callback'] : []
   // Exact scope/kind/ancestry, independent of dynamic ports and HTTP span labels.
   assert.deepEqual(paths, expected.sort(), `${name}: child ancestry`)
 }
