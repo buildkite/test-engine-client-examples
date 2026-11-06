@@ -31,6 +31,13 @@ A Buildkite Test Collector is not a general prerequisite for using bktec. Some
 examples also demonstrate OpenTelemetry collection. Check the matching pipeline
 step for the complete configuration.
 
+## Playwright examples
+
+- [`playwright`](./playwright): JSON collection with bktec, including pool runs.
+- [`playwright-otel`](./playwright-otel): OpenTelemetry test results using the
+  pinned, merged JavaScript collector. Includes passed, failed, skipped, and
+  retried attempts; no child spans.
+
 ## Vitest examples
 
 - [`vitest-4`](./vitest-4): Vitest 4.
