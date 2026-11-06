@@ -278,6 +278,7 @@ steps:
         commands:
           - cd playwright-otel
           - bin/setup
+          - npx playwright install --with-deps chromium
           - export BUILDKITE_ANALYTICS_KEY="$$BUILDKITE_BUILD_ID-playwright-otel-$$BUILDKITE_JOB_ID"
           - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
           - bktec run

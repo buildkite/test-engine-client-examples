@@ -8,6 +8,7 @@ Use the Node version in `mise.toml`, then run:
 
 ```sh
 ./bin/setup
+npx playwright install --with-deps chromium
 npm test
 ```
 
@@ -25,13 +26,20 @@ receiver, set `BUILDKITE_ANALYTICS_OTLP_ENDPOINT` to its `/v1/traces` URL and us
 a dummy token instead of a production credential. Set `BUILDKITE_ANALYTICS_KEY`
 to group the results under a chosen run key.
 
-The four browser-free tests produce five root `test.execution` spans: two passed,
-two failed (including the first retry attempt), and one skipped. Retries have
-distinct execution IDs and separate step trees. Child spans show nested
-`calculate` → `add` / `multiply` steps, fixture setup/teardown, hooks, assertions,
-and failed steps. The same `retry attempt` step fails once and passes on retry.
-The deliberate failure keeps `npm test` exiting 1; the CI step soft-fails that
-exit rather than hiding it.
+The tests use Chromium against the public
+[TodoMVC demo](https://demo.playwright.dev/todomvc/), also used by this
+repository's existing Playwright examples. They add, edit, complete, filter,
+reload, and clear tasks, verifying saved state and active-item counts. Each test
+gets a fresh browser context; no demo-server data is changed. Running the example
+requires network access to the demo.
+
+Four tests produce five root `test.execution` spans: two passed, two failed
+(including the first retry attempt), and one skipped. Nested workflow steps,
+browser actions, fixtures, hooks, and assertions appear as child spans. The retry
+case intercepts its first navigation with a local 503 response, then accesses the
+real demo on retry; each attempt has its own trace. An intentionally wrong counter
+assertion keeps `npm test` exiting 1; the CI step soft-fails that exit rather than
+hiding it.
 
 This is Playwright reporter-side tracing, not worker or browser instrumentation.
 It does not collect arbitrary manual spans or automatic HTTP/database spans.
