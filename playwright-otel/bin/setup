@@ -4,7 +4,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 # Pack the JavaScript subpackage, not the bktest monorepo root.
-collector_commit=677e3839cf2b2cb3bb0fe4ba28a5ec339cba513b
+collector_commit=2235305ea72ad569687de9e7ec1b1ebef6279a96
 source_dir="$(mktemp -d)"
 trap 'rm -rf "$source_dir"' EXIT
 git -C "$source_dir" init -q
