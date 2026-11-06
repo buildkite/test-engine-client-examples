@@ -37,6 +37,8 @@ step for the complete configuration.
 - [`vitest`](./vitest): the current Vitest major version (5).
 - [`vitest-otel`](./vitest-otel): Vitest 5 with native OpenTelemetry, manual,
   hook, HTTP and fetch child spans (currently pins an unreleased collector).
+- [`vitest-json`](./vitest-json): candidate-versus-1.13.0 JSON production proof,
+  including a deliberate failure to compare stored failure reasons.
 
 The JSON examples run Vitest directly and upload results using the Buildkite Test
 Collector. They have independent npm installs to keep their Vitest versions

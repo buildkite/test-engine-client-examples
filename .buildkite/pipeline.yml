@@ -190,6 +190,44 @@ steps:
           - mise#v1.1.4:
               dir: vitest-otel
 
+      - label: ":vitest: Vitest JSON (released 1.13.0 control)"
+        key: vitest-json-control
+        commands:
+          - cd vitest-json
+          - npm ci
+          - export BUILDKITE_ANALYTICS_KEY="$$BUILDKITE_BUILD_ID-vitest-json-control-$$BUILDKITE_JOB_ID"
+          - npm run verify
+        env:
+          JSON_PROOF_MODE: control
+          BUILDKITE_ANALYTICS_LOCATION_PREFIX: vitest-json
+        plugins:
+          - tests#v1.0.1:
+              test-runner: custom
+              suite-slug: test-engine-client-examples
+              upload-results: false
+              install-client: false
+          - mise#v1.1.4:
+              dir: vitest-json
+
+      - label: ":vitest: Vitest JSON (candidate)"
+        key: vitest-json-candidate
+        commands:
+          - cd vitest-json
+          - bash ../vitest-otel/install-collector
+          - export BUILDKITE_ANALYTICS_KEY="$$BUILDKITE_BUILD_ID-vitest-json-candidate-$$BUILDKITE_JOB_ID"
+          - npm run verify
+        env:
+          JSON_PROOF_MODE: candidate
+          BUILDKITE_ANALYTICS_LOCATION_PREFIX: vitest-json
+        plugins:
+          - tests#v1.0.1:
+              test-runner: custom
+              suite-slug: test-engine-client-examples
+              upload-results: false
+              install-client: false
+          - mise#v1.1.4:
+              dir: vitest-json
+
       - label: ":jest: Jest"
         parallelism: 2
         commands:
