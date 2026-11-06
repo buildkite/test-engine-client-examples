@@ -47,8 +47,8 @@ export function verify(dir, mode, size, parentPid) {
       const name = root.attributes['test.case.name']
       assert.ok(!root.parentSpanId)
       assert.equal(root.exporterPid, parentPid)
-      assert.equal(root.scopeVersion, '1.14.0')
-      assert.equal(root.attributes['buildkite.collector.version'], '1.14.0')
+      assert.equal(root.scopeVersion, '1.13.0')
+      assert.equal(root.attributes['buildkite.collector.version'], '1.13.0')
       assert.equal(root.attributes['test.case.result.status'], { passed: 'pass', failed: 'fail', skipped: 'skipped' }[expected.get(name)])
     }
     for (const proof of proofs) {

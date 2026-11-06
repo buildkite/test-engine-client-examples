@@ -6,6 +6,8 @@ packing, stock-export observation, proof IDs, byte caps and independent stored
 result/trace verification. `collector.sha` is an exact collector source commit,
 not an npm tag. JSON always uses the separately installed released **1.13.0**
 alias, even after the OTel package is replaced by the packed commit.
+The final OTel pin is `ffd731a5645cb0d7125f00067129586642961bed`, rebased onto
+main with package version **1.13.0**; the SHA, not that version, identifies it.
 
 ## Workload and local checks
 
@@ -22,7 +24,7 @@ stored executions**, separately accounting for skipped tests that never run.
 Each file has an import-time manual tracer, manual `beforeEach`/body/`afterEach`
 spans, named ESM `node:http` client → in-process server → handler spans, fetch,
 and a concurrent manual child. Empty tests and `beforeAll` are negative controls.
-For collector 1.14.0, the expected export is **1,680 roots + 570 children**:
+For the pinned collector, the expected export is **1,680 roots + 570 children**:
 420 rich/concurrent children plus one error callback phase per deliberate
 failure. Each failing callback must have error status and one exception event
 with the exact thrown type/message. Native phases are retained if they have a
@@ -81,7 +83,7 @@ Sample execution IDs from `slowest_executions_for_build` and paged
 every returned span ID/parent/name/scope/kind. This API returns only ten slowest
 spans, even when `span_count` is larger. Neither that endpoint nor the
 slowest-100 execution list can establish exhaustive tree coverage. Check
-failure traces too: release 1.14.0 requires two spans (root plus error callback),
+failure traces too: the pinned collector requires two spans (root plus error callback),
 not the earlier root-only tree. Stored display labels can have leading whitespace;
 IDs and parents must still match exactly.
 
