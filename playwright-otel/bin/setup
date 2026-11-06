@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+cd "$(dirname "$0")/.."
+
+# Pack the JavaScript subpackage, not the bktest monorepo root.
+collector_commit=9827a7d786068e9c3b02fc9328553ba79a6dc227
+source_dir="$(mktemp -d)"
+trap 'rm -rf "$source_dir"' EXIT
+git -C "$source_dir" init -q
+git -C "$source_dir" fetch -q --depth 1 https://github.com/buildkite/bktest.git "$collector_commit"
+git -C "$source_dir" checkout -q FETCH_HEAD
+test "$(git -C "$source_dir" rev-parse HEAD)" = "$collector_commit"
+
+mkdir -p tmp
+tarball="$(cd "$source_dir/test-collector-javascript" && npm pack --silent)"
+mv "$source_dir/test-collector-javascript/$tarball" tmp/collector.tgz
+npm ci

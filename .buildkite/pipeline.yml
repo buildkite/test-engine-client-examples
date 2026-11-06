@@ -295,6 +295,32 @@ steps:
         env:
           BUILDKITE_ANALYTICS_LOCATION_PREFIX: playwright
 
+      - label: ":playwright: Playwright (OpenTelemetry)"
+        key: playwright-otel
+        commands:
+          - cd playwright-otel
+          - bin/setup
+          - npx playwright install --with-deps chromium
+          - export BUILDKITE_ANALYTICS_KEY="$$BUILDKITE_BUILD_ID-playwright-otel-$$BUILDKITE_JOB_ID"
+          - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
+          - bktec run
+        soft_fail:
+          - exit_status: 1
+        env:
+          BUILDKITE_ANALYTICS_LOCATION_PREFIX: playwright-otel
+          BUILDKITE_TESTS_OTLP_RELAY: "true"
+          OTEL_PROOF: "true"
+        plugins:
+          - tests#v1.0.1:
+              test-runner: custom
+              test-cmd: "npm test -- {{testExamples}}"
+              test-file-pattern: "tests/**/*.spec.js"
+              suite-slug: test-engine-client-examples
+              upload-results: false
+              client-version: "3.5.0"
+          - mise#v1.1.4:
+              dir: playwright-otel
+
       # bktec pool consume starts a fresh Playwright process for each leased
       # batch, drawing from a Test Scheduler pool shared by this step's jobs.
       # --pool-lease-max-attempts 2 caps attempts per lease so jobs cycle
