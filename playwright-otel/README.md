@@ -13,10 +13,11 @@ npm test
 ```
 
 Setup fetches bktest commit
-[`2235305ea72ad569687de9e7ec1b1ebef6279a96`](https://github.com/buildkite/bktest/commit/2235305ea72ad569687de9e7ec1b1ebef6279a96)
-(merged PR #103), packs its `test-collector-javascript` directory, and installs
-it with the lockfile. It does not use a released collector or unmerged changes.
-The optional OpenTelemetry SDK 2 and protobuf exporter dependencies are included.
+[`9827a7d786068e9c3b02fc9328553ba79a6dc227`](https://github.com/buildkite/bktest/commit/9827a7d786068e9c3b02fc9328553ba79a6dc227),
+the collector 1.14.0 release candidate (bktest PR #106), packs its
+`test-collector-javascript` directory, and installs it with the lockfile. Once
+1.14.0 is on npm, this example will depend on it directly. The optional
+OpenTelemetry SDK 2 and protobuf exporter dependencies are included.
 
 Set `BUILDKITE_ANALYTICS_TOKEN` to a suite token, or
 `BUILDKITE_TESTS_OTLP_TOKEN` to an OIDC token with the suite's `write_uploads`
@@ -48,5 +49,11 @@ Root timings enclose observed steps, so they can exceed Playwright's JSON durati
 The [pipeline](../.buildkite/pipeline.yml) runs this through bktec's OTLP relay
 with built-in result uploads disabled. OTel configuration and upload failures
 warn without changing Playwright's exit code or falling back to JSON. See the
-[collector guide](https://github.com/buildkite/bktest/blob/2235305ea72ad569687de9e7ec1b1ebef6279a96/test-collector-javascript/docs/opentelemetry.md#playwright)
+[collector guide](https://github.com/buildkite/bktest/blob/9827a7d786068e9c3b02fc9328553ba79a6dc227/test-collector-javascript/docs/opentelemetry.md#playwright)
 for supported settings.
+
+CI also sets `OTEL_PROOF=true`, which adds [`otel-proof.js`](./otel-proof.js).
+After each attempt it prints the trace ID, root span ID and every span the
+collector started, plus Playwright's own step count. Match these against the
+stored traces in Test Engine. It patches the OpenTelemetry SDK to see the IDs,
+so it is for verification only; customer configuration does not need it.

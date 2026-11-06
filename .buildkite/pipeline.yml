@@ -309,6 +309,7 @@ steps:
         env:
           BUILDKITE_ANALYTICS_LOCATION_PREFIX: playwright-otel
           BUILDKITE_TESTS_OTLP_RELAY: "true"
+          OTEL_PROOF: "true"
         plugins:
           - tests#v1.0.1:
               test-runner: custom

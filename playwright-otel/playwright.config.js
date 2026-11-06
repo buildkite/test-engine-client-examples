@@ -9,5 +9,6 @@ module.exports = defineConfig({
       otelEnabled: true,
       tags: { 'collector.mode': 'otel' },
     }],
+    ...(process.env.OTEL_PROOF ? [['./otel-proof.js']] : []),
   ],
 });
