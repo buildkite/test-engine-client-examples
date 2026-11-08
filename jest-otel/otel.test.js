@@ -5,10 +5,10 @@ const { trace } = require('@opentelemetry/api');
 const tracer = trace.getTracer('example.otel');
 
 test('captures a manual child span', () => {
-  tracer.startActiveSpan('parse_widget', (span) => {
+  tracer.startActiveSpan('process order', (span) => {
     try {
-      const widget = JSON.parse('{"name":"instrumented"}');
-      expect(widget.name).toBe('instrumented');
+      const order = JSON.parse('{"quantity":3,"unitPrice":7}');
+      expect(order.quantity * order.unitPrice).toBe(21);
     } finally {
       span.end();
     }
