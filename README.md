@@ -31,11 +31,14 @@ A Buildkite Test Collector is not a general prerequisite for using bktec. Some
 examples also demonstrate OpenTelemetry collection. Check the matching pipeline
 step for the complete configuration.
 
+The [versioned JavaScript OpenTelemetry guide](https://github.com/buildkite/bktest/blob/test-collector-javascript/v1.14.0/test-collector-javascript/docs/opentelemetry.md)
+defines supported versions, instrumentation, delivery and limitations.
+
 ## Jest examples
 
 - [`jest`](./jest): collector 1.14.0 with the default JSON uploads and bktec.
-- [`jest-otel`](./jest-otel): experimental, opt-in OpenTelemetry with
-  collector-provided setup, manual and HTTP child spans, and bktec's OTLP relay.
+- [`jest-otel`](./jest-otel): OpenTelemetry test results with manual and local
+  HTTP spans.
 
 ## Playwright examples
 
