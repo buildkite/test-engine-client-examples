@@ -21,7 +21,7 @@ Configure one method to upload results from each test run:
   tests. The Ruby, JavaScript, and Python examples use this configuration.
 - **Collector upload without bktec:** Let the collector upload results, set
   `upload-results: false`, and set `install-client: false`. The Vitest, Swift,
-  and Android examples use this configuration.
+  and Android examples use this configuration (Vitest OpenTelemetry uses bktec).
 
 > [!IMPORTANT]
 > If bktec and a Buildkite Test Collector both upload results from the same test
@@ -41,19 +41,10 @@ step for the complete configuration.
 
 - [`vitest-4`](./vitest-4): Vitest 4.
 - [`vitest`](./vitest): the current Vitest major version (5).
+- [`vitest-otel`](./vitest-otel): OpenTelemetry test results with hook, manual,
+  local HTTP and fetch spans (Vitest 4/5).
 
-Both examples run Vitest directly and upload results using the Buildkite Test
+The JSON examples run Vitest directly and upload results using the Buildkite Test
 Collector. They have independent npm installs to keep their Vitest versions
-isolated. Use the Node version in each example's `mise.toml`:
-
-```sh
-npm ci --prefix vitest-4
-npm test --prefix vitest-4
-
-npm ci --prefix vitest
-npm test --prefix vitest
-```
-
-`npm test` uploads to Test Engine when
-`BUILDKITE_ANALYTICS_TOKEN` is set (provided by the Tests plugin in CI). Without
-a token, the collector prints a warning and skips the upload.
+isolated. Use the Node version in each example's `mise.toml`, run `npm ci` and
+`npm test` in that directory, and set `BUILDKITE_ANALYTICS_TOKEN` to upload.
