@@ -271,6 +271,28 @@ steps:
         env:
           BUILDKITE_ANALYTICS_LOCATION_PREFIX: jest
 
+      - label: ":jest: Jest (OTel setup by collector)"
+        key: jest-otel-relay
+        commands:
+          - cd jest-otel
+          - npm ci
+          - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN BUILDKITE_TESTS_OTLP_TOKEN
+          - export BUILDKITE_ANALYTICS_KEY="$$BUILDKITE_BUILD_ID-jest-otel-$$BUILDKITE_JOB_ID"
+          - bktec run
+        env:
+          BUILDKITE_TESTS_OTLP_RELAY: "true"
+          BUILDKITE_TESTS_OTLP_RELAY_BATCHING: "true"
+          BUILDKITE_ANALYTICS_LOCATION_PREFIX: jest-otel
+        plugins:
+          - tests#v1.0.1:
+              test-runner: jest
+              result-path: jest-result.json
+              suite-slug: test-engine-client-examples
+              upload-results: false
+              client-version: "3.5.0"
+          - mise#v1.1.4:
+              dir: jest-otel
+
       # bktec pool consume starts a fresh Jest process for each leased batch,
       # drawing from a Test Scheduler pool shared by this step's jobs.
       # --pool-lease-max-attempts 2 caps attempts per lease so jobs cycle
