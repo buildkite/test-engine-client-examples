@@ -1,7 +1,7 @@
 # Jest OpenTelemetry
 
-Small, collector-owned example using `buildkite-test-collector` 1.13.0, the first
-stable release with experimental, opt-in Jest OpenTelemetry support. The existing
+Small, collector-owned example using `buildkite-test-collector` 1.14.0 with
+experimental, opt-in Jest OpenTelemetry support. The existing
 [`jest/`](../jest) example still uses JSON uploads.
 
 The reporter enables OTel, and the collector runtime connects tests and child
@@ -33,5 +33,5 @@ The [CI step](../.buildkite/pipeline.yml) uses `bktec run` and its OTLP relay, w
 Engine plan that includes them and are billed by data ingested. Review recorded
 URLs and other attributes before enabling instrumentation on real applications.
 
-See the [1.13.0 OTel guide](https://github.com/buildkite/bktest/blob/test-collector-javascript/v1.13.0/test-collector-javascript/docs/opentelemetry.md)
+See the [1.14.0 OTel guide](https://github.com/buildkite/bktest/blob/test-collector-javascript/v1.14.0/test-collector-javascript/docs/opentelemetry.md)
 for supported dependency versions, environment setup, limitations and settings.
