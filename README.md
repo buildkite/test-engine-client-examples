@@ -40,8 +40,8 @@ step for the complete configuration.
 ## Playwright examples
 
 - [`playwright`](./playwright): JSON collection with bktec, including pool runs.
-- [`playwright-otel`](./playwright-otel): OpenTelemetry test results using the
-  published collector 1.14.0, nested steps, browser actions and assertions.
+- [`playwright-otel`](./playwright-otel): OpenTelemetry test results with nested
+  steps, browser actions and assertions.
 
 ## Vitest examples
 
