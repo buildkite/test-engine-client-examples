@@ -5,10 +5,6 @@ module.exports = defineConfig({
   outputDir: './tmp/test-results',
   reporter: [
     ['line'],
-    ['buildkite-test-collector/playwright/reporter', {
-      otelEnabled: true,
-      tags: { 'collector.mode': 'otel' },
-    }],
-    ...(process.env.OTEL_PROOF ? [['./otel-proof.js']] : []),
+    ['buildkite-test-collector/playwright/reporter', { otelEnabled: true }],
   ],
 });

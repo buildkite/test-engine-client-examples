@@ -41,8 +41,7 @@ step for the complete configuration.
 
 - [`playwright`](./playwright): JSON collection with bktec, including pool runs.
 - [`playwright-otel`](./playwright-otel): OpenTelemetry test results using the
-  pinned, merged JavaScript collector. Includes passed, failed, skipped, and
-  retried attempts with nested Playwright step spans.
+  published collector 1.14.0, nested steps, browser actions and assertions.
 
 ## Vitest examples
 
