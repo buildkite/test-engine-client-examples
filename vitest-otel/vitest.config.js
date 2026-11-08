@@ -7,9 +7,11 @@ export default defineConfig({
   test: {
     reporters: [
       'default',
-      ['json', { outputFile: 'tmp/vitest-results.json' }],
+      'json',
       ['buildkite-test-collector/vitest/reporter', { otelEnabled: true }],
     ],
+    outputFile: 'tmp/vitest-results.json',
+    includeTaskLocation: true,
     experimental: {
       openTelemetry: {
         enabled: true,

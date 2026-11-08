@@ -12,7 +12,7 @@
     "@opentelemetry/instrumentation-http": ">=0.200.0 <0.300.0",
     "@opentelemetry/instrumentation-undici": "0.27.0",
     "@opentelemetry/sdk-trace-base": "^2.0.0",
-    "buildkite-test-collector": "1.13.0",
+    "buildkite-test-collector": "1.14.0",
     "vitest": "5.1.0"
   }
 }

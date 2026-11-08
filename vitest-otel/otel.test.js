@@ -3,31 +3,23 @@ import { once } from 'node:events';
 import { trace } from '@opentelemetry/api';
 import { beforeEach, expect, test } from 'vitest';
 
-// Creating the tracer at module load also exercises application-style usage.
 const tracer = trace.getTracer('example.otel');
+let order;
 
-beforeEach(({ task }) => {
-  // Proof only: the SDK phase's parent is the collector's test.execution root.
-  if (process.env.OTEL_PROOF) {
-    const phase = trace.getActiveSpan();
-    expect(phase).toBeDefined();
-    expect(phase.parentSpanContext).toBeDefined();
-    console.log('OTEL_PROOF', JSON.stringify({
-      test: task.name,
-      traceId: phase.spanContext().traceId,
-      rootSpanId: phase.parentSpanContext.spanId,
-    }));
-  }
-  tracer.startActiveSpan('prepare_widget', (span) => {
-    span.end();
+beforeEach(() => {
+  tracer.startActiveSpan('seed order', (span) => {
+    try {
+      order = { quantity: 3, unitPrice: 7 };
+    } finally {
+      span.end();
+    }
   });
 });
 
 test('captures a manual child span', () => {
-  tracer.startActiveSpan('parse_widget', (span) => {
+  tracer.startActiveSpan('process order', (span) => {
     try {
-      const widget = JSON.parse('{"name":"instrumented"}');
-      expect(widget.name).toBe('instrumented');
+      expect(order.quantity * order.unitPrice).toBe(21);
     } finally {
       span.end();
     }
@@ -36,9 +28,12 @@ test('captures a manual child span', () => {
 
 test('captures an HTTP request', async () => {
   const server = http.createServer((request, response) => {
-    tracer.startActiveSpan('handle_health', (span) => {
-      response.end('OK');
-      span.end();
+    tracer.startActiveSpan('handle health', (span) => {
+      try {
+        response.end('OK');
+      } finally {
+        span.end();
+      }
     });
   });
   server.listen(0, '127.0.0.1');

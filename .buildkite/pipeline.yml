@@ -169,7 +169,7 @@ steps:
         key: vitest-otel-relay
         commands:
           - cd vitest-otel
-          - bash install-collector
+          - npm ci
           - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN BUILDKITE_TESTS_OTLP_TOKEN
           - export BUILDKITE_ANALYTICS_KEY="$$BUILDKITE_BUILD_ID-vitest-otel-$$BUILDKITE_JOB_ID"
           - bktec run
@@ -177,7 +177,6 @@ steps:
           BUILDKITE_TESTS_OTLP_RELAY: "true"
           BUILDKITE_TESTS_OTLP_RELAY_BATCHING: "true"
           BUILDKITE_ANALYTICS_LOCATION_PREFIX: vitest-otel
-          OTEL_PROOF: "true"
         plugins:
           - tests#v1.0.1:
               test-runner: vitest
@@ -189,44 +188,6 @@ steps:
               client-version: "3.5.0"
           - mise#v1.1.4:
               dir: vitest-otel
-
-      - label: ":vitest: Vitest JSON (released 1.13.0 control)"
-        key: vitest-json-control
-        commands:
-          - cd vitest-json
-          - npm ci
-          - export BUILDKITE_ANALYTICS_KEY="$$BUILDKITE_BUILD_ID-vitest-json-control-$$BUILDKITE_JOB_ID"
-          - npm run verify
-        env:
-          JSON_PROOF_MODE: control
-          BUILDKITE_ANALYTICS_LOCATION_PREFIX: vitest-json
-        plugins:
-          - tests#v1.0.1:
-              test-runner: custom
-              suite-slug: test-engine-client-examples
-              upload-results: false
-              install-client: false
-          - mise#v1.1.4:
-              dir: vitest-json
-
-      - label: ":vitest: Vitest JSON (candidate)"
-        key: vitest-json-candidate
-        commands:
-          - cd vitest-json
-          - bash ../vitest-otel/install-collector
-          - export BUILDKITE_ANALYTICS_KEY="$$BUILDKITE_BUILD_ID-vitest-json-candidate-$$BUILDKITE_JOB_ID"
-          - npm run verify
-        env:
-          JSON_PROOF_MODE: candidate
-          BUILDKITE_ANALYTICS_LOCATION_PREFIX: vitest-json
-        plugins:
-          - tests#v1.0.1:
-              test-runner: custom
-              suite-slug: test-engine-client-examples
-              upload-results: false
-              install-client: false
-          - mise#v1.1.4:
-              dir: vitest-json
 
       - label: ":jest: Jest"
         parallelism: 2
