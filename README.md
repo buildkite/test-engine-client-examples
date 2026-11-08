@@ -33,7 +33,7 @@ step for the complete configuration.
 
 ## Jest examples
 
-- [`jest`](./jest): collector 1.13.0 with the default JSON uploads and bktec.
+- [`jest`](./jest): collector 1.14.0 with the default JSON uploads and bktec.
 - [`jest-otel`](./jest-otel): experimental, opt-in OpenTelemetry with
   collector-provided setup, manual and HTTP child spans, and bktec's OTLP relay.
 
