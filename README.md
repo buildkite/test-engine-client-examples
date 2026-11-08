@@ -37,6 +37,12 @@ step for the complete configuration.
 - [`jest-otel`](./jest-otel): experimental, opt-in OpenTelemetry with
   collector-provided setup, manual and HTTP child spans, and bktec's OTLP relay.
 
+## Playwright examples
+
+- [`playwright`](./playwright): JSON collection with bktec, including pool runs.
+- [`playwright-otel`](./playwright-otel): OpenTelemetry test results with nested
+  steps, browser actions and assertions.
+
 ## Vitest examples
 
 - [`vitest-4`](./vitest-4): Vitest 4.

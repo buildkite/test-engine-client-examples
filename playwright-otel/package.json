@@ -1,0 +1,15 @@
+{
+  "name": "buildkite-test-engine-client-playwright-otel-example",
+  "private": true,
+  "scripts": {
+    "test": "playwright test"
+  },
+  "devDependencies": {
+    "@opentelemetry/api": "~1.9.0",
+    "@opentelemetry/context-async-hooks": "^2",
+    "@opentelemetry/exporter-trace-otlp-proto": ">=0.200.0 <0.300.0",
+    "@opentelemetry/sdk-trace-base": "^2",
+    "@playwright/test": "^1.48.2",
+    "buildkite-test-collector": "1.14.0"
+  }
+}
