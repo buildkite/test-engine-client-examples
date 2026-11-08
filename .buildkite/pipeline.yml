@@ -182,6 +182,7 @@ steps:
               test-runner: vitest
               # CLI --reporter replaces configured reporters; keep the collector.
               test-cmd: "npx vitest run {{testExamples}} --outputFile {{resultPath}}"
+              retry-cmd: "npx vitest run {{testExamples}} --testNamePattern '{{testNamePattern}}' --outputFile {{resultPath}}"
               result-path: tmp/vitest-results.json
               suite-slug: test-engine-client-examples
               upload-results: false

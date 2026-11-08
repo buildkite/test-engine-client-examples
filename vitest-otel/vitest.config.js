@@ -8,7 +8,7 @@ export default defineConfig({
     reporters: [
       'default',
       'json',
-      ['buildkite-test-collector/vitest/reporter', { otelEnabled: true }],
+      [require.resolve('buildkite-test-collector/vitest/reporter'), { otelEnabled: true }],
     ],
     outputFile: 'tmp/vitest-results.json',
     includeTaskLocation: true,
