@@ -1,0 +1,30 @@
+#!/usr/bin/env bash
+# Start Postgres and Redis for the example and wait until the job can reach them.
+set -euo pipefail
+
+docker run -d --name otel-postgres -e POSTGRES_HOST_AUTH_METHOD=trust \
+  -p 127.0.0.1:5432:5432 public.ecr.aws/docker/library/postgres:17-alpine >/dev/null
+docker run -d --name otel-redis \
+  -p 127.0.0.1:6379:6379 public.ecr.aws/docker/library/redis:7-alpine >/dev/null
+
+reachable() {
+  node -e '
+    const net = require("node:net")
+    const socket = net.connect(Number(process.argv[1]), "127.0.0.1")
+    socket.on("connect", () => process.exit(0)).on("error", () => process.exit(1))
+  ' "$1"
+}
+
+for _ in $(seq 60); do
+  if docker exec otel-postgres pg_isready -U postgres >/dev/null 2>&1 &&
+    docker exec otel-redis redis-cli ping >/dev/null 2>&1 &&
+    reachable 5432 && reachable 6379; then
+    echo "Postgres and Redis are reachable on 127.0.0.1"
+    exit 0
+  fi
+  sleep 1
+done
+
+echo "Postgres or Redis did not become reachable on 127.0.0.1" >&2
+docker ps -a >&2
+exit 1

@@ -1,0 +1,91 @@
+diff --git a/create-hook.mjs b/create-hook.mjs
+index f93ff2a..d128e7f 100644
+--- a/create-hook.mjs
++++ b/create-hook.mjs
+@@ -108,6 +108,43 @@ function isBareSpecifier (specifier) {
+   }
+ }
+ 
++/**
++ * Whether an application import names a module by absolute path or file URL,
++ * excluding the entrypoint, `require()` and import-in-the-middle's own wrappers.
++ *
++ * @param {string} specifier The original import specifier.
++ * @param {ResolveContext} context The resolve context.
++ */
++function isAbsoluteImport (specifier, context) {
++  const { parentURL = '' } = context
++  return (specifier.startsWith('/') || specifier.startsWith('file:')) &&
++    parentURL !== '' && !hasIitm(parentURL) && !hasIitm(specifier) &&
++    context.conditions?.includes('require') !== true
++}
++
++/**
++ * Test runners such as Vitest import a package's entry point by the path they
++ * resolved for it, not by package name. When importing the package by name
++ * would resolve to the same URL, return that name, so the import matches
++ * `include`/`exclude` entries and `Hook` package names like `import 'pkg'`.
++ * require-in-the-middle treats `require()` of a package's main file the same way.
++ *
++ * @param {string} url The resolved module URL.
++ * @param {ResolveContext} context The resolve context.
++ * @returns {Generator<Array, string | undefined>}
++ */
++function * packageEntryName (url, context) {
++  const index = url.lastIndexOf('/node_modules/')
++  if (index === -1 || !url.startsWith('file:')) return
++  const start = index + '/node_modules/'.length
++  const [first, second] = url.slice(start).split('/', 2)
++  const name = first.startsWith('@') ? `${first}/${second}` : first
++  try {
++    const entry = yield [RESOLVE, name, { ...context, parentURL: `${url.slice(0, start)}${name}/package.json` }]
++    if (entry.url === url) return name
++  } catch {}
++}
++
+ /**
+  * Determines whether the input is a bare specifier, file URL or a regular expression.
+  *
+@@ -725,8 +762,12 @@ export function createHook (meta) {
+       context.parentURL = ''
+     }
+     const result = await parentResolve(newSpecifier, context)
++    let packageName
++    if (isAbsoluteImport(specifier, context)) {
++      packageName = await driveAsync(packageEntryName(result.url, context), { resolve: parentResolve })
++    }
+ 
+-    return finishResolve(result, specifier, context, parentURL, binding)
++    return finishResolve(result, packageName ?? specifier, context, parentURL, binding)
+   }
+ 
+   // Synchronous counterpart to `resolve`, for `module.registerHooks`. The
+@@ -756,8 +797,12 @@ export function createHook (meta) {
+       context.parentURL = ''
+     }
+     const result = nextResolve(newSpecifier, context)
++    let packageName
++    if (isAbsoluteImport(specifier, context)) {
++      packageName = driveSync(packageEntryName(result.url, context), { resolve: nextResolve })
++    }
+ 
+-    return finishResolve(result, specifier, context, parentURL, binding)
++    return finishResolve(result, packageName ?? specifier, context, parentURL, binding)
+   }
+ 
+   /**
+diff --git a/index.js b/index.js
+index 8a2ae5f..0b0ea70 100644
+--- a/index.js
++++ b/index.js
+@@ -215,7 +215,9 @@ function Hook (modules, options, hookFn) {
+             // built-in module (or unexpected non file:// name?)
+             callHookFn(hookFn, namespace, name, baseDir, format)
+           } else if (isPackageSpecifier(specifiers.get(loadUrl), baseDir)) {
+-            // An import of the top-level module (e.g. `import 'ioredis'`).
++            // An import of the top-level module (e.g. `import 'ioredis'`). The
++            // loader also records the package name for an absolute path or file
++            // URL import of the package's entry point.
+             // Note: Slight behaviour difference from RITM. RITM uses
+             // `require.resolve(name)` to see if filename is the module
+             // main file, which will catch `require('ioredis/built/index.js')`.
