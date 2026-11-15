@@ -1,0 +1,31 @@
+#!/usr/bin/env bash
+# Usage: expect-run <exit status> <collector output|-> <command...>
+# Fails unless the command exits with that status and prints that collector
+# output. "-" requires no [buildkite-test-collector] output at all.
+set -uo pipefail
+
+expected_status="$1"
+expected_output="$2"
+shift 2
+
+log="$(mktemp)"
+"$@" 2>&1 | tee "${log}"
+status="${PIPESTATUS[0]}"
+
+if [ "${status}" -ne "${expected_status}" ]; then
+  echo "^^^ +++"
+  echo "Expected exit status ${expected_status}, got ${status}"
+  exit 1
+fi
+if [ "${expected_output}" = "-" ]; then
+  if grep -F '[buildkite-test-collector]' "${log}"; then
+    echo "^^^ +++"
+    echo "Expected no collector output"
+    exit 1
+  fi
+elif ! grep -qF "${expected_output}" "${log}"; then
+  echo "^^^ +++"
+  echo "Expected collector output: ${expected_output}"
+  exit 1
+fi
+echo "Exit status ${status} and collector output as expected"
