@@ -13,7 +13,7 @@ steps:
         key: js-sdk3-jest
         commands:
           - cd jest-otel
-          - ../bin/use-unreleased-js-collector 82bc0bc81376dc7343b22b760ac1a9b8bc541932 sdk3 '@opentelemetry/instrumentation-http@^0.301.0'
+          - ../bin/use-unreleased-js-collector 4b028ad3755d8856c0ec0c7b55585496026fefcb sdk3 '@opentelemetry/instrumentation-http@^0.301.0'
           - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
           - export BUILDKITE_TESTS_OTLP_TOKEN="$$(../bin/otel-oidc-token)"
           - export BUILDKITE_ANALYTICS_KEY="$$BUILDKITE_BUILD_ID-js-sdk3-jest"
@@ -28,7 +28,7 @@ steps:
         key: js-sdk3-jest30-esm
         commands:
           - cd jest-otel
-          - ../bin/use-unreleased-js-collector 82bc0bc81376dc7343b22b760ac1a9b8bc541932 sdk3 '@opentelemetry/instrumentation-http@^0.301.0' jest@30.5.2
+          - ../bin/use-unreleased-js-collector 4b028ad3755d8856c0ec0c7b55585496026fefcb sdk3 '@opentelemetry/instrumentation-http@^0.301.0' jest@30.5.2
           - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
           - export BUILDKITE_TESTS_OTLP_TOKEN="$$(../bin/otel-oidc-token)"
           - export BUILDKITE_ANALYTICS_KEY="$$BUILDKITE_BUILD_ID-js-sdk3-jest30-esm"
@@ -46,7 +46,7 @@ steps:
         key: js-sdk2-jest
         commands:
           - cd jest-otel
-          - ../bin/use-unreleased-js-collector 82bc0bc81376dc7343b22b760ac1a9b8bc541932 sdk2
+          - ../bin/use-unreleased-js-collector 4b028ad3755d8856c0ec0c7b55585496026fefcb sdk2
           - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
           - export BUILDKITE_TESTS_OTLP_TOKEN="$$(../bin/otel-oidc-token)"
           - export BUILDKITE_ANALYTICS_KEY="$$BUILDKITE_BUILD_ID-js-sdk2-jest"
@@ -61,7 +61,7 @@ steps:
         key: js-sdk3-vitest
         commands:
           - cd vitest-otel
-          - ../bin/use-unreleased-js-collector 82bc0bc81376dc7343b22b760ac1a9b8bc541932 sdk3 '@opentelemetry/instrumentation-http@^0.301.0' '@opentelemetry/instrumentation-undici@^0.35.0'
+          - ../bin/use-unreleased-js-collector 4b028ad3755d8856c0ec0c7b55585496026fefcb sdk3 '@opentelemetry/instrumentation-http@^0.301.0' '@opentelemetry/instrumentation-undici@^0.35.0'
           - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
           - export BUILDKITE_TESTS_OTLP_TOKEN="$$(../bin/otel-oidc-token)"
           - export BUILDKITE_ANALYTICS_KEY="$$BUILDKITE_BUILD_ID-js-sdk3-vitest"
@@ -72,11 +72,43 @@ steps:
           - mise#v1.1.4:
               dir: vitest-otel
 
+      # Keeps the example's pinned instrumentation-undici 0.27.0.
+      - label: ":vitest: Vitest SDK 2 (collector upgrade only)"
+        key: js-sdk2-vitest
+        commands:
+          - cd vitest-otel
+          - ../bin/use-unreleased-js-collector 4b028ad3755d8856c0ec0c7b55585496026fefcb sdk2
+          - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
+          - export BUILDKITE_TESTS_OTLP_TOKEN="$$(../bin/otel-oidc-token)"
+          - export BUILDKITE_ANALYTICS_KEY="$$BUILDKITE_BUILD_ID-js-sdk2-vitest"
+          - ../bin/expect-run 1 - npx vitest run
+        env:
+          BUILDKITE_ANALYTICS_LOCATION_PREFIX: vitest-otel
+        plugins:
+          - mise#v1.1.4:
+              dir: vitest-otel
+
+      - label: ":playwright: Playwright SDK 2 (collector upgrade only)"
+        key: js-sdk2-playwright
+        commands:
+          - cd playwright-otel
+          - ../bin/use-unreleased-js-collector 4b028ad3755d8856c0ec0c7b55585496026fefcb sdk2
+          - npx playwright install --with-deps chromium
+          - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
+          - export BUILDKITE_TESTS_OTLP_TOKEN="$$(../bin/otel-oidc-token)"
+          - export BUILDKITE_ANALYTICS_KEY="$$BUILDKITE_BUILD_ID-js-sdk2-playwright"
+          - ../bin/expect-run 1 - npx playwright test
+        env:
+          BUILDKITE_ANALYTICS_LOCATION_PREFIX: playwright-otel
+        plugins:
+          - mise#v1.1.4:
+              dir: playwright-otel
+
       - label: ":playwright: Playwright SDK 3"
         key: js-sdk3-playwright
         commands:
           - cd playwright-otel
-          - ../bin/use-unreleased-js-collector 82bc0bc81376dc7343b22b760ac1a9b8bc541932 sdk3
+          - ../bin/use-unreleased-js-collector 4b028ad3755d8856c0ec0c7b55585496026fefcb sdk3
           - npx playwright install --with-deps chromium
           - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
           - export BUILDKITE_TESTS_OTLP_TOKEN="$$(../bin/otel-oidc-token)"
@@ -92,7 +124,7 @@ steps:
         key: js-sdk3-jest-no-token
         commands:
           - cd jest-otel
-          - ../bin/use-unreleased-js-collector 82bc0bc81376dc7343b22b760ac1a9b8bc541932 sdk3 '@opentelemetry/instrumentation-http@^0.301.0'
+          - ../bin/use-unreleased-js-collector 4b028ad3755d8856c0ec0c7b55585496026fefcb sdk3 '@opentelemetry/instrumentation-http@^0.301.0'
           - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN BUILDKITE_TESTS_OTLP_TOKEN
           - ../bin/expect-run 1 'otelEnabled is set, but results were not uploaded' npx jest
         env:
@@ -105,7 +137,7 @@ steps:
         key: js-sdk3-jest-unreachable
         commands:
           - cd jest-otel
-          - ../bin/use-unreleased-js-collector 82bc0bc81376dc7343b22b760ac1a9b8bc541932 sdk3 '@opentelemetry/instrumentation-http@^0.301.0'
+          - ../bin/use-unreleased-js-collector 4b028ad3755d8856c0ec0c7b55585496026fefcb sdk3 '@opentelemetry/instrumentation-http@^0.301.0'
           - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
           - export BUILDKITE_TESTS_OTLP_TOKEN="$$(../bin/otel-oidc-token)"
           - export BUILDKITE_ANALYTICS_KEY="$$BUILDKITE_BUILD_ID-js-sdk3-jest-unreachable"
@@ -281,6 +313,9 @@ steps:
 
       - label: ":vitest: Vitest (OpenTelemetry)"
         key: vitest-otel-relay
+        # Verification branch only: verify.test.js fails on purpose.
+        soft_fail:
+          - exit_status: 1
         commands:
           - cd vitest-otel
           - npm ci
@@ -349,6 +384,9 @@ steps:
 
       - label: ":jest: Jest (OTel setup by collector)"
         key: jest-otel-relay
+        # Verification branch only: verify.test.js fails on purpose.
+        soft_fail:
+          - exit_status: 1
         commands:
           - cd jest-otel
           - npm ci
@@ -436,6 +474,9 @@ steps:
 
       - label: ":playwright: Playwright (OpenTelemetry)"
         key: playwright-otel
+        # Verification branch only: verify.spec.js fails on purpose.
+        soft_fail:
+          - exit_status: 1
         commands:
           - cd playwright-otel
           - npm ci
