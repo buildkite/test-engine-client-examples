@@ -85,6 +85,16 @@ async function startOtlpServer() {
   const spans = [];
   const errors = [];
   const server = http.createServer((req, res) => {
+    if (req.url !== '/v1/traces') {
+      req.resume();
+      res.writeHead(404).end();
+      return;
+    }
+    if (req.method !== 'POST') {
+      req.resume();
+      res.writeHead(405, { Allow: 'POST' }).end();
+      return;
+    }
     const chunks = [];
     req.on('data', chunk => chunks.push(chunk));
     req.on('end', () => {

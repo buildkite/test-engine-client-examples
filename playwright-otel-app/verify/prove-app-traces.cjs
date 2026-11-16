@@ -88,6 +88,9 @@ function checkControls(capture) {
     ['wrong app stream', data => {
       data.spans.find(s => s.service === 'project-board').stream = 'test';
     }, /app transport stream/],
+    ['wrong test stream', data => {
+      for (const s of data.spans.filter(s => s.name === 'test.execution')) s.stream = 'child';
+    }, /test transport stream/],
   ];
   for (const [name, mutate, failure] of controls) {
     const data = structuredClone(capture);
@@ -97,8 +100,26 @@ function checkControls(capture) {
   }
 }
 
+async function checkTransportControls() {
+  const sink = await startOtlpServer();
+  try {
+    // An empty protobuf ExportTraceServiceRequest is valid. Keep its body
+    // identical so only the URL/method distinguishes rejection from success.
+    const post = { method: 'POST', body: Buffer.alloc(0), headers: { 'Content-Type': 'application/x-protobuf' } };
+    assert.equal((await fetch(sink.url, post)).status, 200, 'valid OTLP POST');
+    assert.equal((await fetch(new URL('/wrong-otlp-path', sink.url), post)).status, 404, 'sink accepted wrong OTLP path');
+    console.log('HTTP CONTROL rejected: wrong OTLP path');
+    assert.equal((await fetch(sink.url)).status, 405, 'sink accepted wrong OTLP method');
+    console.log('HTTP CONTROL rejected: wrong OTLP method');
+    assert.equal(sink.spans().length, 0, 'transport controls must not record spans');
+  } finally {
+    await sink.close();
+  }
+}
+
 (async () => {
+  await checkTransportControls();
   checkControls(await run(true));
   await run(false);
-  console.log('PROVED: exact app/test joins and data, 5/5 corruption controls, shutdown-only app batch flushed; SIGKILL loses it');
+  console.log('PROVED: exact app/test joins and data, 6/6 corruption controls, wrong OTLP path/method rejected, shutdown-only app batch flushed; SIGKILL loses it');
 })().catch(error => { console.error(error); process.exitCode = 1; });

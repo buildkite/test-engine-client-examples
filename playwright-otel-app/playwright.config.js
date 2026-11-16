@@ -12,10 +12,11 @@ module.exports = defineConfig({
     ['buildkite-test-collector/playwright/reporter', { otelEnabled: true }],
   ],
   use: { baseURL },
-  webServer: {
+  // Array form keeps server credentials out of Playwright's JSON report.
+  webServer: [{
     command: 'npm start',
     url: `${baseURL}/health`,
-    env: appTracingEnv(),
+    env: { ...appTracingEnv() },
     gracefulShutdown: { signal: 'SIGTERM', timeout: 5000 },
-  },
+  }],
 });

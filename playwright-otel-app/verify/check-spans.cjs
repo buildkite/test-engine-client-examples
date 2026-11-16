@@ -24,6 +24,7 @@ function checkSpans({ spans, proofId, runKey }) {
   for (const t of tests) {
     assert.equal(t.parentSpanId, '', 'test must be the trace root');
     assert.equal(t.attributes['test.case.result.status'], 'pass');
+    assert.equal(t.stream, 'test', 'test transport stream');
     assert.equal(t.runKey, runKey, 'test transport run key');
     assert.equal(t.attributes['buildkite.run_key'], runKey, 'test attribute run key');
   }

@@ -36,8 +36,10 @@ and run `npx playwright test` directly; the app creates its own `tasks` table.
 - Tests import `test` and `expect` from
   `buildkite-test-collector/playwright/fixture`.
 - The config enables the OTel reporter and sets `use.baseURL`.
-- `webServer.env: appTracingEnv()` points the app's existing exporter at Test
-  Engine (or bktec's relay) with the same run key and the child stream.
+- `webServer: [{ env: { ...appTracingEnv() }, … }]` points the app's existing
+  exporter at Test Engine (or bktec's relay) with the same run key and the child
+  stream. Keep the array form: Playwright then omits the credential-bearing
+  server config from its JSON report (`config.webServer` is null).
 - The fixture adds W3C trace context. The app's HTTP spans continue each test's
   `test.execution`; Express handlers and pg queries descend from those requests.
 - `parentbased_always_off` sampling suppresses unparented requests and schema
@@ -78,7 +80,7 @@ after installing the pinned collector and Chromium:
 ./with-postgres node verify/prove-app-traces.cjs
 ```
 
-The gate checks app/test **transport** run-key equality, the child stream,
+The gate checks app/test **transport** run-key equality, test and child streams,
 complete ancestry, HTTP/Express/pg scopes, exact HTTP counts (design/API/finance:
 8/2/5) and query counts (6/2/5), exact per-test project and INSERT title parameters,
 and the finance-only query's 250 ms duration. Pool/connection spans are not
@@ -86,9 +88,11 @@ included in the stable query counts. A fresh proof ID sets independent expected
 projects for each run; normal runs still use randomly generated project IDs.
 Unparented startup and readiness spans must not appear in the local capture.
 
-Five copies of the valid capture must be rejected: wrong app transport run key,
+Six copies of the valid capture must be rejected: wrong app transport run key,
 missing design INSERT, finance INSERT with the operations title, dangling app
-parent, and wrong app stream.
+parent, wrong app stream, and wrong test stream. The sink accepts only
+`POST /v1/traces`; real HTTP controls verify the valid endpoint accepts an empty
+protobuf export while the wrong path and wrong method are rejected.
 
 Both shutdown runs set `OTEL_BSP_SCHEDULE_DELAY=60000` and must finish before
 that delay expires. With graceful SIGTERM and the SDK hook, all expected spans
