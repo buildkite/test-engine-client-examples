@@ -19,7 +19,7 @@ This needs the **unreleased** collector from `buildkite/bktest`'s
 Use Node 24 and Docker Compose, then from this directory:
 
 ```sh
-../bin/use-unreleased-js-collector 99d2abd96b88629071c4a2e5bc82865da4b6c3b8 sdk3
+../bin/use-unreleased-js-collector b5a03c3855c01c6912583fe30dd75aafb827ce68 sdk3
 npx playwright install --with-deps chromium
 export BUILDKITE_ANALYTICS_TOKEN="your-suite-token"
 ./with-postgres npx playwright test
