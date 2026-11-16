@@ -23,6 +23,21 @@ steps:
           - mise#v1.1.4:
               dir: playwright-otel-app
 
+      - label: ":playwright: App spans (local trace gate)"
+        key: playwright-app-trace-gate
+        commands:
+          - cd playwright-otel-app
+          - ../bin/use-unreleased-js-collector 263dc233f7a44540009d2655c9b372ea27b140a7 sdk3
+          - npx playwright install --with-deps chromium
+          - ./with-postgres node verify/prove-app-traces.cjs
+        artifact_paths: playwright-otel-app/tmp/app-trace-proof/*
+        env:
+          PORT: "3102"
+          BUILDKITE_ANALYTICS_LOCATION_PREFIX: playwright-otel-app
+        plugins:
+          - mise#v1.1.4:
+              dir: playwright-otel-app
+
       - label: ":playwright: App spans (bktec relay)"
         key: playwright-app-relay
         commands:

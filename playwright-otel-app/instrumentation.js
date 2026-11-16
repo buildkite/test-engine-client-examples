@@ -6,6 +6,10 @@ const { PgInstrumentation } = require('@opentelemetry/instrumentation-pg');
 
 const sdk = new NodeSDK({
   serviceName: 'project-board',
+  // This example sends traces to Test Engine, not logs or metrics. Newer SDKs
+  // otherwise export metrics to localhost:4318 and block shutdown on retries.
+  logRecordProcessors: [],
+  metricReaders: [],
   instrumentations: [
     new HttpInstrumentation(),
     new ExpressInstrumentation(),

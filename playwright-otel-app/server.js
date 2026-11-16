@@ -48,7 +48,9 @@ async function start() {
   process.once('SIGTERM', () => {
     server.close(async () => {
       await pool.end();
+      console.log('OpenTelemetry shutdown started', Date.now());
       await sdk.shutdown(); // Flush the last batch before Playwright exits.
+      console.log('OpenTelemetry shutdown complete');
     });
   });
 }

@@ -40,14 +40,16 @@ and run `npx playwright test` directly; the app creates its own `tasks` table.
   Engine (or bktec's relay) with the same run key and the child stream.
 - The fixture adds W3C trace context. The app's HTTP spans continue each test's
   `test.execution`; Express handlers and pg queries descend from those requests.
-- `parentbased_always_off` sampling excludes health checks, schema setup and
-  requests not started by a test.
+- `parentbased_always_off` sampling suppresses unparented requests and schema
+  setup. It records **any sampled remote parent**, not only these tests.
 - `webServer.gracefulShutdown` sends SIGTERM; the app closes HTTP and database
   connections and awaits `sdk.shutdown()` so its last batch is not lost.
 
 Browser headers are scoped to the app origin and document/fetch/XHR resources.
 The API `request` fixture attaches context to all origins; use it for app API
-requests rather than unrelated third-party calls.
+requests rather than unrelated third-party calls. Browser routing disables the
+HTTP cache. These three tests pass with and without tracing; that is not a claim
+that tracing leaves cache-sensitive tests unchanged.
 
 The example enables `enhancedDatabaseReporting` to show **synthetic** SQL
 parameters. Do not enable parameter capture for sensitive customer data without
@@ -60,3 +62,43 @@ The [pipeline](../.buildkite/pipeline.yml) runs the same tests twice with separa
 run keys: directly using an OIDC suite token, and under `bktec run` with its OTLP
 relay. `upload-results: false` prevents duplicate result uploads. Both runs use
 real PostgreSQL containers on Linux hosted agents, not an in-memory substitute.
+
+The one-off production check found complete ancestry and zero orphaned app spans
+**among the six retrieved execution traces**. It does not establish a
+production-wide absence of orphan spans. The full REST view has no span
+attributes, so exact project/title values are checked locally, not in production.
+
+## Local trace gate and shutdown controls
+
+A third CI step runs the same tests against a loopback OTLP/protobuf sink using
+a dummy token, then checks actual exported spans. Run it from this directory
+after installing the pinned collector and Chromium:
+
+```sh
+./with-postgres node verify/prove-app-traces.cjs
+```
+
+The gate checks app/test **transport** run-key equality, the child stream,
+complete ancestry, HTTP/Express/pg scopes, exact HTTP counts (design/API/finance:
+8/2/5) and query counts (6/2/5), exact per-test project and INSERT title parameters,
+and the finance-only query's 250 ms duration. Pool/connection spans are not
+included in the stable query counts. A fresh proof ID sets independent expected
+projects for each run; normal runs still use randomly generated project IDs.
+Unparented startup and readiness spans must not appear in the local capture.
+
+Five copies of the valid capture must be rejected: wrong app transport run key,
+missing design INSERT, finance INSERT with the operations title, dangling app
+parent, and wrong app stream.
+
+Both shutdown runs set `OTEL_BSP_SCHEDULE_DELAY=60000` and must finish before
+that delay expires. With graceful SIGTERM and the SDK hook, all expected spans
+must arrive at or after the app's shutdown-start acknowledgement, followed by a
+shutdown-complete acknowledgement. Without `gracefulShutdown`, Playwright's
+default SIGKILL bypasses the hook: the same three tests must still pass, but no
+app spans may arrive and the checker must reject the capture. This establishes
+shutdown flushing causally on the local stack, not from production counts alone.
+
+Sanitized captures and logs are written to `tmp/app-trace-proof/` and uploaded
+as CI artifacts. They retain routing headers but never authentication headers.
+Recheck a saved positive capture with
+`node verify/check-spans.cjs tmp/app-trace-proof/graceful.json`.
