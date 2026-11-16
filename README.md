@@ -45,6 +45,8 @@ defines supported versions, instrumentation, delivery and limitations.
 - [`playwright`](./playwright): JSON collection with bktec, including pool runs.
 - [`playwright-otel`](./playwright-otel): OpenTelemetry test results with nested
   steps, browser actions and assertions.
+- [`playwright-otel-app`](./playwright-otel-app): experimental Express/PostgreSQL
+  app spans under each Playwright UI/API test (unreleased collector).
 
 ## Vitest examples
 

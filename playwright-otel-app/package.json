@@ -1,0 +1,24 @@
+{
+  "name": "buildkite-playwright-otel-app-example",
+  "private": true,
+  "scripts": {
+    "start": "node --require ./instrumentation.js server.js",
+    "test": "playwright test"
+  },
+  "dependencies": {
+    "@opentelemetry/api": "^1.10.0",
+    "@opentelemetry/instrumentation-express": "^0.73.0",
+    "@opentelemetry/instrumentation-http": "~0.301.2",
+    "@opentelemetry/instrumentation-pg": "^0.78.0",
+    "@opentelemetry/sdk-node": "~0.301.2",
+    "express": "^4.22.3",
+    "pg": "^8.23.1"
+  },
+  "devDependencies": {
+    "@opentelemetry/context-async-hooks": "^3.0.0",
+    "@opentelemetry/exporter-trace-otlp-proto": "~0.301.2",
+    "@opentelemetry/sdk-trace": "^3.0.0",
+    "@playwright/test": "^1.58.0",
+    "buildkite-test-collector": "1.14.0"
+  }
+}

@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Project board</title>
+<style>
+  body { font: 18px/1.5 system-ui, sans-serif; max-width: 42rem; margin: 4rem auto; padding: 0 1rem; color: #182536; background: #f7f9fc; }
+  form { display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; }
+  input, button { font: inherit; padding: .5rem .75rem; }
+  input { flex: 1; min-width: 8rem; }
+  button { background: #174e82; color: white; border: 0; border-radius: .25rem; cursor: pointer; }
+  li { padding: .75rem; margin: .5rem 0; background: white; border: 1px solid #d6dfe9; }
+</style>
+<main>
+  <h1>Project board</h1>
+  <p id="project"></p>
+  <form>
+    <label for="title">Task title</label>
+    <input id="title" required autocomplete="off">
+    <button>Add task</button>
+  </form>
+  <p role="status">Loading tasks…</p>
+  <ul aria-label="Tasks"></ul>
+  <button id="report" type="button">Load slow report</button>
+</main>
+<script>
+  const project = new URLSearchParams(location.search).get('project') || 'demo';
+  document.querySelector('#project').textContent = `Project: ${project}`;
+  const endpoint = `/api/projects/${encodeURIComponent(project)}/tasks`;
+  const status = document.querySelector('[role="status"]');
+  async function load(report = false) {
+    const response = await fetch(endpoint + (report ? '?report=slow' : ''));
+    if (!response.ok) throw new Error('Could not load tasks');
+    const tasks = await response.json();
+    document.querySelector('ul').replaceChildren(...tasks.map(task => {
+      const item = document.createElement('li');
+      item.textContent = task.title;
+      return item;
+    }));
+    status.textContent = `${report ? 'Report ready · ' : ''}${tasks.length} ${tasks.length === 1 ? 'task' : 'tasks'}`;
+  }
+  document.querySelector('form').addEventListener('submit', async event => {
+    event.preventDefault();
+    try {
+      const response = await fetch(endpoint, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: document.querySelector('input').value }),
+      });
+      if (!response.ok) throw new Error('Could not save task');
+      document.querySelector('form').reset();
+      await load();
+    } catch (error) { status.textContent = error.message; }
+  });
+  document.querySelector('#report').addEventListener('click', () => {
+    status.textContent = 'Preparing report…';
+    load(true).catch(error => { status.textContent = error.message; });
+  });
+  load().catch(error => { status.textContent = error.message; });
+</script>
+</html>

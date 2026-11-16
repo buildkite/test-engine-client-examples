@@ -3,6 +3,51 @@ cache:
     - "mise"
 
 steps:
+  # Verification branch: install the unreleased collector at a pinned bktest SHA.
+  - group: ":playwright: Playwright app spans"
+    steps:
+      - label: ":playwright: App spans (direct OTLP)"
+        key: playwright-app-direct
+        commands:
+          - cd playwright-otel-app
+          - ../bin/use-unreleased-js-collector 263dc233f7a44540009d2655c9b372ea27b140a7 sdk3
+          - npx playwright install --with-deps chromium
+          - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
+          - export BUILDKITE_TESTS_OTLP_TOKEN="$$(../bin/otel-oidc-token)"
+          - export BUILDKITE_ANALYTICS_KEY="$$BUILDKITE_BUILD_ID-playwright-app-direct"
+          - ./with-postgres ../bin/expect-run 0 - npx playwright test
+        env:
+          PORT: "3100"
+          BUILDKITE_ANALYTICS_LOCATION_PREFIX: playwright-otel-app
+        plugins:
+          - mise#v1.1.4:
+              dir: playwright-otel-app
+
+      - label: ":playwright: App spans (bktec relay)"
+        key: playwright-app-relay
+        commands:
+          - cd playwright-otel-app
+          - ../bin/use-unreleased-js-collector 263dc233f7a44540009d2655c9b372ea27b140a7 sdk3
+          - npx playwright install --with-deps chromium
+          - export BUILDKITE_ANALYTICS_KEY="$$BUILDKITE_BUILD_ID-playwright-app-relay"
+          - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN BUILDKITE_TESTS_OTLP_TOKEN
+          - ./with-postgres bktec run
+        env:
+          PORT: "3101"
+          BUILDKITE_ANALYTICS_LOCATION_PREFIX: playwright-otel-app
+          BUILDKITE_TESTS_OTLP_RELAY: "true"
+          BUILDKITE_TESTS_OTLP_RELAY_BATCHING: "true"
+        plugins:
+          - tests#v1.0.1:
+              test-runner: custom
+              test-cmd: "npx playwright test {{testExamples}}"
+              test-file-pattern: "tests/**/*.spec.js"
+              suite-slug: test-engine-client-examples
+              upload-results: false
+              client-version: "3.5.0"
+          - mise#v1.1.4:
+              dir: playwright-otel-app
+
   - group: ":ruby: Ruby"
     steps:
       - label: ":rspec: RSpec"

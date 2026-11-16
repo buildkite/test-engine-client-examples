@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+# Give each CI job its own real database and random host port; always clean up.
+set -euo pipefail
+if docker compose version >/dev/null 2>&1; then
+  compose=(docker compose)
+else
+  compose=(docker-compose)
+fi
+export COMPOSE_PROJECT_NAME="playwright-app-${BUILDKITE_JOB_ID:-$$}"
+trap '"${compose[@]}" down --volumes' EXIT
+"${compose[@]}" up -d
+ready=false
+for attempt in {1..30}; do
+  if "${compose[@]}" exec -T postgres pg_isready -h 127.0.0.1 -U example -d projects; then
+    ready=true
+    break
+  fi
+  sleep 1
+done
+if [ "$ready" != true ]; then
+  "${compose[@]}" logs postgres
+  exit 1
+fi
+address="$("${compose[@]}" port postgres 5432)"
+export DATABASE_URL="postgres://example:example@${address}/projects"
+"$@"
