@@ -3,7 +3,9 @@
 Verifies [buildkite/bktest#118](https://github.com/buildkite/bktest/pull/118), which
 records package spans in Vitest's OpenTelemetry mode. Each test runs the same
 app from CommonJS, ES module or TypeScript: an Express route called with fetch,
-a GraphQL query, node-redis and ioredis commands, and Postgres queries.
+a GraphQL query, node-redis and ioredis commands, and Postgres queries. Like most
+apps, it declares `@opentelemetry/auto-instrumentations-node` rather than
+individual instrumentation packages.
 
 CI starts Postgres and Redis with `bin/services` and installs the unreleased
 collector at a pinned bktest commit.
