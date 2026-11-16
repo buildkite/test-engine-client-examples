@@ -13,7 +13,7 @@ steps:
         key: js-sdk3-jest
         commands:
           - cd jest-otel
-          - ../bin/use-unreleased-js-collector 4b028ad3755d8856c0ec0c7b55585496026fefcb sdk3 '@opentelemetry/instrumentation-http@^0.301.0'
+          - ../bin/use-unreleased-js-collector 4b028ad3755d8856c0ec0c7b55585496026fefcb sdk3 '@opentelemetry/instrumentation-http@^0.301.0' '@opentelemetry/instrumentation-express@^0.73.0' '@opentelemetry/instrumentation-graphql@^0.73.0' '@opentelemetry/instrumentation-redis@^0.73.0' '@opentelemetry/instrumentation-pg@^0.78.0'
           - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
           - export BUILDKITE_TESTS_OTLP_TOKEN="$$(../bin/otel-oidc-token)"
           - export BUILDKITE_ANALYTICS_KEY="$$BUILDKITE_BUILD_ID-js-sdk3-jest"
@@ -28,7 +28,7 @@ steps:
         key: js-sdk3-jest30-esm
         commands:
           - cd jest-otel
-          - ../bin/use-unreleased-js-collector 4b028ad3755d8856c0ec0c7b55585496026fefcb sdk3 '@opentelemetry/instrumentation-http@^0.301.0' jest@30.5.2
+          - ../bin/use-unreleased-js-collector 4b028ad3755d8856c0ec0c7b55585496026fefcb sdk3 '@opentelemetry/instrumentation-http@^0.301.0' '@opentelemetry/instrumentation-express@^0.73.0' '@opentelemetry/instrumentation-graphql@^0.73.0' '@opentelemetry/instrumentation-redis@^0.73.0' '@opentelemetry/instrumentation-pg@^0.78.0' jest@30.5.2
           - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
           - export BUILDKITE_TESTS_OTLP_TOKEN="$$(../bin/otel-oidc-token)"
           - export BUILDKITE_ANALYTICS_KEY="$$BUILDKITE_BUILD_ID-js-sdk3-jest30-esm"
@@ -41,12 +41,13 @@ steps:
               dir: jest-otel
 
       # Upgrade in place: only the collector changes; the example keeps its SDK 2
-      # packages, including its direct sdk-trace-base dependency.
+      # packages, including its direct sdk-trace-base dependency, plus the last
+      # SDK 2-line package instrumentation.
       - label: ":jest: Jest 29 SDK 2 (collector upgrade only)"
         key: js-sdk2-jest
         commands:
           - cd jest-otel
-          - ../bin/use-unreleased-js-collector 4b028ad3755d8856c0ec0c7b55585496026fefcb sdk2
+          - ../bin/use-unreleased-js-collector 4b028ad3755d8856c0ec0c7b55585496026fefcb sdk2 '@opentelemetry/instrumentation-express@0.71.1' '@opentelemetry/instrumentation-graphql@0.71.0' '@opentelemetry/instrumentation-redis@0.71.0' '@opentelemetry/instrumentation-pg@0.76.0'
           - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
           - export BUILDKITE_TESTS_OTLP_TOKEN="$$(../bin/otel-oidc-token)"
           - export BUILDKITE_ANALYTICS_KEY="$$BUILDKITE_BUILD_ID-js-sdk2-jest"
