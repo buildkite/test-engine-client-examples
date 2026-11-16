@@ -15,10 +15,11 @@ Configure one method to upload results from each test run:
 
 - **Built-in bktec upload:** The Tests Buildkite plugin enables built-in uploads
   by default. Do not configure a Buildkite Test Collector to upload the same
-  results. The Go example uses this configuration.
+  results. The Go and Node.js JUnit examples use this configuration.
 - **Collector upload with bktec:** Let the collector upload results and set
   `upload-results: false`. bktec can still discover, split, run, and retry the
-  tests. The Ruby, JavaScript, and Python examples use this configuration.
+  tests. The Ruby, Jest, Playwright, Cypress, and Python examples use this
+  configuration.
 - **Collector upload without bktec:** Let the collector upload results, set
   `upload-results: false`, and set `install-client: false`. The Vitest, Swift,
   and Android examples use this configuration (Vitest OpenTelemetry uses bktec).
@@ -33,6 +34,17 @@ step for the complete configuration.
 
 The [versioned JavaScript OpenTelemetry guide](https://github.com/buildkite/bktest/blob/test-collector-javascript/v1.14.0/test-collector-javascript/docs/opentelemetry.md)
 defines supported versions, instrumentation, delivery and limitations.
+
+## Node.js JUnit example
+
+[`node`](./node) uses Node's built-in test runner and JUnit reporter with bktec
+3.5.0's custom runner and built-in upload, without a collector. The pipeline
+runs from the repository root so no location prefix is needed, and saves
+`node/tmp/junit.xml` as an artifact.
+
+This reproduces uploads containing absolute checkout paths in JUnit testcase
+`file` attributes. Test Engine source links should resolve to
+`node/test/analysis.test.js`, not include the build machine's checkout path.
 
 ## Jest examples
 
