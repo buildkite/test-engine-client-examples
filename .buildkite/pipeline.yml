@@ -199,7 +199,7 @@ steps:
         commands:
           - cd vitest-otel-packages
           - npm ci
-          - ../bin/install-unreleased-js-collector 5b396fde77a06c8224d8742a07986888282c3cdd
+          - ../bin/install-unreleased-js-collector fc558f8e0710b7f85a6e9063e5bc815e513a4ee8
           - bin/services
           - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN BUILDKITE_TESTS_OTLP_TOKEN
           - export BUILDKITE_ANALYTICS_KEY="$$BUILDKITE_BUILD_ID-vitest-otel-packages-stock-$$BUILDKITE_JOB_ID"
@@ -227,7 +227,7 @@ steps:
         commands:
           - cd vitest-otel-packages
           - npm ci
-          - ../bin/install-unreleased-js-collector 5b396fde77a06c8224d8742a07986888282c3cdd
+          - ../bin/install-unreleased-js-collector fc558f8e0710b7f85a6e9063e5bc815e513a4ee8
           - patch -p1 -d node_modules/import-in-the-middle < patches/import-in-the-middle-absolute-entry.patch
           - bin/services
           - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN BUILDKITE_TESTS_OTLP_TOKEN
