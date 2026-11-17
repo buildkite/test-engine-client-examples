@@ -1,5 +1,5 @@
 pluginManagement {
-    // Verification branch only: exercise the companion collector before release.
+    // Verification branch only; never changes the collector's checked-in source.
     System.getenv("ANDROID_COLLECTOR_SOURCE")?.let { includeBuild(it) }
     repositories {
         google()
