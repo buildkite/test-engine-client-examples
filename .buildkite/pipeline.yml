@@ -595,8 +595,8 @@ steps:
         commands:
           # Verification branch only; not part of the customer-facing PR.
           - git clone --depth 1 --branch android-selector-timings https://github.com/buildkite/bktest.git .collector-source
-          - git -C .collector-source fetch --depth 1 origin 1d0c3a840d740865e808237e00078f4032a6164f
-          - git -C .collector-source checkout 1d0c3a840d740865e808237e00078f4032a6164f
+          - git -C .collector-source fetch --depth 1 origin 4cc0984ebc4dec417effa882d5aae566de28783f
+          - git -C .collector-source checkout 4cc0984ebc4dec417effa882d5aae566de28783f
           - export ANDROID_COLLECTOR_SOURCE="$$PWD/.collector-source/test-collector-android"
           - git -C .collector-source rev-parse HEAD
           - cd android
