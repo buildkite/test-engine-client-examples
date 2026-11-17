@@ -621,12 +621,7 @@ steps:
         key: android
         if: build.env("ANDROID_PROOF_NATIVE_ONLY") != "true"
         depends_on: android-discover
-        parallelism: 3
-        # Verification only: exercise a real Buildkite retry, not a shell rerun.
-        retry:
-          automatic:
-            - exit_status: 1
-              limit: 1
+        parallelism: 2
         commands:
           # Download from this build's discovery job before Gradle reads ownership.
           # Download '*' spans path separators, unlike upload globs: include the
