@@ -589,11 +589,14 @@ steps:
           queue: swift-macos-15-xcode-26-2
         artifact_paths:
           - swift-xcuitest/artifacts/SwiftXCUITest.xcresult/**/*
+          - swift-xcuitest/artifacts/plan.json
         env:
           # Switch BOTH steps to method for large classes. The setup hook uses
           # this same value to tag each execution with its exact selector.
           TEST_SPLIT_BY: class
           BUILDKITE_TEST_ENGINE_SELECTOR_FILE: swift-xcuitest/artifacts/selectors.txt
+          # Keep the exact server plan for timing and assignment diagnostics.
+          BUILDKITE_TEST_ENGINE_PLAN_OUT: swift-xcuitest/artifacts/plan.json
           BUILDKITE_ANALYTICS_TAGS: '{"test.framework.name":"xcuitest","language.name":"swift","custom.tag.from":"upload"}'
           # Hand each finished test to bktec, which outlives the XCTest runner,
           # and batch the relay's uploads to Test Engine.
