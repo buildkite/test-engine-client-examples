@@ -620,7 +620,7 @@ steps:
               upload-results: false
               client-version: "3.5.0"
           - docker#v5.13.0:
-              image: "mobiledevops/android-sdk-image:34.0.0-jdk17"
+              image: "ghcr.io/cirruslabs/android-sdk:34"
               user: root
               # The Tests plugin installs bktec on the host; run it in Docker.
               expand-volume-vars: true
