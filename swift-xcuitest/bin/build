@@ -25,6 +25,14 @@ xcodebuild build-for-testing \
 mv artifacts/DerivedData/Build/Products artifacts/Products
 mv artifacts/Products/*.xctestrun artifacts/Products/Tests.xctestrun
 
+# The collector knows the bundle name, whereas Xcode selects by target name.
+# Reject custom product names instead of silently losing all timing matches.
+plutil -convert json -o - artifacts/Products/Tests.xctestrun | jq -r '
+  .TestConfigurations[].TestTargets[] |
+  (.TestBundlePath | split("/")[-1] | rtrimstr(".xctest")) as $bundle |
+  select(.BlueprintName != $bundle) |
+  error("Test target \(.BlueprintName) builds bundle \($bundle). XCTest splitting requires PRODUCT_NAME to equal the target name; restore Xcode\u0027s default PRODUCT_NAME = $(TARGET_NAME).")'
+
 xcodebuild test-without-building \
   -xctestrun artifacts/Products/Tests.xctestrun -destination "$destination" \
   -enumerate-tests -test-enumeration-style flat -test-enumeration-format json \

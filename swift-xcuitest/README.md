@@ -8,8 +8,10 @@ for Xcode unit-test targets; this fixture prioritizes UI tests.
 Copy the two XCUITest steps in [the pipeline](../.buildkite/pipeline.yml),
 `bin/build` and `bin/test`. Adapt the project, scheme, test plan and destination.
 Tests remain ordinary `XCTestCase` subclasses: no tagging superclass, setup
-override or `tagExecution` call is required. Verified on Xcode 26.2; requires
-Xcode's `-enumerate-tests` support, `jq` and bktec 3.5.0.
+override or `tagExecution` call is required. This fixture is verified on Xcode
+26.2. The workflow needs Xcode 15+ for enumeration and the collector needs
+Swift 5.10+ (Xcode 15.3+); original `.xctestrun` sharing adds no Xcode 16 minimum.
+Older Xcode versions are not verified here. Also requires `jq` and bktec 3.5.0.
 
 Automatic selector tagging needs the **next Swift collector release**, after
 the already-published 2.0.0-beta.4. Until then, `bin/build` fetches a pinned
@@ -80,6 +82,7 @@ class's identifier and tag, not under the declaring class's tag.
 Discovery includes all enabled XCTest targets in the test plan. The target
 prefix keeps classes in different targets disjoint. Link the collector into
 every test target whose results should be uploaded.
+Each test target's `PRODUCT_NAME` must equal its target name (Xcode's default); discovery fails loudly on a mismatch rather than silently losing timing matches.
 
 All enabled plan configurations run on the shard assigned their selector.
 A test enabled in two configurations has two legitimate executions, not one;
