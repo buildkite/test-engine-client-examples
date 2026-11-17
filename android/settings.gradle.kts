@@ -16,4 +16,4 @@ dependencyResolutionManagement {
 
 rootProject.name = "buildkite-test-engine-android-example"
 
-include(":app")
+include(":app", ":library")

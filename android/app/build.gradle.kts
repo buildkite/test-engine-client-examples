@@ -35,6 +35,3 @@ buildkiteTestAnalytics {
 dependencies {
     testImplementation("junit:junit:4.13.2")
 }
-
-// This script works with any Gradle JVM Test task, not just Android.
-apply(from = "../test-splitting.gradle")
