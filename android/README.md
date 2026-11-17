@@ -130,6 +130,43 @@ both modules; the library task then skips on SlowTest's shard.
   companion change does not add instrumentation splitting. Gradle's
   `--test-dry-run` applies to JVM `Test` tasks, not instrumentation tasks.
 
+## Splitting can expose test isolation problems
+
+Splitting changes which classes run together and can change their execution
+order. Tests that depend on another class's static state, shared files, or timing
+may start failing. Reproduce with native Gradle using the same task-local
+`--tests` filters and the same fork settings before blaming the splitter. Fix
+test isolation or synchronization rather than dropping tests, weakening result
+checks, or retrying until the build happens to pass.
+
+We investigated this with unchanged Now in Android tests at
+`815b347e39c9081f33c7acd892d1b5e41e1c9344` in hosted
+[build #1207](https://buildkite.com/buildkite/test-engine-client-examples/builds/1207).
+Five repetitions of each mode gave these pass counts for three methods in
+`InterestsListDetailScreenTest`:
+
+| Mode | `compactWidth_topicSelected_showsTopicDetailPane` | `compactWidth_initialState_showsListPane` | `expandedWidth_backPressFromTopicDetail_leavesInterests` |
+| --- | --- | --- | --- |
+| Full native demo task | 4/5 | 4/5 | 4/5 |
+| Class alone, native `--tests` | 3/5 | 3/5 | 3/5 |
+| Archived shard's 17 classes, native `--tests` | 4/5 | 4/5 | 3/5 |
+| bktec with those same classes and Gradle arguments | 4/5 | 4/5 | 3/5 |
+
+Every invocation used the project's unchanged `maxParallelForks=1` and
+`forkEvery=0`, with a fresh app test worker JVM. The full native task ran four
+app classes in that worker, the class-alone mode one, and the two shard modes
+two; other modules had separate Test-task workers. bktec's diagnostic plan was
+pinned to the archived assignment, not allowed to rebalance between repetitions.
+
+There was no observed bktec-specific failure-rate increase: the identical native
+filters reproduced the failures at the same rates. Even running the class alone
+was unstable, so sharing a JVM with other classes is not necessary for these
+failures. This does not isolate a particular race or rule out state/order effects
+between methods inside the class, and five repetitions cannot prove that rare
+effects never occur. The original native-versus-shard result comparison in
+[build #1201](https://buildkite.com/buildkite/test-engine-client-examples/builds/1201)
+remains failed; these diagnostic rates do not turn it into a passing proof.
+
 ## Credentials and Docker
 
 The Tests plugin mints a token for the selected Test Engine suite on the Buildkite
