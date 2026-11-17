@@ -573,6 +573,8 @@ steps:
         command: swift-xctest-parallel/bin/build
         artifact_paths: swift-xctest-parallel/artifacts/tests.tar.gz
         env:
+          # Existing --filter/--skip patterns go in TEST_FILTER/TEST_SKIP here;
+          # shards use the archived enabled methods, so assignments only narrow.
           TEST_SPLIT_BY: class
         plugins:
           - docker#v5.11.0:
@@ -584,6 +586,7 @@ steps:
         key: swiftpm-shards
         depends_on: swiftpm-build
         parallelism: 2
+        artifact_paths: swift-xctest-parallel/artifacts/plan.json
         commands:
           - buildkite-agent artifact download swift-xctest-parallel/artifacts/tests.tar.gz . --step swiftpm-build
           - cd swift-xctest-parallel
@@ -594,6 +597,8 @@ steps:
           # setup hook tags the same native selector that discovery produces.
           TEST_SPLIT_BY: class
           BUILDKITE_TEST_ENGINE_SELECTOR_FILE: artifacts/selectors.txt
+          # Keep the exact server plan for timing and assignment diagnostics.
+          BUILDKITE_TEST_ENGINE_PLAN_OUT: artifacts/plan.json
         plugins:
           - tests#v1.1.0:
               test-runner: custom

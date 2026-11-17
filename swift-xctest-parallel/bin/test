@@ -8,13 +8,14 @@ fi
 filters=()
 for selector in "$@"; do
   echo "Assigned selector: $selector"
-  # --filter takes a regex. Escape the dot in Module.Class, and anchor the
-  # class boundary so selecting Foo never also runs FooExtra.
-  escaped="${selector//./\\.}"
-  if [[ "${TEST_SPLIT_BY:-class}" == method ]]; then
+  # Expand only methods enabled at discovery; never broaden TEST_FILTER/SKIP.
+  while IFS= read -r method; do
+    escaped="${method//./\\.}"
     filters+=(--filter "^${escaped}$")
-  else
-    filters+=(--filter "^${escaped}/")
-  fi
+  done < <(awk -F/ -v selector="$selector" '$0 == selector || $1 == selector' artifacts/methods.txt)
 done
+if [[ ${#filters[@]} -eq 0 ]]; then
+  echo 'No enabled methods assigned; running no tests.'
+  exit 0
+fi
 swift test --skip-build --disable-swift-testing "${filters[@]}"

@@ -13,7 +13,8 @@ passing, failing, flaky and skipped results without splitting.
 `bin/build` uses `swift test list --disable-swift-testing` to build and discover
 XCTest methods, then derives newline-delimited `Module.Class` selectors from
 SwiftPM's native `Module.Class/method` identifiers. No source scanning or
-hand-maintained class list. The build job archives `.build` and selectors;
+hand-maintained class list. The build job archives `.build`, enabled methods
+and selectors;
 two shard jobs download that artifact and use ordinary
 `swift test --skip-build --filter` invocations. All three jobs must use the
 same Docker image, architecture and absolute checkout path (`/workdir` here):
@@ -27,19 +28,39 @@ bin/build
 bin/test PackageTests.ArithmeticTests PackageTests.StringTests
 ```
 
-An empty assignment runs no tests. Filters escape the module/class dot and
-anchor the class boundary so one class cannot accidentally select another.
-`--disable-swift-testing` selects XCTest rather than Swift Testing.
+An empty assignment runs no tests. Shards expand assignments to exact enabled
+methods, with anchored regexes, so one class cannot select a neighbor or broaden
+the original selection. Inherited XCTest methods belong to each concrete class:
+selecting a base class does not also run its subclasses.
+`--disable-swift-testing` excludes Swift Testing, including nested `@Suite`
+types, during both discovery and execution. This is an XCTest-only example.
+
+For an existing `swift test --filter REGEX --skip REGEX` selection, set
+`TEST_FILTER` and `TEST_SKIP` on the **build** step. For example:
+
+```sh
+TEST_FILTER='PackageTests.ArithmeticTests' TEST_SKIP='testAddition' bin/build
+bin/test PackageTests.ArithmeticTests
+```
+
+Only `testSubtraction` is discovered and run. Swift 6.0's `swift test list`
+ignores its `--filter`/`--skip` flags, so `bin/build` applies these expressions
+to the native method inventory using Foundation's regex engine, like SwiftPM.
+The selected method inventory travels with the artifact; shards cannot add
+excluded methods back. Use `|` to combine alternative include or skip patterns.
 
 ## Matched durations, not default estimates
 
 The setup hook calls the collector's existing `tagExecution` API for every
 method, tagging `test.selector.primary` with the exact `Module.Class` selector
 sent to bktec. Xcode's `Target/Class` spelling would **not** match SwiftPM's
-selectors. Test Engine sums the methods' durations per class; after the first
-run, matching history lets it balance these four classes by time. One class
+selectors. Test Engine sums the methods' durations per class; once the planner's
+history snapshot refreshes, matching history lets it balance these classes by
+time. One class
 is deliberately slow so a timing-aware split differs from a 2/2 count split.
 New selectors and history older than seven days can use default estimates.
+An immediate repeat can still hit cached missing history; check the plan's
+historical-timing summary rather than assuming upload visibility is immediate.
 Overrides of `setUpWithError` must call `super.setUpWithError()`.
 
 For large classes, set `TEST_SPLIT_BY: method` in **both** pipeline steps.

@@ -5,8 +5,22 @@ mkdir -p artifacts
 split_by="${TEST_SPLIT_BY:-class}"
 case "$split_by" in class|method) ;; *) echo 'TEST_SPLIT_BY must be class or method' >&2; exit 1 ;; esac
 
-# Native discovery builds the test executable once. Keep diagnostics on stderr.
-swift test list --disable-swift-testing > artifacts/methods.txt
+# Native discovery builds once. Swift 6.0's list ignores --filter/--skip, so
+# apply existing selection with the same Foundation regex engine as SwiftPM.
+swift test list --disable-swift-testing > artifacts/discovered.txt
+swift -e '
+import Foundation
+let env = ProcessInfo.processInfo.environment
+let include = try NSRegularExpression(pattern: env["TEST_FILTER"] ?? ".*")
+let exclude = try NSRegularExpression(pattern: env["TEST_SKIP"] ?? "(?!)")
+while let method = readLine() {
+    let range = NSRange(method.startIndex..., in: method)
+    if include.firstMatch(in: method, range: range) != nil &&
+       exclude.firstMatch(in: method, range: range) == nil {
+        print(method)
+    }
+}
+' < artifacts/discovered.txt > artifacts/methods.txt
 awk -F/ -v split_by="$split_by" '
   NF == 2 { if (split_by == "class") print $1; else print $0 }
 ' artifacts/methods.txt | sort -u > artifacts/selectors.txt
@@ -15,4 +29,4 @@ echo "Discovered $split_by selectors:"
 cat artifacts/selectors.txt
 # SwiftPM's build state uses absolute paths. All jobs use the same Docker
 # image and /workdir checkout, so --skip-build can reuse this exact build.
-tar -czf artifacts/tests.tar.gz .build artifacts/selectors.txt
+tar -czf artifacts/tests.tar.gz .build artifacts/selectors.txt artifacts/methods.txt
