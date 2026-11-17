@@ -24,7 +24,7 @@ timing-aware setup; the intended next version is 0.4.1, pending release approval
    apply(from = "test-splitting.gradle")
    ```
 
-3. Copy the Android step from [the pipeline](../.buildkite/pipeline.yml) and change
+3. Copy the Android group from [the pipeline](../.buildkite/pipeline.yml) and change
    the suite slug. `splitTests` selects `testDebugUnitTest` in every module; use
    `-PsplitTestTask=test` on both invocations for JVM-only builds, or select your
    desired variant's task name. Modules without that task are ignored. Use a JDK

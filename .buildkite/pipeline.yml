@@ -629,7 +629,9 @@ steps:
               limit: 1
         commands:
           # Download from this build's discovery job before Gradle reads ownership.
-          - buildkite-agent artifact download "android/**/build/test-selectors/*.txt" . --step android-discover
+          # Download '*' spans path separators, unlike upload globs: include the
+          # root build/test-selectors/all.txt as well as every module manifest.
+          - buildkite-agent artifact download "android/*/test-selectors/*.txt" . --step android-discover
           - git clone --depth 1 --branch android-selector-timings https://github.com/buildkite/bktest.git .collector-source
           - git -C .collector-source fetch --depth 1 origin 4cc0984ebc4dec417effa882d5aae566de28783f
           - git -C .collector-source checkout 4cc0984ebc4dec417effa882d5aae566de28783f
