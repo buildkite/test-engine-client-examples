@@ -30,6 +30,16 @@ timing-aware setup; the intended next version is 0.4.1, pending release approval
    desired variant's task name. Modules without that task are ignored. Use a JDK
    Docker image instead of the Android SDK image for JVM-only projects.
 
+For product flavors, select **one variant per splitting group**, for example
+`-PsplitTestTask=testDemoDebugUnitTest` on both discovery and execution. Run prod
+in a separate group with `testProdDebugUnitTest` and a separate Test Engine suite.
+Do not combine variants: the same class legitimately appears in both, while this
+example's timing keys deliberately contain no variant name. In a mixed Android/JVM
+project, add a separate JVM group using `-PsplitTestTask=test` for JVM modules;
+Android's aggregate `test` task is not a JVM `Test` task and is not selected.
+Disabled, `onlyIf`-skipped and NO-SOURCE tasks contribute no selectors; every
+task that runs must produce a fresh discovery manifest.
+
 The discovery job runs Gradle once without an analytics token:
 
 ```sh
@@ -81,10 +91,11 @@ both modules; the library task then skips on SlowTest's shard.
   uses raw class/suite names, not module-qualified timing keys; silently merging
   duplicates would make ownership and history ambiguous. Rename/package them
   uniquely or split modules in separate Buildkite steps/suites.
-- **Class names cannot contain whitespace.** Discovery fails with the offending
-  name before bktec plans anything. Kotlin backtick class names with spaces cannot
-  survive bktec's space-joined selector transport. Backtick method names are fine;
-  the collector's raw timing key is unchanged.
+- **Class names cannot contain whitespace or apostrophes.** Discovery fails with
+  the offending name before bktec plans anything. Kotlin backtick class names with
+  spaces cannot survive the space-joined selector transport; an apostrophe in
+  `Quote'NameTest` breaks the command's single-quoted argument. Backtick method
+  names are fine; the collector's raw timing key is unchanged.
 - **Method-level splitting is not enabled.** Outermost runnable classes/suites
   are the assignment units across JUnit 4, JUnit Platform, parameterized tests,
   factories, and custom display names; individual nested/member classes are not
@@ -118,6 +129,28 @@ both modules; the library task then skips on SlowTest's shard.
   Its listener also needs runnable-selector tags for timing-aware plans; this
   companion change does not add instrumentation splitting. Gradle's
   `--test-dry-run` applies to JVM `Test` tasks, not instrumentation tasks.
+
+## Credentials and Docker
+
+The Tests plugin mints a token for the selected Test Engine suite on the Buildkite
+host, then the step passes that same token to bktec and the collector inside
+Docker. `oidc-lifetime: 7200` gives it two hours, covering the one-hour step limit
+including setup; increase both deliberately if your build needs longer. The token
+can access that suite and remains usable until it expires, even if the job ends.
+Treat the image and Gradle build/test code as trusted with those suite results.
+
+The step uses plain `docker run` with an explicit environment list, not the Docker
+plugin: that plugin also mounts the agent job-API socket automatically. Neither
+the agent access token nor the job-API socket/token is passed or mounted here.
+Artifact downloads and token minting stay on the host. Discovery receives no
+credentials. Do not add `--env-file`, whole-environment forwarding, agent/socket
+mounts, or unset the suite token inside the container: it cannot mint a replacement.
+
+Docker is optional. On a trusted host with the project's JDK and SDK installed,
+run the documented Gradle commands and `bktec run` directly with the Tests plugin;
+remove the `docker run` wrappers and keep the token lifetime and suite settings.
+That simpler arrangement trusts the build with the host's normal CI authority;
+it does not provide the container credential boundary described above.
 
 ## Discovery overhead and large builds
 

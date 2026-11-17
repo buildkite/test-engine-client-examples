@@ -595,31 +595,42 @@ steps:
       - label: ":android: Discover JVM tests"
         key: android-discover
         commands:
-          - cd android
-          # Discovery enables Gradle dry-run mode and never uploads callbacks.
-          - env -u BUILDKITE_ANALYTICS_TOKEN ./gradlew --no-daemon --console=plain --profile splitTests -PdiscoverTests
+          # Plain Docker deliberately avoids the plugin's automatic agent-job
+          # socket mount. Discovery receives no credentials or host environment.
+          - >-
+            docker run --rm --volume "$$PWD:/workdir" --workdir /workdir/android
+            ghcr.io/cirruslabs/android-sdk:34
+            ./gradlew --no-daemon --console=plain --profile splitTests -PdiscoverTests
         artifact_paths:
           - android/**/build/test-selectors/*.txt
           - android/build/reports/profile/*
-        plugins:
-          - docker#v5.13.0:
-              image: "ghcr.io/cirruslabs/android-sdk:34"
-              user: root
-              propagate-environment: true
 
       - label: ":android: Android"
         key: android
         depends_on: android-discover
         parallelism: 2
+        timeout_in_minutes: 60
         commands:
           # Download from this build's discovery job before Gradle reads ownership.
           # Download '*' spans path separators, unlike upload globs: include the
           # root build/test-selectors/all.txt as well as every module manifest.
           - buildkite-agent artifact download "android/*/test-selectors/*.txt" . --step android-discover
-          - cd android
-          # Use freshly minted OIDC credentials for the assigned-test invocation.
-          - unset BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN BUILDKITE_ANALYTICS_TOKEN
-          - bktec run --plan-out app/build/test-plan.json
+          # The Tests plugin mints the suite token on the HOST. Pass only that
+          # credential and named CI fields, never the agent token/job-API socket.
+          # Do not unset the suite tokens: the container cannot mint replacements.
+          - >-
+            docker run --rm --volume "$$PWD:/workdir" --workdir /workdir/android
+            --volume "$$BUILDKITE_TEST_ENGINE_CLIENT_PATH:/usr/local/bin/bktec:ro"
+            --env BUILDKITE --env BUILDKITE_BUILD_ID --env BUILDKITE_BUILD_NUMBER
+            --env BUILDKITE_JOB_ID --env BUILDKITE_STEP_ID --env BUILDKITE_RETRY_COUNT
+            --env BUILDKITE_PARALLEL_JOB --env BUILDKITE_PARALLEL_JOB_COUNT
+            --env BUILDKITE_COMMIT --env BUILDKITE_BRANCH --env BUILDKITE_BUILD_URL
+            --env BUILDKITE_ORGANIZATION_SLUG --env BUILDKITE_PIPELINE_SLUG --env BUILDKITE_MESSAGE
+            --env BUILDKITE_TEST_ENGINE_TEST_RUNNER --env BUILDKITE_TEST_ENGINE_TEST_CMD
+            --env BUILDKITE_TEST_ENGINE_SUITE_SLUG --env BUILDKITE_TEST_ENGINE_UPLOAD_RESULTS
+            --env BUILDKITE_TEST_ENGINE_SELECTOR_FILE
+            --env BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN --env BUILDKITE_ANALYTICS_TOKEN
+            ghcr.io/cirruslabs/android-sdk:34 bktec run --plan-out app/build/test-plan.json
         artifact_paths:
           - android/app/build/test-plan.json
           - android/**/build/test-selectors/*.txt
@@ -632,6 +643,9 @@ steps:
         plugins:
           - tests#v1.1.0:
               test-runner: custom
+              # Two hours covers the one-hour step including setup. This is a
+              # suite-scoped token, not an agent token; adjust both limits together.
+              oidc-lifetime: 7200
               # Each Test task gets only its owned assignments; empty modules
               # skip. The script forces Test execution, not recompilation.
               # --continue lets other modules finish after intentional failures.
@@ -640,17 +654,6 @@ steps:
               # Only the Android collector uploads; bktec must not duplicate it.
               upload-results: false
               client-version: "3.5.0"
-          - docker#v5.13.0:
-              image: "ghcr.io/cirruslabs/android-sdk:34"
-              user: root
-              # The Tests plugin installs bktec on the host; run it in Docker.
-              expand-volume-vars: true
-              volumes:
-                - "$$BUILDKITE_TEST_ENGINE_CLIENT_PATH:/usr/local/bin/bktec:ro"
-              propagate-environment: true
-              mount-buildkite-agent: true
-              environment:
-                - BUILDKITE_ANALYTICS_TOKEN
 
   - group: ":golang: Go"
     steps:

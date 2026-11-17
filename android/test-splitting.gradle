@@ -24,8 +24,14 @@ tasks.register('splitTests') {
         doLast {
             def owners = new TreeMap<String, String>()
             selectedTasks.each { tasks -> tasks.each { task ->
-                if (!task.state.noSource) {
-                    task.project.layout.buildDirectory.file("test-selectors/${task.name}.txt").get().asFile.readLines().findAll().each { selector ->
+                def manifest = task.project.layout.buildDirectory.file("test-selectors/${task.name}.txt").get().asFile
+                if (task.state.skipped) {
+                    // Disabled/onlyIf/NO-SOURCE tasks produce no discovery output.
+                    // Never transfer an old ownership manifest for a skipped task.
+                    manifest.delete()
+                } else {
+                    if (!manifest.exists()) throw new GradleException("Discovery task ${task.path} ran but did not write its selector manifest")
+                    manifest.readLines().findAll().each { selector ->
                         def previous = owners.put(selector, task.path)
                         if (previous != null) {
                             throw new GradleException("Duplicate selector '${selector}' in ${previous} and ${task.path}; class names must be unique across selected modules")
@@ -59,7 +65,8 @@ allprojects {
             doFirst {
                 reports.junitXml.outputLocation.get().asFile.deleteDir()
                 selectors.parentFile.mkdirs()
-                selectors.text = ''
+                // Only the completed discovery listener may create the manifest.
+                selectors.delete()
             }
             // Use the same outermost class/suite as the collector's timing tag.
             def discover = { descriptor ->
@@ -68,8 +75,8 @@ allprojects {
                     if (current.className != null) selector = current.className
                 }
                 if (selector != null) {
-                    if (selector =~ /\s/) {
-                        throw new GradleException("Cannot split selector '${selector}': bktec's custom runner joins selectors with spaces; class names must not contain whitespace")
+                    if (selector =~ /[\s']/) {
+                        throw new GradleException("Cannot split selector '${selector}': bktec joins selectors with spaces inside a single-quoted argument; class names must not contain whitespace or apostrophes")
                     }
                     classes.add(selector)
                 }
