@@ -4,7 +4,7 @@ bktec has no built-in Gradle runner. Use its **custom** runner to split JVM unit
 tests, with Gradle discovering and selecting the tests and the Android collector
 uploading their results.
 
-Requires JDK 17, the Android SDK 34, Gradle 8.3+ (`--test-dry-run`), bktec 3.5.0,
+Requires JDK 17+, the Android SDK 34, Gradle 8.3+ (`--test-dry-run`), bktec 3.5.0,
 and an Android collector release containing class selector tags. **Collector
 0.4.0 does not supply timing history for these selectors.** The companion
 collector change must be released before this example can be copied as a
@@ -50,9 +50,10 @@ bktec itself runs nothing for a job with no assigned tests.
 
 The collector tags **every method** with `test.selector.primary=<class name>`.
 Test Engine sums those method durations per class per run and uses recent
-history (seven days) for later plans. A first run without history uses defaults;
-later runs should not print the default-duration warning. Splitting stays at
-class granularity: methods in one class always run together. `SlowTest` deliberately
+history (seven days) for later plans. A first run without history uses defaults.
+Test Engine may keep using default durations for new selectors for up to about an hour after their first run, so the build right after the first one may not be balanced yet.
+
+Splitting stays at class granularity: methods in one class always run together. `SlowTest` deliberately
 takes 15 seconds so a warm plan can put it alone opposite the four fast classes.
 
 ## Boundaries
