@@ -596,7 +596,7 @@ steps:
           - cd android
           # Ask Gradle to discover tests, without executing methods or uploading
           # skipped dry-run results that would overwrite real timing history.
-          - env -u BUILDKITE_ANALYTICS_TOKEN ./gradlew --no-daemon --profile :app:testDebugUnitTest --test-dry-run --rerun -PdiscoverTests
+          - env -u BUILDKITE_ANALYTICS_TOKEN ./gradlew --no-daemon --console=plain --profile :app:testDebugUnitTest --test-dry-run --rerun -PdiscoverTests
           # Use freshly minted OIDC credentials after dependency installation.
           - unset BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN BUILDKITE_ANALYTICS_TOKEN
           - bktec run --plan-out app/build/test-plan.json
@@ -614,13 +614,14 @@ steps:
               test-runner: custom
               # Gradle's filters select exactly the class names bktec assigns.
               # --rerun prevents up-to-date/cache hits from skipping execution.
-              test-cmd: "./gradlew --no-daemon --profile :app:testDebugUnitTest --rerun -PtestClasses='{{testExamples}}'"
+              test-cmd: "./gradlew --no-daemon --console=plain --profile :app:testDebugUnitTest --rerun -PtestClasses='{{testExamples}}'"
               suite-slug: test-engine-client-examples
               # Only the Android collector uploads; bktec must not duplicate it.
               upload-results: false
               client-version: "3.5.0"
           - docker#v5.13.0:
-              image: "ghcr.io/cirruslabs/android-sdk:34"
+              image: "mobiledevops/android-sdk-image:34.0.0-jdk17"
+              user: root
               # The Tests plugin installs bktec on the host; run it in Docker.
               expand-volume-vars: true
               volumes:
