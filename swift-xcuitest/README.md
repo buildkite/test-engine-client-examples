@@ -37,8 +37,8 @@ Use the same Xcode version and simulator architecture on all three agents.
 Locally, from this directory:
 
 ```sh
-bin/build
-bin/test ExampleAppUITests/LaunchTests ExampleAppUITests/StatusTests
+BUILDKITE_TEST_ENGINE_XCTEST_SPLIT_BY=class bin/build
+BUILDKITE_TEST_ENGINE_XCTEST_SPLIT_BY=class bin/test ExampleAppUITests/LaunchTests ExampleAppUITests/StatusTests
 ```
 
 The default destination is `platform=iOS Simulator,name=iPhone 17`. Override
@@ -46,7 +46,8 @@ The default destination is `platform=iOS Simulator,name=iPhone 17`. Override
 
 ## Timing-aware class or method splits
 
-The collector automatically tags each execution with `test.selector.primary`,
+The pipeline opts in with `BUILDKITE_TEST_ENGINE_XCTEST_SPLIT_BY=class` in both
+steps. With that setting the collector tags each execution with `test.selector.primary`,
 using its own test bundle and concrete runtime class. This is essential: the
 custom runner cannot infer selector tags, and a class scope is **not** a
 selector. Test Engine sums
@@ -68,7 +69,8 @@ tags that exact identifier instead. The parentheses are part of Xcode's output.
 Objective-C-named and nested XCTest classes can instead have bare method names
 and mangled class identifiers; the collector uses the runtime class name to
 match them. `bin/test` forwards the same setting with Xcode's `TEST_RUNNER_`
-prefix. Changing granularity needs a fresh history-building run.
+prefix. Unset adds no selector tag, preserving existing file-based timing keys.
+Switching from file selectors or changing granularity needs a fresh history-building run.
 An explicit test-supplied selector tag overrides the automatic value; it must
 still match the discovered selector if that execution is to contribute timings.
 
@@ -83,6 +85,7 @@ Discovery includes all enabled XCTest targets in the test plan. The target
 prefix keeps classes in different targets disjoint. Link the collector into
 every test target whose results should be uploaded.
 Each test target's `PRODUCT_NAME` must equal its target name (Xcode's default); discovery fails loudly on a mismatch rather than silently losing timing matches.
+Native identifiers must contain no whitespace, quotes or backslashes: bktec 3.5.0's custom command substitution cannot preserve them. Discovery rejects them instead of silently skipping assigned tests.
 
 All enabled plan configurations run on the shard assigned their selector.
 A test enabled in two configurations has two legitimate executions, not one;
@@ -144,6 +147,10 @@ including **`BUILDKITE_TESTS_OTLP_TOKEN`**. Losing that token silently disables
 the synchronous relay path. Do not replace the environment forwarding with
 only an analytics upload token. A test that never finishes has no completed
 result to preserve.
+When the relay token is present, `bin/test` does not forward the real suite
+analytics token into XCTest; bktec retains it for upstream uploads. This does
+not isolate trusted tests from the agent or override credentials explicitly
+configured in your own test plan or app launch environment.
 
 The custom runner has **no automatic retries**. To use XCTest's native retry
 policy, add `-retry-tests-on-failure -test-iterations 3` to `bin/test`'s

@@ -12,7 +12,7 @@ case "$split_by" in class|method) ;; *) echo 'BUILDKITE_TEST_ENGINE_XCTEST_SPLIT
 if [[ ! -d artifacts/collector-source/.git ]]; then
   git init -q artifacts/collector-source
 fi
-git -C artifacts/collector-source fetch -q --depth 1 https://github.com/buildkite/bktest.git b1b34544514f23fc8be4322875f2fa02cd69f291
+git -C artifacts/collector-source fetch -q --depth 1 https://github.com/buildkite/bktest.git 826afacd83cec95b93734cb443264b8150b1232b
 git -C artifacts/collector-source checkout -q --detach FETCH_HEAD
 
 # Keep Xcode's original products and xctestrun together. Both xcodebuild and
@@ -42,6 +42,9 @@ xcodebuild test-without-building \
 jq -e '(.errors | length) == 0' artifacts/enumeration.json >/dev/null
 jq -r --arg split "$split_by" '
   [.values[].enabledTests[].identifier | select(split("/") | length == 3) |
+   if test("\\s") or (explode | any(. == 34 or . == 39 or . == 92)) then
+     error("Unsupported XCTest identifier \(. | @json): bktec custom runner cannot preserve whitespace, quotes or backslashes in selectors. Rename the target/class/method before splitting.")
+   else . end |
    if $split == "class" then split("/")[0:2] | join("/") else . end] |
   unique[]' artifacts/enumeration.json > artifacts/selectors.txt
 test -s artifacts/selectors.txt

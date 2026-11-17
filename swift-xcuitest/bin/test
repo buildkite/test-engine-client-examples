@@ -16,16 +16,26 @@ for selector in "$@"; do
   echo "Assigned selector: $selector"
   # Intersect assignments with discovery's enabled methods. Passing a class
   # straight to Xcode can override selectedTests in the customer's test plan.
-  while IFS= read -r method; do
-    only_testing+=("-only-testing:$method")
-  done < <(jq -r --arg selector "$selector" '
+  if ! methods="$(jq -r --arg selector "$selector" '
     [.values[].enabledTests[].identifier |
      select(. == $selector or startswith($selector + "/")) |
-     select(split("/") | length == 3)] | unique[]' "$artifacts_dir/enumeration.json")
+     select(split("/") | length == 3)] | unique[]' "$artifacts_dir/enumeration.json")"; then
+    echo 'Cannot read enabled tests from enumeration.json; run bin/build and restore its artifacts.' >&2
+    exit 1
+  fi
+  if [[ -z "$methods" ]]; then
+    echo "Assigned selector '$selector' matches no enabled tests in enumeration.json." >&2
+    exit 1
+  fi
+  while IFS= read -r method; do
+    only_testing+=("-only-testing:$method")
+  done <<< "$methods"
 done
-if [[ ${#only_testing[@]} -eq 0 ]]; then
-  echo 'No enabled methods assigned; running no tests.'
-  exit 0
+
+# XCTest needs only the loopback credential when bktec owns upstream uploads.
+# Also remove a caller's pre-existing prefixed value rather than forwarding it.
+if [[ -n "${BUILDKITE_TESTS_OTLP_TOKEN:-}" ]]; then
+  unset TEST_RUNNER_BUILDKITE_ANALYTICS_TOKEN
 fi
 
 for name in \
@@ -58,6 +68,9 @@ for name in \
   OTEL_EXPORTER_OTLP_TRACES_PROTOCOL \
   OTEL_RESOURCE_ATTRIBUTES
 do
+  if [[ "$name" == BUILDKITE_ANALYTICS_TOKEN && -n "${BUILDKITE_TESTS_OTLP_TOKEN:-}" ]]; then
+    continue
+  fi
   if [[ -n "${!name:-}" ]]; then
     export "TEST_RUNNER_${name}=${!name}"
   fi
