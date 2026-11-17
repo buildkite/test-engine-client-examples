@@ -36,7 +36,7 @@ defines supported versions, instrumentation, delivery and limitations.
 
 ## Jest examples
 
-- [`jest`](./jest): collector 1.14.0 with the default JSON uploads and bktec.
+- [`jest`](./jest): collector 1.15.0 with the default JSON uploads and bktec.
 - [`jest-otel`](./jest-otel): OpenTelemetry test results with manual and local
   HTTP spans.
 
