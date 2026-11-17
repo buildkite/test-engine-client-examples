@@ -34,32 +34,41 @@ Each job first runs Gradle's discovery without an analytics token:
 env -u BUILDKITE_ANALYTICS_TOKEN ./gradlew --no-daemon :app:testDebugUnitTest --test-dry-run --rerun -PdiscoverTests
 ```
 
-The shared Gradle script records distinct fully qualified class names from
-Gradle's test descriptors, not source file names or a maintained list. bktec
-requests a balanced plan and substitutes its job's assigned classes into:
+The shared Gradle script records the outermost class-bearing descriptor for each
+runnable subtree, not source file names or a maintained list. Container callbacks
+include Jupiter classes with only parameterized tests or test factories, without
+executing their methods during discovery. Nested classes and JUnit 4 suite members
+stay with their outermost runnable class or suite. Binary names keep their literal
+`$` spelling. bktec requests a balanced plan and substitutes its job's assigned
+classes into:
 
 ```sh
 ./gradlew --no-daemon --profile :app:testDebugUnitTest --rerun -PtestClasses='{{testExamples}}'
 ```
 
-`testClasses` applies Gradle's `includeTestsMatching` filters, the same class
-selectors used by `--tests`. `--rerun` forces the Test task to execute even after
+`testClasses` applies Gradle's `--tests` filters, intersecting the project's
+existing includes and retaining its exclusions rather than adding OR-ed includes.
+`--rerun` forces the Test task to execute even after
 discovery or a cache hit, without recompiling up-to-date dependencies. Empty
 assignments and filters matching no tests fail rather than running everything.
 bktec itself runs nothing for a job with no assigned tests.
 
-The collector tags **every method** with `test.selector.primary=<class name>`.
-Test Engine sums those method durations per class per run and uses recent
+The collector tags **every method** with `test.selector.primary=<runnable class or suite>`
+using that same outermost descriptor. Gradle's completed result supplies each
+method's timing, including when multiple Gradle forks overlap.
+Test Engine sums those method durations per selector per run and uses recent
 history (seven days) for later plans. A first run without history uses defaults.
 Test Engine may keep using default durations for new selectors for up to about an hour after their first run, so the build right after the first one may not be balanced yet.
 
-Splitting stays at class granularity: methods in one class always run together. `SlowTest` deliberately
+Splitting stays at runnable-subtree granularity: nested and suite-member tests stay together. `SlowTest` deliberately
 takes 15 seconds so a warm plan can put it alone opposite the four fast classes.
 
 ## Boundaries
 
-- **Method-level splitting is not enabled.** A class is a safe Gradle filter
-  across JUnit 4, JUnit Platform, parameterized tests, and custom display names.
+- **Method-level splitting is not enabled.** Outermost runnable classes/suites
+  are the assignment units across JUnit 4, JUnit Platform, parameterized tests,
+  factories, and custom display names; individual nested/member classes are not
+  independently assigned because Gradle's class filters select whole subtrees.
   Method selectors require framework-aware handling of descriptor names and
   matching collector tags; changing only the discovery list would silently
   discard timing history. A single slow method is indivisible anyway. Break up
@@ -85,6 +94,6 @@ takes 15 seconds so a warm plan can put it alone opposite the four fast classes.
   `connectedDebugAndroidTest`, discover instrumentation tests, and pass assigned
   class names with `-Pandroid.testInstrumentationRunnerArguments.class=ClassA,ClassB`.
   Use the instrumented collector and forward CI/token arguments to the device.
-  Its listener also needs class selector tags for timing-aware plans; this
-  companion change only updates the JVM unit-test collector. Gradle's
+  Its listener also needs runnable-selector tags for timing-aware plans; this
+  companion change does not add instrumentation splitting. Gradle's
   `--test-dry-run` applies to JVM `Test` tasks, not instrumentation tasks.

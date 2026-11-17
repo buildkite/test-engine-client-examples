@@ -14,7 +14,17 @@ tasks.withType(Test).configureEach {
             selectors.get().asFile.parentFile.mkdirs()
             selectors.get().asFile.text = ''
         }
-        beforeTest { descriptor -> classes.add(descriptor.className) }
+        // Containers also cover Jupiter parameterized/factory-only classes.
+        // Assign the outermost class/suite: Gradle selects its whole subtree.
+        def discover = { descriptor ->
+            def selector = null
+            for (def current = descriptor; current != null; current = current.parent) {
+                if (current.className != null) selector = current.className
+            }
+            if (selector != null) classes.add(selector)
+        }
+        beforeSuite { descriptor -> discover(descriptor) }
+        beforeTest { descriptor -> discover(descriptor) }
         afterSuite { descriptor, result ->
             if (descriptor.parent == null) {
                 selectors.get().asFile.text = classes.join('\n') + '\n'
@@ -28,10 +38,12 @@ tasks.withType(Test).configureEach {
         if (classes.empty) {
             throw new GradleException('testClasses must contain at least one class')
         }
-        filter {
-            classes.each { includeTestsMatching(it) }
+        doFirst {
+            // Gradle's --tests filter intersects build-script includes/excludes;
+            // includeTestsMatching would OR assignments with existing includes.
+            setTestNameIncludePatterns(classes)
+            logger.lifecycle("Assigned test classes: ${classes.join(' ')}")
         }
-        doFirst { logger.lifecycle("Assigned test classes: ${classes.join(' ')}") }
     }
 
     testLogging { events 'passed', 'failed', 'skipped' }
