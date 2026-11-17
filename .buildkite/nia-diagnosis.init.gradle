@@ -1,0 +1,12 @@
+import org.gradle.api.tasks.testing.Test
+
+// Verification branch only. Observe the original fork policy without changing it.
+allprojects {
+    tasks.withType(Test).configureEach {
+        outputs.upToDateWhen { false }
+        outputs.cacheIf { false }
+        doFirst {
+            logger.lifecycle("NIA_FORK_POLICY task=${path} maxParallelForks=${maxParallelForks} forkEvery=${forkEvery} executable=${executable}")
+        }
+    }
+}

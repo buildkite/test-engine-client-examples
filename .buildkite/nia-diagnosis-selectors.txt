@@ -1,0 +1,17 @@
+com.google.samples.apps.nowinandroid.core.data.CompositeUserNewsResourceRepositoryTest
+com.google.samples.apps.nowinandroid.core.data.model.NetworkEntityKtTest
+com.google.samples.apps.nowinandroid.core.data.repository.OfflineFirstTopicsRepositoryTest
+com.google.samples.apps.nowinandroid.core.database.model.PopulatedNewsResourceKtTest
+com.google.samples.apps.nowinandroid.core.datastore.ListToMapMigrationTest
+com.google.samples.apps.nowinandroid.core.datastore.UserPreferencesSerializerTest
+com.google.samples.apps.nowinandroid.core.designsystem.ButtonScreenshotTests
+com.google.samples.apps.nowinandroid.core.designsystem.IconButtonScreenshotTests
+com.google.samples.apps.nowinandroid.core.designsystem.NavigationScreenshotTests
+com.google.samples.apps.nowinandroid.core.designsystem.TagScreenshotTests
+com.google.samples.apps.nowinandroid.core.designsystem.TopAppBarScreenshotTests
+com.google.samples.apps.nowinandroid.core.network.demo.DemoNiaNetworkDataSourceTest
+com.google.samples.apps.nowinandroid.feature.foryou.ForYouScreenScreenshotTests
+com.google.samples.apps.nowinandroid.feature.search.SearchViewModelTest
+com.google.samples.apps.nowinandroid.feature.topic.TopicViewModelTest
+com.google.samples.apps.nowinandroid.ui.InterestsListDetailScreenTest
+com.google.samples.apps.nowinandroid.ui.SnackbarInsetsScreenshotTests
