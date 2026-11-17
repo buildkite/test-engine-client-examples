@@ -1,50 +1,100 @@
 import org.gradle.api.tasks.testing.Test
+import org.gradle.api.tasks.testing.junitplatform.JUnitPlatformOptions
 
-// Gradle discovers tests using the project's actual framework and classpath.
-// --test-dry-run reports them without executing test methods. Run discovery
-// without BUILDKITE_ANALYTICS_TOKEN so skipped dry-run results aren't uploaded.
+// Apply once from the root project. Select one variant across every module;
+// JVM-only builds use -PsplitTestTask=test instead of testDebugUnitTest.
+def testTaskName = providers.gradleProperty('splitTestTask').getOrElse('testDebugUnitTest')
 def discovering = providers.gradleProperty('discoverTests').isPresent()
 def assignedClasses = providers.gradleProperty('testClasses')
+def combinedSelectors = layout.buildDirectory.file('test-selectors/all.txt').get().asFile
+def selectedTasks = allprojects.collect { p -> p.tasks.withType(Test).matching { it.name == testTaskName } }
 
-tasks.withType(Test).configureEach {
+def assignments = []
+if (!discovering && assignedClasses.isPresent()) {
+    assignments = assignedClasses.get().tokenize()
+    if (assignments.empty) throw new GradleException('testClasses must contain at least one class')
+    if (!combinedSelectors.exists()) throw new GradleException('Run splitTests -PdiscoverTests before assigning classes')
+    def unknown = assignments - combinedSelectors.readLines()
+    if (!unknown.empty) throw new GradleException("Undiscovered test classes: ${unknown}")
+}
+
+tasks.register('splitTests') {
+    dependsOn(selectedTasks)
     if (discovering) {
-        def classes = new TreeSet<String>()
-        def selectors = layout.buildDirectory.file("test-selectors/${name}.txt")
-        doFirst {
-            selectors.get().asFile.parentFile.mkdirs()
-            selectors.get().asFile.text = ''
-        }
-        // Containers also cover Jupiter parameterized/factory-only classes.
-        // Assign the outermost class/suite: Gradle selects its whole subtree.
-        def discover = { descriptor ->
-            def selector = null
-            for (def current = descriptor; current != null; current = current.parent) {
-                if (current.className != null) selector = current.className
-            }
-            if (selector != null) classes.add(selector)
-        }
-        beforeSuite { descriptor -> discover(descriptor) }
-        beforeTest { descriptor -> discover(descriptor) }
-        afterSuite { descriptor, result ->
-            if (descriptor.parent == null) {
-                selectors.get().asFile.text = classes.join('\n') + '\n'
-                logger.lifecycle("Discovered test classes: ${classes.join(' ')}")
-            }
-        }
-    } else if (assignedClasses.isPresent()) {
-        // These are Gradle's class-name filters (the same values as --tests).
-        // Reject an empty assignment rather than accidentally running everything.
-        def classes = assignedClasses.get().tokenize()
-        if (classes.empty) {
-            throw new GradleException('testClasses must contain at least one class')
-        }
-        doFirst {
-            // Gradle's --tests filter intersects build-script includes/excludes;
-            // includeTestsMatching would OR assignments with existing includes.
-            setTestNameIncludePatterns(classes)
-            logger.lifecycle("Assigned test classes: ${classes.join(' ')}")
+        doLast {
+            def owners = new TreeMap<String, String>()
+            selectedTasks.each { tasks -> tasks.each { task ->
+                if (!task.state.noSource) {
+                    task.project.layout.buildDirectory.file("test-selectors/${task.name}.txt").get().asFile.readLines().findAll().each { selector ->
+                        def previous = owners.put(selector, task.path)
+                        if (previous != null) {
+                            throw new GradleException("Duplicate selector '${selector}' in ${previous} and ${task.path}; class names must be unique across selected modules")
+                        }
+                    }
+                }
+            } }
+            combinedSelectors.parentFile.mkdirs()
+            combinedSelectors.text = owners.keySet().join('\n') + '\n'
+            logger.lifecycle("Discovered ${owners.size()} selectors across modules: ${owners}")
         }
     }
+}
 
-    testLogging { events 'passed', 'failed', 'skipped' }
+allprojects {
+    tasks.withType(Test).matching { it.name == testTaskName }.configureEach {
+        def selectors = project.layout.buildDirectory.file("test-selectors/${name}.txt").get().asFile
+        if (discovering || assignedClasses.isPresent()) {
+            // Force only Test tasks, not their compilation dependencies. The root
+            // task's --rerun alone would not force its dependent Test tasks.
+            outputs.upToDateWhen { false }
+            outputs.cacheIf { false }
+        }
+        if (discovering) {
+            dryRun.set(true)
+            def classes = new TreeSet<String>()
+            doFirst {
+                selectors.parentFile.mkdirs()
+                selectors.text = ''
+            }
+            // Use the same outermost class/suite as the collector's timing tag.
+            def discover = { descriptor ->
+                def selector = null
+                for (def current = descriptor; current != null; current = current.parent) {
+                    if (current.className != null) selector = current.className
+                }
+                if (selector != null) {
+                    if (selector =~ /\s/) {
+                        throw new GradleException("Cannot split selector '${selector}': bktec's custom runner joins selectors with spaces; class names must not contain whitespace")
+                    }
+                    classes.add(selector)
+                }
+            }
+            // Atomic callbacks omit empty JUnit 4 suites and Enclosed placeholders.
+            beforeTest { descriptor -> discover(descriptor) }
+            beforeSuite { descriptor ->
+                // Platform templates/factories have method containers but no
+                // atomic dry-run callbacks. Class containers aren't enough.
+                if (options instanceof JUnitPlatformOptions && descriptor.className != null &&
+                    descriptor.parent?.className == descriptor.className && descriptor.name != descriptor.className) {
+                    discover(descriptor)
+                }
+            }
+            afterSuite { descriptor, result ->
+                if (descriptor.parent == null) {
+                    selectors.text = classes.join('\n') + '\n'
+                    logger.lifecycle("Discovered test classes for ${path}: ${classes.join(' ')}")
+                }
+            }
+        } else if (assignedClasses.isPresent()) {
+            def owned = selectors.exists() ? selectors.readLines() : []
+            def classes = assignments.findAll { it in owned }
+            onlyIf("this module owns assigned classes") { !classes.empty }
+            doFirst {
+                // --tests filters intersect existing includes and keep exclusions.
+                setTestNameIncludePatterns(classes)
+                logger.lifecycle("Assigned test classes for ${path}: ${classes.join(' ')}")
+            }
+        }
+        testLogging { events 'passed', 'failed', 'skipped' }
+    }
 }
