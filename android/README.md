@@ -30,7 +30,7 @@ timing-aware setup; the intended next version is 0.4.1, pending release approval
    desired variant's task name. Modules without that task are ignored. Use a JDK
    Docker image instead of the Android SDK image for JVM-only projects.
 
-Each job first runs Gradle's discovery without an analytics token:
+The discovery job runs Gradle once without an analytics token:
 
 ```sh
 env -u BUILDKITE_ANALYTICS_TOKEN ./gradlew --no-daemon splitTests -PdiscoverTests
@@ -39,7 +39,8 @@ env -u BUILDKITE_ANALYTICS_TOKEN ./gradlew --no-daemon splitTests -PdiscoverTest
 The root task runs each selected `Test` task in Gradle dry-run mode, merges the
 selectors into `build/test-selectors/all.txt`, and retains each task's discovered
 classes in `<module>/build/test-selectors/<task-name>.txt` for ownership routing.
-Keep those files between discovery and execution in the same job.
+The pipeline uploads those manifests once. Each shard downloads them from this
+build's `android-discover` step before running Gradle, so it configures only once.
 
 The script records the outermost class-bearing descriptor for each runnable
 subtree, not source file names or a maintained list. Atomic test callbacks omit
@@ -101,11 +102,11 @@ both modules; the library task then skips on SlowTest's shard.
   configured. Failures retain Gradle's exit code. The pipeline soft-fails exit 1
   only because this repository intentionally includes failing and flaky tests.
   Remove that setting for a normal CI gate.
-- **Build cost:** every shard configures Gradle and compiles before discovery.
-  The subsequent filtered invocation reuses its local compilation outputs.
-  Splitting does not divide compilation work; for short suites that overhead can
-  outweigh test savings. The example uploads Gradle `--profile` reports so you
-  can measure configuration, compilation, and test-task execution separately.
+- **Build cost:** discovery configures and compiles once in its own job; every
+  shard still configures and compiles its own dependencies. Transferring selectors
+  does not transfer compilation outputs. Splitting does not divide compilation
+  work; for short suites that overhead can outweigh test savings. The pipeline
+  uploads Gradle `--profile` reports for discovery and each execution job.
   A shared Gradle remote build cache can reuse compilation across isolated
   agents, but requires a cache endpoint and credentials; this example does not
   assume one. The script disables Test-task caching/up-to-date reuse, including
@@ -117,3 +118,40 @@ both modules; the library task then skips on SlowTest's shard.
   Its listener also needs runnable-selector tags for timing-aware plans; this
   companion change does not add instrumentation splitting. Gradle's
   `--test-dry-run` applies to JVM `Test` tasks, not instrumentation tasks.
+
+## Discovery overhead and large builds
+
+Use the separate discovery step in the pipeline for large multi-module builds,
+rather than adding discovery to every parallel job. In source-built collector
+[build #1170](https://buildkite.com/buildkite/test-engine-client-examples/builds/1170),
+per-shard discovery added **83.940 / 85.280 seconds**, including **66.380 / 68.310
+seconds configuring projects**, before the assigned invocations took another
+25.023 / 10.911 seconds (configuration 6.818 / 7.077 seconds). These are single-run
+observations of this small Android example with included collector source, not
+published-plugin benchmarks or estimates for a customer's build.
+
+The separate step removes that extra Gradle invocation from each worker and pays
+discovery once before the shards. It does not remove the initial discovery from
+the critical path, or guarantee a faster total build: clean workers still compile,
+and artifact transfer/queueing also cost time. Measure your own task graph and
+configure a shared compilation cache if appropriate.
+
+Do not enable configuration cache as a substitute for the discovery step here.
+With Gradle 8.9, the current discovery task cannot store its task-collection closure
+in the configuration cache; changing from discovery to assignments also invalidates
+the entry because the Gradle properties change. An assignment-only invocation
+can store an entry, but that does not make discovery and execution share one
+configuration. Configuration-cache support is not claimed for this example.
+
+A local deterministic JVM stress fixture (not included in this example) used
+16 modules, 320 classes, 640 test methods and 3,986 registered tasks, of which
+3,520 were inert tasks to exercise a larger task registry. Discovery took
+15.009 seconds wall / 1.083 seconds configuration; three assigned invocations
+took 12.293 / 10.444 / 11.103 seconds wall, with 1.558 / 0.960 / 1.100 seconds
+configuration. Their exact (class, method, result) multiset matched the native
+control's 640 methods. Repeating an identical assignment with configuration cache
+reduced wall time from 8.951 to 7.254 seconds and configuration from 0.971 to 0,
+but switching to discovery failed to store the cache. These are single-run local
+measurements, without uploads or an Android plugin; a large real Android build's
+configuration/dependency costs remain unproven. Profile that build before
+choosing parallelism or claiming a speedup.

@@ -51,8 +51,13 @@ allprojects {
         }
         if (discovering) {
             dryRun.set(true)
+            // Dry-run XML would look like extra skipped executions on modules
+            // that receive no assignments later. Publish only real run reports.
+            reports.junitXml.required.set(false)
+            reports.html.required.set(false)
             def classes = new TreeSet<String>()
             doFirst {
+                reports.junitXml.outputLocation.get().asFile.deleteDir()
                 selectors.parentFile.mkdirs()
                 selectors.text = ''
             }

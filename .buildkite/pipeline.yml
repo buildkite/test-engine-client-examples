@@ -589,9 +589,11 @@ steps:
 
   - group: ":android: Android"
     steps:
-      - label: ":android: Android"
-        key: android
-        parallelism: 2
+      # Discover once, not once per shard: large multi-module builds otherwise
+      # pay for configuring Gradle twice on every worker. Transfer only selector
+      # manifests; workers still compile their own task dependencies/cache hits.
+      - label: ":android: Discover JVM tests"
+        key: android-discover
         commands:
           # Verification branch only; not part of the customer-facing PR.
           - git clone --depth 1 --branch android-selector-timings https://github.com/buildkite/bktest.git .collector-source
@@ -603,11 +605,32 @@ steps:
           - git -C .collector-source rev-parse HEAD
           - git -C .collector-source diff --cached --stat
           - cd android
-          # Ask Gradle to discover tests, without executing methods or uploading
-          # skipped dry-run results. splitTests covers every module's debug JVM
-          # task, merges selectors, and keeps per-task ownership for execution.
+          # Discovery enables Gradle dry-run mode and never uploads callbacks.
           - env -u BUILDKITE_ANALYTICS_TOKEN ./gradlew --no-daemon --console=plain --profile splitTests -PdiscoverTests
-          # Use freshly minted OIDC credentials after dependency installation.
+        artifact_paths:
+          - android/**/build/test-selectors/*.txt
+          - android/build/reports/profile/*
+        plugins:
+          - docker#v5.13.0:
+              image: "mobiledevops/android-sdk-image:34.0.0-jdk17"
+              user: root
+              propagate-environment: true
+
+      - label: ":android: Android"
+        key: android
+        depends_on: android-discover
+        parallelism: 2
+        commands:
+          # Download from this build's discovery job before Gradle reads ownership.
+          - buildkite-agent artifact download "android/**/build/test-selectors/*.txt" . --step android-discover
+          - git clone --depth 1 --branch android-selector-timings https://github.com/buildkite/bktest.git .collector-source
+          - git -C .collector-source fetch --depth 1 origin 4cc0984ebc4dec417effa882d5aae566de28783f
+          - git -C .collector-source checkout 4cc0984ebc4dec417effa882d5aae566de28783f
+          - git -C .collector-source fetch --depth 2 origin b5920c0f33ca1d297267ced6fd30748b6b8aaa20
+          - git -C .collector-source cherry-pick --no-commit b5920c0f33ca1d297267ced6fd30748b6b8aaa20
+          - export ANDROID_COLLECTOR_SOURCE="$$PWD/.collector-source/test-collector-android"
+          - cd android
+          # Use freshly minted OIDC credentials for the assigned-test invocation.
           - unset BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN BUILDKITE_ANALYTICS_TOKEN
           - bktec run --plan-out app/build/test-plan.json
         artifact_paths:
