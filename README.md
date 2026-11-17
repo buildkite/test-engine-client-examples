@@ -31,27 +31,27 @@ A Buildkite Test Collector is not a general prerequisite for using bktec. Some
 examples also demonstrate OpenTelemetry collection. Check the matching pipeline
 step for the complete configuration.
 
-The [versioned JavaScript OpenTelemetry guide](https://github.com/buildkite/bktest/blob/test-collector-javascript/v1.14.0/test-collector-javascript/docs/opentelemetry.md)
+The [versioned JavaScript OpenTelemetry guide](https://github.com/buildkite/bktest/blob/test-collector-javascript/v1.15.0/test-collector-javascript/docs/opentelemetry.md)
 defines supported versions, instrumentation, delivery and limitations.
 
 ## Jest examples
 
 - [`jest`](./jest): collector 1.14.0 with the default JSON uploads and bktec.
-- [`jest-otel`](./jest-otel): OpenTelemetry test results with manual and local
-  HTTP spans.
+- [`jest-otel`](./jest-otel): collector 1.15.0 with OpenTelemetry test results,
+  manual, local HTTP and fetch spans.
 
 ## Playwright examples
 
 - [`playwright`](./playwright): JSON collection with bktec, including pool runs.
-- [`playwright-otel`](./playwright-otel): OpenTelemetry test results with nested
-  steps, browser actions and assertions.
+- [`playwright-otel`](./playwright-otel): collector 1.15.0 with OpenTelemetry test
+  results, nested steps, browser actions and assertions.
 
 ## Vitest examples
 
 - [`vitest-4`](./vitest-4): Vitest 4.
 - [`vitest`](./vitest): the current Vitest major version (5).
-- [`vitest-otel`](./vitest-otel): OpenTelemetry test results with hook, manual,
-  local HTTP and fetch spans (Vitest 4/5).
+- [`vitest-otel`](./vitest-otel): collector 1.15.0 with OpenTelemetry test results,
+  hook, manual, local HTTP and fetch spans (Vitest 4/5).
 
 The JSON examples run Vitest directly and upload results using the Buildkite Test
 Collector. They have independent npm installs to keep their Vitest versions

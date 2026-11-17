@@ -1,18 +1,25 @@
 # Vitest OpenTelemetry
 
 Collect test results, hook, manual, HTTP and fetch spans with
-`buildkite-test-collector` 1.14.0. For JSON uploads, see [`vitest`](../vitest) or
+`buildkite-test-collector` 1.15.0. For JSON uploads, see [`vitest`](../vitest) or
 [`vitest-4`](../vitest-4).
 
 ## Setup
 
-Use Node 24. From the repository root:
+Use Node 24.19.0 from `mise.toml`. From the repository root:
 
 ```sh
 npm ci --prefix vitest-otel
 export BUILDKITE_ANALYTICS_TOKEN="your-suite-token"
 npm test --prefix vitest-otel
 ```
+
+The dependencies use the [collector guide]'s SDK 3 setup: API `^1.10`,
+`sdk-trace` and `context-async-hooks` `^3`, and the OTLP protobuf exporter
+`~0.301.0`, with HTTP `^0.301.0` and undici `^0.35.0` instrumentation.
+SDK 3 requires Node 22.15+ and API 1.10+. When upgrading from collector 1.14.0,
+replace `sdk-trace-base` with `sdk-trace` (SDK 2.9+ or 3); without it,
+OpenTelemetry mode warns and uploads nothing.
 
 Without a suite token, tests run without uploading. OpenTelemetry mode never
 falls back to JSON.
@@ -55,4 +62,4 @@ data before using real application data.
 
 See the [collector guide] for supported versions, instrumentation and limitations.
 
-[collector guide]: https://github.com/buildkite/bktest/blob/test-collector-javascript/v1.14.0/test-collector-javascript/docs/opentelemetry.md
+[collector guide]: https://github.com/buildkite/bktest/blob/test-collector-javascript/v1.15.0/test-collector-javascript/docs/opentelemetry.md#setup-1
