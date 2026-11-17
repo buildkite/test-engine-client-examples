@@ -5,9 +5,11 @@ tests, with Gradle discovering and selecting the tests and the Android collector
 uploading their results.
 
 Requires JDK 17+, the Android SDK 34, Gradle 8.3+ (`--test-dry-run`), bktec 3.5.0,
-and an Android collector release containing class selector tags. **Collector
-0.4.0 does not supply timing history for these selectors.** The companion
-collector change must be released before this example can be copied as a
+and an Android collector release containing
+[runnable selector tags and per-test timings](https://github.com/buildkite/bktest/pull/126)
+and [complete uploads beyond 5,000 results](https://github.com/buildkite/bktest/pull/127).
+**Collector 0.4.0 does not supply timing history for these selectors.** Those
+companion changes must be released before this example can be copied as a
 timing-aware setup; the intended next version is 0.4.1, pending release approval.
 
 ## Copying the example
