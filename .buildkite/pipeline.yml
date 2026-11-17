@@ -600,7 +600,7 @@ steps:
           # Plain Docker deliberately avoids the plugin's automatic agent-job
           # socket mount. Discovery receives no credentials or host environment.
           - >-
-            docker run --rm --volume "$$PWD:/workdir" --workdir /workdir/android
+            docker run --rm --user 0:0 --volume "$$PWD:/workdir" --workdir /workdir/android
             --env ANDROID_COLLECTOR_SOURCE=/workdir/.collector-source/test-collector-android
             mobiledevops/android-sdk-image:34.0.0-jdk17
             sh /workdir/.buildkite/android-proof-env.sh
@@ -625,7 +625,7 @@ steps:
           # credential and named CI fields, never the agent token/job-API socket.
           # Do not unset the suite tokens: the container cannot mint replacements.
           - >-
-            docker run --rm --volume "$$PWD:/workdir" --workdir /workdir/android
+            docker run --rm --user 0:0 --volume "$$PWD:/workdir" --workdir /workdir/android
             --volume "$$BUILDKITE_TEST_ENGINE_CLIENT_PATH:/usr/local/bin/bktec:ro"
             --env BUILDKITE --env BUILDKITE_BUILD_ID --env BUILDKITE_BUILD_NUMBER
             --env BUILDKITE_JOB_ID --env BUILDKITE_STEP_ID --env BUILDKITE_RETRY_COUNT
@@ -669,7 +669,7 @@ steps:
         commands:
           - bash .buildkite/android-proof-bootstrap.sh
           - >-
-            docker run --rm --volume "$$PWD:/workdir" --workdir /workdir/android
+            docker run --rm --user 0:0 --volume "$$PWD:/workdir" --workdir /workdir/android
             --env ANDROID_COLLECTOR_SOURCE=/workdir/.collector-source/test-collector-android
             mobiledevops/android-sdk-image:34.0.0-jdk17
             sh /workdir/.buildkite/android-proof-env.sh
@@ -687,7 +687,7 @@ steps:
         commands:
           - bash .buildkite/android-proof-bootstrap.sh
           - >-
-            docker run --rm --volume "$$PWD:/workdir" --workdir /workdir/android
+            docker run --rm --user 0:0 --volume "$$PWD:/workdir" --workdir /workdir/android
             --env BUILDKITE --env BUILDKITE_BUILD_ID --env BUILDKITE_BUILD_NUMBER
             --env BUILDKITE_JOB_ID --env BUILDKITE_COMMIT --env BUILDKITE_BRANCH
             --env BUILDKITE_BUILD_URL --env BUILDKITE_MESSAGE --env BUILDKITE_ANALYTICS_TOKEN
@@ -707,6 +707,81 @@ steps:
               oidc-lifetime: 7200
               upload-results: false
               install-client: false
+
+  # Verification branch only: unchanged Now in Android tests, demo variant only.
+  - group: ":android: Now in Android proof"
+    if: build.env("NIA_PROOF") == "true"
+    steps:
+      - label: "NIA native demo control"
+        key: nia-control
+        timeout_in_minutes: 60
+        commands:
+          - bash .buildkite/android-proof-bootstrap.sh
+          - python3 .buildkite/prepare-nowinandroid.py
+          - >-
+            docker run --rm --user 0:0 --volume "$$PWD:/workdir" --workdir /workdir
+            --env NIA_PROOF_ROLE=control
+            --env ANDROID_COLLECTOR_SOURCE=/workdir/.collector-source/test-collector-android
+            mobiledevops/android-sdk-image:34.0.0-jdk17
+            sh /workdir/.buildkite/android-proof-env.sh bash /workdir/.buildkite/nowinandroid-proof.sh
+        artifact_paths:
+          - .nowinandroid/**/build/test-results/**/*.xml
+          - .nowinandroid/build/reports/profile/*
+          - .nowinandroid/native-tasks.log
+
+      - label: "NIA demo discovery"
+        key: nia-discover
+        timeout_in_minutes: 60
+        commands:
+          - bash .buildkite/android-proof-bootstrap.sh
+          - python3 .buildkite/prepare-nowinandroid.py
+          - >-
+            docker run --rm --user 0:0 --volume "$$PWD:/workdir" --workdir /workdir
+            --env NIA_PROOF_ROLE=discovery
+            --env ANDROID_COLLECTOR_SOURCE=/workdir/.collector-source/test-collector-android
+            mobiledevops/android-sdk-image:34.0.0-jdk17
+            sh /workdir/.buildkite/android-proof-env.sh bash /workdir/.buildkite/nowinandroid-proof.sh
+        artifact_paths:
+          - .nowinandroid/**/build/test-selectors/*.txt
+          - .nowinandroid/build/reports/profile/*
+
+      - label: "NIA demo shard"
+        key: nia-shard
+        depends_on: nia-discover
+        parallelism: 2
+        timeout_in_minutes: 60
+        commands:
+          - bash .buildkite/android-proof-bootstrap.sh
+          - python3 .buildkite/prepare-nowinandroid.py
+          - buildkite-agent artifact download ".nowinandroid/*/test-selectors/*.txt" . --step nia-discover
+          - >-
+            docker run --rm --user 0:0 --volume "$$PWD:/workdir" --workdir /workdir/.nowinandroid
+            --volume "$$BUILDKITE_TEST_ENGINE_CLIENT_PATH:/usr/local/bin/bktec:ro"
+            --env NIA_PROOF_ROLE=shard
+            --env BUILDKITE --env BUILDKITE_BUILD_ID --env BUILDKITE_BUILD_NUMBER
+            --env BUILDKITE_JOB_ID --env BUILDKITE_COMMIT --env BUILDKITE_BRANCH
+            --env BUILDKITE_BUILD_URL --env BUILDKITE_MESSAGE --env BUILDKITE_RETRY_COUNT
+            --env BUILDKITE_PARALLEL_JOB --env BUILDKITE_PARALLEL_JOB_COUNT
+            --env BUILDKITE_TEST_ENGINE_TEST_RUNNER --env BUILDKITE_TEST_ENGINE_TEST_CMD
+            --env BUILDKITE_TEST_ENGINE_SUITE_SLUG --env BUILDKITE_TEST_ENGINE_UPLOAD_RESULTS
+            --env BUILDKITE_TEST_ENGINE_SELECTOR_FILE
+            --env BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN --env BUILDKITE_ANALYTICS_TOKEN
+            --env ANDROID_COLLECTOR_SOURCE=/workdir/.collector-source/test-collector-android
+            mobiledevops/android-sdk-image:34.0.0-jdk17
+            sh /workdir/.buildkite/android-proof-env.sh bash /workdir/.buildkite/nowinandroid-proof.sh
+        artifact_paths:
+          - .nowinandroid/**/build/test-results/**/*.xml
+          - .nowinandroid/build/test-plan.json
+          - .nowinandroid/build/reports/profile/*
+        plugins:
+          - tests#v1.1.0:
+              test-runner: custom
+              test-cmd: "./gradlew --no-daemon --no-configuration-cache --profile --continue --max-workers=4 splitTests -PsplitTestTask=testDemoDebugUnitTest -PtestClasses='{{testExamples}}'"
+              selector-file: build/test-selectors/all.txt
+              suite-slug: test-engine-client-examples
+              oidc-lifetime: 7200
+              upload-results: false
+              client-version: "3.5.0"
 
   - group: ":golang: Go"
     steps:
