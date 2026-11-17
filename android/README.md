@@ -136,6 +136,14 @@ the critical path, or guarantee a faster total build: clean workers still compil
 and artifact transfer/queueing also cost time. Measure your own task graph and
 configure a shared compilation cache if appropriate.
 
+With that separate step, source-built
+[build #1177](https://buildkite.com/buildkite/test-engine-client-examples/builds/1177)
+paid 96.150 seconds for discovery (76.750 configuring), then 98.590 / 86.940
+seconds for the assigned invocations (67.270 / 70.620 configuring). Each worker
+configured only once, but clean workers paid the included collector's source-build
+cost again. These measurements demonstrate fewer discovery invocations, not a
+wall-clock speedup or the cost of the future published collector.
+
 Do not enable configuration cache as a substitute for the discovery step here.
 With Gradle 8.9, the current discovery task cannot store its task-collection closure
 in the configuration cache; changing from discovery to assignments also invalidates
