@@ -41,3 +41,21 @@ test('captures an HTTP request', async () => {
     });
   }
 });
+
+test('captures a fetch request', async () => {
+  const server = http.createServer((request, response) => {
+    response.end('fetched');
+  });
+  server.listen(0, '127.0.0.1');
+  await once(server, 'listening');
+
+  try {
+    const response = await fetch(`http://127.0.0.1:${server.address().port}/widget`);
+    expect(response.status).toBe(200);
+    expect(await response.text()).toBe('fetched');
+  } finally {
+    await new Promise((resolve, reject) => {
+      server.close((error) => error ? reject(error) : resolve());
+    });
+  }
+});
