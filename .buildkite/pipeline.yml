@@ -593,6 +593,11 @@ steps:
         key: android
         parallelism: 2
         commands:
+          # Verification branch only; not part of the customer-facing PR.
+          - git clone --depth 1 --branch android-selector-timings https://github.com/buildkite/bktest.git .collector-source
+          - git -C .collector-source checkout 3aab4f0b85b4109a9f36fbf97df6d2cac9e46eb3
+          - export ANDROID_COLLECTOR_SOURCE="$$PWD/.collector-source/test-collector-android"
+          - git -C .collector-source rev-parse HEAD
           - cd android
           # Ask Gradle to discover tests, without executing methods or uploading
           # skipped dry-run results that would overwrite real timing history.

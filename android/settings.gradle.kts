@@ -1,4 +1,6 @@
 pluginManagement {
+    // Verification branch only: exercise the companion collector before release.
+    System.getenv("ANDROID_COLLECTOR_SOURCE")?.let { includeBuild(it) }
     repositories {
         google()
         mavenCentral()
