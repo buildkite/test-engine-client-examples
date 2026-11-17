@@ -1,15 +1,18 @@
 import Core
 import XCTest
 
-// Match the native identifiers in bin/build exactly, including () for methods.
+// Match the native identifiers in bin/build, including Objective-C class names.
 // In this project the test target and Swift module are both ExampleAppUITests.
 class SplitUITestCase: XCTestCase {
     override func setUpWithError() throws {
         continueAfterFailure = false
-        var selector = "ExampleAppUITests/\(type(of: self))"
+        let test = name.dropFirst(2).dropLast().split(separator: " ", maxSplits: 1)
+        let runtimeClass = NSStringFromClass(type(of: self))
+        var selector = "ExampleAppUITests/\(runtimeClass.split(separator: ".").last!)"
         if ProcessInfo.processInfo.environment["TEST_SPLIT_BY"] == "method" {
-            let method = name.split(separator: " ").last!.trimmingCharacters(in: CharacterSet(charactersIn: "]"))
-            selector += "/\(method)()"
+            // Xcode uses Swift method() spelling for Module.Class, but bare
+            // Objective-C selectors for custom/mangled runtime class names.
+            selector += "/\(test[1])\(runtimeClass.contains(".") ? "()" : "")"
         }
         tagExecution("test.selector.primary", selector)
         print("Execution selector: \(selector)")

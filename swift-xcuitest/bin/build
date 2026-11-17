@@ -29,4 +29,6 @@ jq -r --arg split "$split_by" '
 test -s artifacts/selectors.txt
 echo "Discovered $split_by selectors:"
 cat artifacts/selectors.txt
-tar -czf artifacts/tests.tar.gz -C artifacts Tests.xctestproducts selectors.txt
+# Keep the enabled method set: class-level -only-testing can override a
+# test plan's selectedTests and otherwise re-enable excluded methods.
+tar -czf artifacts/tests.tar.gz -C artifacts Tests.xctestproducts selectors.txt enumeration.json

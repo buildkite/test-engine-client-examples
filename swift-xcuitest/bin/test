@@ -14,8 +14,19 @@ fi
 only_testing=()
 for selector in "$@"; do
   echo "Assigned selector: $selector"
-  only_testing+=("-only-testing:$selector")
+  # Intersect assignments with discovery's enabled methods. Passing a class
+  # straight to Xcode can override selectedTests in the customer's test plan.
+  while IFS= read -r method; do
+    only_testing+=("-only-testing:$method")
+  done < <(jq -r --arg selector "$selector" '
+    [.values[].enabledTests[].identifier |
+     select(. == $selector or startswith($selector + "/")) |
+     select(split("/") | length == 3)] | unique[]' "$artifacts_dir/enumeration.json")
 done
+if [[ ${#only_testing[@]} -eq 0 ]]; then
+  echo 'No enabled methods assigned; running no tests.'
+  exit 0
+fi
 
 for name in \
   TEST_SPLIT_BY \

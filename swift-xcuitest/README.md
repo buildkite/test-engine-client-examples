@@ -17,10 +17,13 @@ No unreleased collector change is needed.
 `bin/build` uses `build-for-testing` and Xcode's native `-enumerate-tests`
 JSON output. It derives class selectors such as `ExampleAppUITests/LaunchTests`
 from enabled method identifiers, ignoring empty classes. It archives the
-relocatable `.xctestproducts` bundle and newline-delimited `selectors.txt`.
-Each shard downloads the same archive and runs `test-without-building` with
-one `-only-testing:` argument per selector assigned by bktec. Empty assignments
-run nothing. Compilation and package resolution happen only in the build job.
+relocatable `.xctestproducts` bundle, enumeration JSON and newline-delimited
+`selectors.txt`. Each shard intersects its assignments with the enumerated
+enabled methods and passes those exact identifiers to `test-without-building`.
+This matters even for class splits: `-only-testing:Target/Class` can override
+a plan's `selectedTests` and re-enable methods the plan excluded. Empty
+assignments run nothing. Compilation and package resolution happen only in
+the build job.
 Use the same Xcode version and simulator architecture on all three agents.
 
 Locally, from this directory:
@@ -38,19 +41,30 @@ The default destination is `platform=iOS Simulator,name=iPhone 17`. Override
 Every test method tags its execution with `test.selector.primary` in a shared
 setup hook. This is essential: the custom runner cannot infer selector tags,
 and the Swift collector's class scope is **not** a selector. Test Engine sums
-the methods' durations for each exact selector, so subsequent builds balance
-the same classes using recorded timings instead of default estimates.
+the methods' durations for each exact selector, so subsequent builds can balance
+the same classes using recorded timings once the planner's history snapshot
+refreshes.
 The first run (and newly added tests, or history older than seven days) can
-use default durations. The deliberately slow class makes timing-based placement
+use default durations. An immediate repeat can still hit cached missing history;
+check bktec's historical-timing summary rather than assuming the upload is
+immediately visible.
+The deliberately slow class makes timing-based placement
 visibly different from an even-count split.
 
 For a suite dominated by one large class, set `TEST_SPLIT_BY: method` in
 **both** pipeline steps. Discovery then keeps full identifiers such as
 `ExampleAppUITests/ExampleAppUITests/test01AppLaunches()`, and the setup hook
 tags that exact identifier instead. The parentheses are part of Xcode's output.
+Objective-C-named and nested XCTest classes can instead have bare method names
+and mangled class identifiers; the hook uses the runtime class name to match them.
 Changing granularity needs a fresh history-building run. Keep the setup hook
 in any subclass overrides (call `super.setUpWithError()`). The target prefix
 in the hook must match Xcode's enumerated test target, not a source filename.
+
+This is an **XCTest** example, not a mixed XCTest/Swift Testing runner. Xcode
+26.2 rejects `import Testing` in UI-test targets. A base XCTest class and its
+subclass are distinct runnable units: inherited methods run under each concrete
+class's identifier and tag, not under the declaring class's tag.
 
 ## Relay, muting and retries
 
