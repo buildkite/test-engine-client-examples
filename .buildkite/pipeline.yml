@@ -613,7 +613,9 @@ steps:
         parallelism: 2
         commands:
           # Download from this build's discovery job before Gradle reads ownership.
-          - buildkite-agent artifact download "android/**/build/test-selectors/*.txt" . --step android-discover
+          # Download '*' spans path separators, unlike upload globs: include the
+          # root build/test-selectors/all.txt as well as every module manifest.
+          - buildkite-agent artifact download "android/*/test-selectors/*.txt" . --step android-discover
           - cd android
           # Use freshly minted OIDC credentials for the assigned-test invocation.
           - unset BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN BUILDKITE_ANALYTICS_TOKEN
