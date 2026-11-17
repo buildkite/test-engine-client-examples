@@ -642,6 +642,30 @@ steps:
               environment:
                 - BUILDKITE_ANALYTICS_TOKEN
 
+      # Verification only: independent native control in the SAME build, with
+      # no bktec or collector uploads. Compare its XML with the shard XML.
+      - label: ":android: Native control (no uploads)"
+        key: android-native-control
+        commands:
+          - git clone --depth 1 --branch android-selector-timings https://github.com/buildkite/bktest.git .collector-source
+          - git -C .collector-source fetch --depth 1 origin 4cc0984ebc4dec417effa882d5aae566de28783f
+          - git -C .collector-source checkout 4cc0984ebc4dec417effa882d5aae566de28783f
+          - git -C .collector-source fetch --depth 2 origin b5920c0f33ca1d297267ced6fd30748b6b8aaa20
+          - git -C .collector-source cherry-pick --no-commit b5920c0f33ca1d297267ced6fd30748b6b8aaa20
+          - export ANDROID_COLLECTOR_SOURCE="$$PWD/.collector-source/test-collector-android"
+          - cd android
+          - env -u BUILDKITE_ANALYTICS_TOKEN -u BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN ./gradlew --no-daemon --console=plain --profile --continue :app:testDebugUnitTest --rerun :library:testDebugUnitTest --rerun
+        artifact_paths:
+          - android/**/build/test-results/testDebugUnitTest/*.xml
+          - android/build/reports/profile/*
+        soft_fail:
+          - exit_status: 1
+        plugins:
+          - docker#v5.13.0:
+              image: "mobiledevops/android-sdk-image:34.0.0-jdk17"
+              user: root
+              propagate-environment: true
+
   - group: ":golang: Go"
     steps:
       - label: ":golang: Go test"
