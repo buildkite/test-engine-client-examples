@@ -755,6 +755,8 @@ steps:
         depends_on: nia-discover
         parallelism: 2
         timeout_in_minutes: 60
+        env:
+          BUILDKITE_TEST_ENGINE_SELECTOR_FILE: build/test-selectors/all.txt
         commands:
           - bash .buildkite/android-proof-bootstrap.sh
           - python3 .buildkite/prepare-nowinandroid.py
@@ -766,6 +768,7 @@ steps:
             --env BUILDKITE --env BUILDKITE_BUILD_ID --env BUILDKITE_BUILD_NUMBER
             --env BUILDKITE_JOB_ID --env BUILDKITE_COMMIT --env BUILDKITE_BRANCH
             --env BUILDKITE_BUILD_URL --env BUILDKITE_MESSAGE --env BUILDKITE_RETRY_COUNT
+            --env BUILDKITE_ORGANIZATION_SLUG --env BUILDKITE_PIPELINE_SLUG --env BUILDKITE_STEP_ID
             --env BUILDKITE_PARALLEL_JOB --env BUILDKITE_PARALLEL_JOB_COUNT
             --env BUILDKITE_TEST_ENGINE_TEST_RUNNER --env BUILDKITE_TEST_ENGINE_TEST_CMD
             --env BUILDKITE_TEST_ENGINE_SUITE_SLUG --env BUILDKITE_TEST_ENGINE_UPLOAD_RESULTS
@@ -782,7 +785,6 @@ steps:
           - tests#v1.1.0:
               test-runner: custom
               test-cmd: "./gradlew --no-daemon --no-configuration-cache --profile --continue --max-workers=4 splitTests -PsplitTestTask=testDemoDebugUnitTest -PtestClasses='{{testExamples}}'"
-              selector-file: build/test-selectors/all.txt
               suite-slug: test-engine-client-examples
               oidc-lifetime: 7200
               upload-results: false
