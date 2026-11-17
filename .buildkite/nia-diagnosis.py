@@ -30,6 +30,8 @@ owner = {}
 for manifest in root.rglob('build/test-selectors/testDemoDebugUnitTest.txt'):
     module = manifest.parent.parent.parent.relative_to(root).as_posix().replace('/', ':')
     for selector in manifest.read_text().splitlines():
+        if not selector:
+            continue
         assert selector not in owner
         owner[selector] = ':'+module+':testDemoDebugUnitTest'
 assert set(selectors) <= owner.keys()
