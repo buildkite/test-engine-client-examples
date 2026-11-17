@@ -1,0 +1,20 @@
+#!/bin/bash
+set -euo pipefail
+cd "$(dirname "$0")/.."
+if [[ $# -eq 0 ]]; then
+  echo 'No selectors assigned; running no tests.'
+  exit 0
+fi
+filters=()
+for selector in "$@"; do
+  echo "Assigned selector: $selector"
+  # --filter takes a regex. Escape the dot in Module.Class, and anchor the
+  # class boundary so selecting Foo never also runs FooExtra.
+  escaped="${selector//./\\.}"
+  if [[ "${TEST_SPLIT_BY:-class}" == method ]]; then
+    filters+=(--filter "^${escaped}$")
+  else
+    filters+=(--filter "^${escaped}/")
+  fi
+done
+swift test --skip-build --disable-swift-testing "${filters[@]}"

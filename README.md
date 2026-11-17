@@ -57,3 +57,11 @@ The JSON examples run Vitest directly and upload results using the Buildkite Tes
 Collector. They have independent npm installs to keep their Vitest versions
 isolated. Use the Node version in each example's `mise.toml`, run `npm ci` and
 `npm test` in that directory, and set `BUILDKITE_ANALYTICS_TOKEN` to upload.
+
+## Parallel Swift package example
+
+[`swift-xctest-parallel`](./swift-xctest-parallel) builds once in Linux Docker,
+discovers native SwiftPM XCTest selectors, and runs two timing-aware custom
+runner shards. It includes matching execution tags and a method-level option
+for large classes. The original [`swift-xctest`](./swift-xctest) example remains
+an unsplit demonstration of passing, failing, flaky and skipped results.

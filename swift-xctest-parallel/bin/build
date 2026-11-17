@@ -1,0 +1,18 @@
+#!/bin/bash
+set -euo pipefail
+cd "$(dirname "$0")/.."
+mkdir -p artifacts
+split_by="${TEST_SPLIT_BY:-class}"
+case "$split_by" in class|method) ;; *) echo 'TEST_SPLIT_BY must be class or method' >&2; exit 1 ;; esac
+
+# Native discovery builds the test executable once. Keep diagnostics on stderr.
+swift test list --disable-swift-testing > artifacts/methods.txt
+awk -F/ -v split_by="$split_by" '
+  NF == 2 { if (split_by == "class") print $1; else print $0 }
+' artifacts/methods.txt | sort -u > artifacts/selectors.txt
+test -s artifacts/selectors.txt
+echo "Discovered $split_by selectors:"
+cat artifacts/selectors.txt
+# SwiftPM's build state uses absolute paths. All jobs use the same Docker
+# image and /workdir checkout, so --skip-build can reuse this exact build.
+tar -czf artifacts/tests.tar.gz .build artifacts/selectors.txt

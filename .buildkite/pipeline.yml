@@ -566,6 +566,51 @@ steps:
                 - BUILDKITE_ANALYTICS_TAGS
                 - BUILDKITE_ANALYTICS_DEBUG_ENABLED
 
+      # Keep the image and checkout path identical so SwiftPM's absolute build
+      # paths remain valid when the two shards download the compiled products.
+      - label: ":swift: SwiftPM build and discover"
+        key: swiftpm-build
+        command: swift-xctest-parallel/bin/build
+        artifact_paths: swift-xctest-parallel/artifacts/tests.tar.gz
+        env:
+          TEST_SPLIT_BY: class
+        plugins:
+          - docker#v5.11.0:
+              image: "swift:6.0-noble"
+              workdir: /workdir
+              propagate-environment: true
+
+      - label: ":swift: SwiftPM shard %n"
+        key: swiftpm-shards
+        depends_on: swiftpm-build
+        parallelism: 2
+        commands:
+          - buildkite-agent artifact download swift-xctest-parallel/artifacts/tests.tar.gz . --step swiftpm-build
+          - cd swift-xctest-parallel
+          - tar -xzf artifacts/tests.tar.gz
+          - bktec run
+        env:
+          # Switch BOTH steps to method to split within large classes. The
+          # setup hook tags the same native selector that discovery produces.
+          TEST_SPLIT_BY: class
+          BUILDKITE_TEST_ENGINE_SELECTOR_FILE: artifacts/selectors.txt
+        plugins:
+          - tests#v1.1.0:
+              test-runner: custom
+              test-cmd: bin/test {{testExamples}}
+              suite-slug: test-engine-client-examples
+              upload-results: false
+              client-version: "3.5.0"
+          - docker#v5.11.0:
+              image: "swift:6.0-noble"
+              workdir: /workdir
+              # bktec is installed on the agent by the preceding Tests plugin.
+              expand-volume-vars: true
+              volumes:
+                - "$$BUILDKITE_TEST_ENGINE_CLIENT_PATH:/usr/local/bin/bktec:ro"
+              propagate-environment: true
+              mount-buildkite-agent: true
+
       - label: ":swift: Swift: XCUITest (test-collector-swift)"
         command: bktec run
         agents:
