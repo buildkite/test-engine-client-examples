@@ -4,6 +4,10 @@ steps:
     agents:
       queue: hosted
     command: |
+      if [ -z "${SWIFT_PROOF_SCRIPT:-}" ]; then
+        echo 'Verification dispatcher only: start a manual proof build with SWIFT_PROOF_SCRIPT to execute the matrix.'
+        exit 0
+      fi
       mkdir -p .amp/in/orb-backup
       python3 -c "import os,base64,gzip;open('.amp/in/orb-backup/swift-proof.py','wb').write(gzip.decompress(base64.b64decode(os.environ['SWIFT_PROOF_SCRIPT'])))"
       python3 .amp/in/orb-backup/swift-proof.py pipeline > .amp/in/orb-backup/proof-pipeline.json
