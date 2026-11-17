@@ -18,10 +18,11 @@ Configure one method to upload results from each test run:
   results. The Go example uses this configuration.
 - **Collector upload with bktec:** Let the collector upload results and set
   `upload-results: false`. bktec can still discover, split, run, and retry the
-  tests. The Ruby, JavaScript, and Python examples use this configuration.
+  tests (depending on runner support). The Ruby, JavaScript, Python, and Android
+  examples use this configuration.
 - **Collector upload without bktec:** Let the collector upload results, set
-  `upload-results: false`, and set `install-client: false`. The Vitest, Swift,
-  and Android examples use this configuration (Vitest OpenTelemetry uses bktec).
+  `upload-results: false`, and set `install-client: false`. The Vitest and Swift
+  examples use this configuration (Vitest OpenTelemetry uses bktec).
 
 > [!IMPORTANT]
 > If bktec and a Buildkite Test Collector both upload results from the same test
@@ -57,3 +58,10 @@ The JSON examples run Vitest directly and upload results using the Buildkite Tes
 Collector. They have independent npm installs to keep their Vitest versions
 isolated. Use the Node version in each example's `mise.toml`, run `npm ci` and
 `npm test` in that directory, and set `BUILDKITE_ANALYTICS_TOKEN` to upload.
+
+## Android / Gradle JVM example
+
+[`android`](./android) splits JVM unit tests using bktec's custom runner and
+Gradle's own test discovery and class filters. The Android collector uploads
+results and class-level timing history. See its [setup and limitations](./android/README.md)
+before copying the example to another Gradle JVM project.

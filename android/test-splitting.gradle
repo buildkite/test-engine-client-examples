@@ -1,0 +1,38 @@
+import org.gradle.api.tasks.testing.Test
+
+// Gradle discovers tests using the project's actual framework and classpath.
+// --test-dry-run reports them without executing test methods. Run discovery
+// without BUILDKITE_ANALYTICS_TOKEN so skipped dry-run results aren't uploaded.
+def discovering = providers.gradleProperty('discoverTests').isPresent()
+def assignedClasses = providers.gradleProperty('testClasses')
+
+tasks.withType(Test).configureEach {
+    if (discovering) {
+        def classes = new TreeSet<String>()
+        def selectors = layout.buildDirectory.file("test-selectors/${name}.txt")
+        doFirst {
+            selectors.get().asFile.parentFile.mkdirs()
+            selectors.get().asFile.text = ''
+        }
+        beforeTest { descriptor -> classes.add(descriptor.className) }
+        afterSuite { descriptor, result ->
+            if (descriptor.parent == null) {
+                selectors.get().asFile.text = classes.join('\n') + '\n'
+                logger.lifecycle("Discovered test classes: ${classes.join(' ')}")
+            }
+        }
+    } else if (assignedClasses.isPresent()) {
+        // These are Gradle's class-name filters (the same values as --tests).
+        // Reject an empty assignment rather than accidentally running everything.
+        def classes = assignedClasses.get().tokenize()
+        if (classes.empty) {
+            throw new GradleException('testClasses must contain at least one class')
+        }
+        filter {
+            classes.each { includeTestsMatching(it) }
+        }
+        doFirst { logger.lifecycle("Assigned test classes: ${classes.join(' ')}") }
+    }
+
+    testLogging { events 'passed', 'failed', 'skipped' }
+}

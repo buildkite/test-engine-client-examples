@@ -1,7 +1,7 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
-    id("com.buildkite.test-collector-android.unit-test-collector-plugin") version "0.4.0"
+    id("com.buildkite.test-collector-android.unit-test-collector-plugin") version "0.4.1"
 }
 
 android {
@@ -35,3 +35,6 @@ buildkiteTestAnalytics {
 dependencies {
     testImplementation("junit:junit:4.13.2")
 }
+
+// This script works with any Gradle JVM Test task, not just Android.
+apply(from = "../test-splitting.gradle")
