@@ -4,19 +4,29 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 mkdir -p artifacts
 destination="${XCUITEST_DESTINATION:-platform=iOS Simulator,name=iPhone 17}"
-split_by="${TEST_SPLIT_BY:-class}"
-case "$split_by" in class|method) ;; *) echo 'TEST_SPLIT_BY must be class or method' >&2; exit 1 ;; esac
+split_by="${BUILDKITE_TEST_ENGINE_XCTEST_SPLIT_BY:-class}"
+case "$split_by" in class|method) ;; *) echo 'BUILDKITE_TEST_ENGINE_XCTEST_SPLIT_BY must be class or method' >&2; exit 1 ;; esac
 
-# Xcode 16+ packages relocatable products, including the test configuration.
-rm -rf artifacts/Tests.xctestproducts artifacts/enumeration.json
+# Temporary source pin until automatic selectors ship in the next collector
+# release. Shards need only the built products, not this source checkout.
+if [[ ! -d artifacts/collector-source/.git ]]; then
+  git init -q artifacts/collector-source
+fi
+git -C artifacts/collector-source fetch -q --depth 1 https://github.com/buildkite/bktest.git b1b34544514f23fc8be4322875f2fa02cd69f291
+git -C artifacts/collector-source checkout -q --detach FETCH_HEAD
+
+# Keep Xcode's original products and xctestrun together. Both xcodebuild and
+# fastlane scan can run this archive without resolving packages or rebuilding.
+rm -rf artifacts/Products artifacts/enumeration.json
 xcodebuild build-for-testing \
   -project SwiftXCUITest.xcodeproj -scheme SwiftXCUITest \
   -testPlan SwiftXCUITest -destination 'generic/platform=iOS Simulator' \
-  -derivedDataPath artifacts/DerivedData \
-  -testProductsPath artifacts/Tests.xctestproducts
+  -derivedDataPath artifacts/DerivedData
+mv artifacts/DerivedData/Build/Products artifacts/Products
+mv artifacts/Products/*.xctestrun artifacts/Products/Tests.xctestrun
 
 xcodebuild test-without-building \
-  -testProductsPath artifacts/Tests.xctestproducts -destination "$destination" \
+  -xctestrun artifacts/Products/Tests.xctestrun -destination "$destination" \
   -enumerate-tests -test-enumeration-style flat -test-enumeration-format json \
   -test-enumeration-output-path artifacts/enumeration.json
 
@@ -31,4 +41,4 @@ echo "Discovered $split_by selectors:"
 cat artifacts/selectors.txt
 # Keep the enabled method set: class-level -only-testing can override a
 # test plan's selectedTests and otherwise re-enable excluded methods.
-tar -czf artifacts/tests.tar.gz -C artifacts Tests.xctestproducts selectors.txt enumeration.json
+tar -czf artifacts/tests.tar.gz -C artifacts Products selectors.txt enumeration.json

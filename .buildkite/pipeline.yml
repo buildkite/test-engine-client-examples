@@ -566,7 +566,7 @@ steps:
                 - BUILDKITE_ANALYTICS_TAGS
                 - BUILDKITE_ANALYTICS_DEBUG_ENABLED
 
-      # Build once: shards download relocatable Xcode 16+ test products instead
+      # Build once: shards download Xcode's products and xctestrun instead
       # of resolving packages and compiling the app on every hosted Mac.
       - label: ":swift: XCUITest build and discover"
         key: swift-xcuitest-build
@@ -575,7 +575,7 @@ steps:
           queue: swift-macos-15-xcode-26-2
         artifact_paths: swift-xcuitest/artifacts/tests.tar.gz
         env:
-          TEST_SPLIT_BY: class
+          BUILDKITE_TEST_ENGINE_XCTEST_SPLIT_BY: class
 
       - label: ":swift: XCUITest shard %n"
         key: swift-xcuitest-shards
@@ -591,9 +591,9 @@ steps:
           - swift-xcuitest/artifacts/SwiftXCUITest.xcresult/**/*
           - swift-xcuitest/artifacts/plan.json
         env:
-          # Switch BOTH steps to method for large classes. The setup hook uses
+          # Switch BOTH steps to method for large classes. The collector uses
           # this same value to tag each execution with its exact selector.
-          TEST_SPLIT_BY: class
+          BUILDKITE_TEST_ENGINE_XCTEST_SPLIT_BY: class
           BUILDKITE_TEST_ENGINE_SELECTOR_FILE: swift-xcuitest/artifacts/selectors.txt
           # Keep the exact server plan for timing and assignment diagnostics.
           BUILDKITE_TEST_ENGINE_PLAN_OUT: swift-xcuitest/artifacts/plan.json

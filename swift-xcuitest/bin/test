@@ -29,7 +29,7 @@ if [[ ${#only_testing[@]} -eq 0 ]]; then
 fi
 
 for name in \
-  TEST_SPLIT_BY \
+  BUILDKITE_TEST_ENGINE_XCTEST_SPLIT_BY \
   BUILDKITE_ANALYTICS_BASE_URL \
   BUILDKITE_ANALYTICS_BRANCH \
   BUILDKITE_ANALYTICS_DEBUG_ENABLED \
@@ -70,8 +70,9 @@ mkdir -p "$artifacts_dir"
 
 xcodebuild \
   test-without-building \
-  -testProductsPath "$artifacts_dir/Tests.xctestproducts" \
+  -xctestrun "$artifacts_dir/Products/Tests.xctestrun" \
   -destination "$destination" \
   -resultBundlePath "$result_bundle" \
-  -parallel-testing-enabled NO \
+  -parallel-testing-enabled "${XCUITEST_PARALLEL_TESTING:-NO}" \
+  -parallel-testing-worker-count 2 \
   "${only_testing[@]}"

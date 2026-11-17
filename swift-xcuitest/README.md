@@ -6,18 +6,24 @@ built-in XCTest runner. The same build/enumerate/`-only-testing` approach works
 for Xcode unit-test targets; this fixture prioritizes UI tests.
 
 Copy the two XCUITest steps in [the pipeline](../.buildkite/pipeline.yml),
-`bin/build`, `bin/test`, and the selector-tagging setup hook in
-[`SplitUITestCase`](ExampleAppUITests/ExampleAppUITests.swift). Adapt the project,
-scheme, test plan, target name and destination. Requires Xcode 16+ for
-`-testProductsPath`, `jq`, bktec 3.5.0 and Swift collector **2.0.0-beta.3**.
-No unreleased collector change is needed.
+`bin/build` and `bin/test`. Adapt the project, scheme, test plan and destination.
+Tests remain ordinary `XCTestCase` subclasses: no tagging superclass, setup
+override or `tagExecution` call is required. Verified on Xcode 26.2; requires
+Xcode's `-enumerate-tests` support, `jq` and bktec 3.5.0.
+
+Automatic selector tagging needs the **next Swift collector release**, after
+the already-published 2.0.0-beta.4. Until then, `bin/build` fetches a pinned
+[collector source commit](https://github.com/buildkite/bktest/pull/130) and the
+Xcode project uses its local package. Nothing is released by this example.
+After that release, replace the local package with the released
+`buildkite/test-collector-swift` dependency and remove the source-fetch block.
 
 ## Build once, run only assigned tests
 
 `bin/build` uses `build-for-testing` and Xcode's native `-enumerate-tests`
 JSON output. It derives class selectors such as `ExampleAppUITests/LaunchTests`
 from enabled method identifiers, ignoring empty classes. It archives the
-relocatable `.xctestproducts` bundle, enumeration JSON and newline-delimited
+original `Products` directory and `.xctestrun`, enumeration JSON and newline-delimited
 `selectors.txt`. Each shard intersects its assignments with the enumerated
 enabled methods and passes those exact identifiers to `test-without-building`.
 This matters even for class splits: `-only-testing:Target/Class` can override
@@ -38,9 +44,10 @@ The default destination is `platform=iOS Simulator,name=iPhone 17`. Override
 
 ## Timing-aware class or method splits
 
-Every test method tags its execution with `test.selector.primary` in a shared
-setup hook. This is essential: the custom runner cannot infer selector tags,
-and the Swift collector's class scope is **not** a selector. Test Engine sums
+The collector automatically tags each execution with `test.selector.primary`,
+using its own test bundle and concrete runtime class. This is essential: the
+custom runner cannot infer selector tags, and a class scope is **not** a
+selector. Test Engine sums
 the methods' durations for each exact selector, so subsequent builds can balance
 the same classes using recorded timings once the planner's history snapshot
 refreshes.
@@ -51,20 +58,77 @@ immediately visible.
 The deliberately slow class makes timing-based placement
 visibly different from an even-count split.
 
-For a suite dominated by one large class, set `TEST_SPLIT_BY: method` in
+For a suite dominated by one large class, set
+`BUILDKITE_TEST_ENGINE_XCTEST_SPLIT_BY: method` in
 **both** pipeline steps. Discovery then keeps full identifiers such as
-`ExampleAppUITests/ExampleAppUITests/test01AppLaunches()`, and the setup hook
+`ExampleAppUITests/ExampleAppUITests/test01AppLaunches()`, and the collector
 tags that exact identifier instead. The parentheses are part of Xcode's output.
 Objective-C-named and nested XCTest classes can instead have bare method names
-and mangled class identifiers; the hook uses the runtime class name to match them.
-Changing granularity needs a fresh history-building run. Keep the setup hook
-in any subclass overrides (call `super.setUpWithError()`). The target prefix
-in the hook must match Xcode's enumerated test target, not a source filename.
+and mangled class identifiers; the collector uses the runtime class name to
+match them. `bin/test` forwards the same setting with Xcode's `TEST_RUNNER_`
+prefix. Changing granularity needs a fresh history-building run.
+An explicit test-supplied selector tag overrides the automatic value; it must
+still match the discovered selector if that execution is to contribute timings.
 
 This is an **XCTest** example, not a mixed XCTest/Swift Testing runner. Xcode
 26.2 rejects `import Testing` in UI-test targets. A base XCTest class and its
 subclass are distinct runnable units: inherited methods run under each concrete
 class's identifier and tag, not under the declaring class's tag.
+
+## Test plans, targets and simulator workers
+
+Discovery includes all enabled XCTest targets in the test plan. The target
+prefix keeps classes in different targets disjoint. Link the collector into
+every test target whose results should be uploaded.
+
+All enabled plan configurations run on the shard assigned their selector.
+A test enabled in two configurations has two legitimate executions, not one;
+its timing is their sum. Compare shards against an unfiltered control with
+the same configuration set, retaining configuration multiplicity. This example
+does not split configurations into separate selectors. Dynamically generated
+tests whose inventory changes between enumeration and execution are out of scope.
+
+By default Xcode's own parallel testing is disabled: Buildkite provides the
+parallelism. Set `XCUITEST_PARALLEL_TESTING=YES` on shards to also use two Xcode
+simulator workers per shard. The worker processes share that job's bktec relay,
+so retain every forwarded collector/relay variable. More simulators also use
+more memory; this example does not choose a worker count for an arbitrary app.
+
+## Using fastlane scan
+
+Keep the native enumeration and assignment-to-enabled-method intersection.
+`scan` delegates test execution to xcodebuild; it does not discover or split
+the suite for bktec. The equivalent options are:
+
+| xcodebuild option | scan option |
+| --- | --- |
+| `-project`, `-scheme`, `-testPlan` | `project`, `scheme`, `testplan` |
+| `build-for-testing` | `build_for_testing: true` |
+| `test-without-building` | `test_without_building: true` |
+| `-only-testing:Target/Class/method()` | `only_testing: ["Target/Class/method()"]` |
+| `-xctestrun path` | `xctestrun: "path"` |
+| `-testProductsPath path` | No direct option; use the original `.xctestrun` and products instead (see below) |
+| `-derivedDataPath`, `-destination` | `derived_data_path`, `destination` |
+| `-only-test-configuration Name` | `only_test_configurations: ["Name"]` |
+| `-parallel-testing-enabled YES`, `-parallel-testing-worker-count 2` | `parallel_testing: true`, `concurrent_workers: 2` |
+| `-retry-tests-on-failure -test-iterations 3` | `number_of_retries: 2` (two retries, three attempts) |
+
+For example, after `bin/build`, run one enabled method from the built products:
+
+```sh
+fastlane run scan xctestrun:artifacts/Products/Tests.xctestrun \
+  test_without_building:true destination:'platform=iOS Simulator,name=iPhone 17' \
+  only_testing:'ExampleAppUITests/StatusTests/testStatus()' \
+  result_bundle:true output_directory:artifacts/fastlane
+```
+
+For a bktec shard, replace only `bin/test`'s final xcodebuild invocation with
+your `scan` lane, passing its already-expanded `only_testing` method array.
+Keep the environment-forwarding loop, especially the OTLP token, unchanged.
+Do not combine `xctestrun` with project/scheme or `testProductsPath`. Fastlane
+2.232.2 adds project/scheme flags when using `xcargs: "-testProductsPath ..."`,
+which Xcode rejects. Sharing the original `.xctestrun` and matching products
+avoids that incompatibility without an adapter or a second build.
 
 ## Relay, muting and retries
 

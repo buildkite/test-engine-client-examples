@@ -1,25 +1,6 @@
-import Core
 import XCTest
 
-// Match the native identifiers in bin/build, including Objective-C class names.
-// In this project the test target and Swift module are both ExampleAppUITests.
-class SplitUITestCase: XCTestCase {
-    override func setUpWithError() throws {
-        continueAfterFailure = false
-        let test = name.dropFirst(2).dropLast().split(separator: " ", maxSplits: 1)
-        let runtimeClass = NSStringFromClass(type(of: self))
-        var selector = "ExampleAppUITests/\(runtimeClass.split(separator: ".").last!)"
-        if ProcessInfo.processInfo.environment["TEST_SPLIT_BY"] == "method" {
-            // Xcode uses Swift method() spelling for Module.Class, but bare
-            // Objective-C selectors for custom/mangled runtime class names.
-            selector += "/\(test[1])\(runtimeClass.contains(".") ? "()" : "")"
-        }
-        tagExecution("test.selector.primary", selector)
-        print("Execution selector: \(selector)")
-    }
-}
-
-final class ExampleAppUITests: SplitUITestCase {
+final class ExampleAppUITests: XCTestCase {
     func test01AppLaunches() {
         let app = XCUIApplication()
         app.launch()
@@ -28,8 +9,6 @@ final class ExampleAppUITests: SplitUITestCase {
     }
 
     func test02ExecutionTag() {
-        tagExecution("custom.tag.from", "execution")
-
         let app = XCUIApplication()
         app.launch()
 
@@ -37,7 +16,7 @@ final class ExampleAppUITests: SplitUITestCase {
     }
 }
 
-final class LaunchTests: SplitUITestCase {
+final class LaunchTests: XCTestCase {
     func testLaunch() {
         let app = XCUIApplication()
         app.launch()
@@ -45,7 +24,7 @@ final class LaunchTests: SplitUITestCase {
     }
 }
 
-final class StatusTests: SplitUITestCase {
+final class StatusTests: XCTestCase {
     func testStatus() {
         let app = XCUIApplication()
         app.launch()
@@ -53,7 +32,7 @@ final class StatusTests: SplitUITestCase {
     }
 }
 
-final class SlowTests: SplitUITestCase {
+final class SlowTests: XCTestCase {
     func testSlowFlow() {
         let app = XCUIApplication()
         app.launch()
