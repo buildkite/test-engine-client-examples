@@ -1,11 +1,22 @@
 import Core
 import XCTest
 
-final class ExampleAppUITests: XCTestCase {
+// Match the native identifiers in bin/build exactly, including () for methods.
+// In this project the test target and Swift module are both ExampleAppUITests.
+class SplitUITestCase: XCTestCase {
     override func setUpWithError() throws {
         continueAfterFailure = false
+        var selector = "ExampleAppUITests/\(type(of: self))"
+        if ProcessInfo.processInfo.environment["TEST_SPLIT_BY"] == "method" {
+            let method = name.split(separator: " ").last!.trimmingCharacters(in: CharacterSet(charactersIn: "]"))
+            selector += "/\(method)()"
+        }
+        tagExecution("test.selector.primary", selector)
+        print("Execution selector: \(selector)")
     }
+}
 
+final class ExampleAppUITests: SplitUITestCase {
     func test01AppLaunches() {
         let app = XCUIApplication()
         app.launch()
@@ -20,5 +31,31 @@ final class ExampleAppUITests: XCTestCase {
         app.launch()
 
         XCTAssertEqual(app.staticTexts["status"].label, "Swift XCUITest example")
+    }
+}
+
+final class LaunchTests: SplitUITestCase {
+    func testLaunch() {
+        let app = XCUIApplication()
+        app.launch()
+        XCTAssertTrue(app.staticTexts["status"].exists)
+    }
+}
+
+final class StatusTests: SplitUITestCase {
+    func testStatus() {
+        let app = XCUIApplication()
+        app.launch()
+        XCTAssertEqual(app.staticTexts["status"].label, "Swift XCUITest example")
+    }
+}
+
+final class SlowTests: SplitUITestCase {
+    func testSlowFlow() {
+        let app = XCUIApplication()
+        app.launch()
+        // Make timing-aware placement visibly different from a 2/2 class split.
+        Thread.sleep(forTimeInterval: 45)
+        XCTAssertTrue(app.staticTexts["status"].exists)
     }
 }

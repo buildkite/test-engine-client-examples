@@ -1,0 +1,32 @@
+#!/bin/bash
+set -euo pipefail
+
+cd "$(dirname "$0")/.."
+mkdir -p artifacts
+destination="${XCUITEST_DESTINATION:-platform=iOS Simulator,name=iPhone 17}"
+split_by="${TEST_SPLIT_BY:-class}"
+case "$split_by" in class|method) ;; *) echo 'TEST_SPLIT_BY must be class or method' >&2; exit 1 ;; esac
+
+# Xcode 16+ packages relocatable products, including the test configuration.
+rm -rf artifacts/Tests.xctestproducts artifacts/enumeration.json
+xcodebuild build-for-testing \
+  -project SwiftXCUITest.xcodeproj -scheme SwiftXCUITest \
+  -testPlan SwiftXCUITest -destination 'generic/platform=iOS Simulator' \
+  -derivedDataPath artifacts/DerivedData \
+  -testProductsPath artifacts/Tests.xctestproducts
+
+xcodebuild test-without-building \
+  -testProductsPath artifacts/Tests.xctestproducts -destination "$destination" \
+  -enumerate-tests -test-enumeration-style flat -test-enumeration-format json \
+  -test-enumeration-output-path artifacts/enumeration.json
+
+# Use Xcode's enabled identifiers, not source filenames or a maintained list.
+jq -e '(.errors | length) == 0' artifacts/enumeration.json >/dev/null
+jq -r --arg split "$split_by" '
+  [.values[].enabledTests[].identifier | select(split("/") | length == 3) |
+   if $split == "class" then split("/")[0:2] | join("/") else . end] |
+  unique[]' artifacts/enumeration.json > artifacts/selectors.txt
+test -s artifacts/selectors.txt
+echo "Discovered $split_by selectors:"
+cat artifacts/selectors.txt
+tar -czf artifacts/tests.tar.gz -C artifacts Tests.xctestproducts selectors.txt

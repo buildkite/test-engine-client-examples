@@ -566,13 +566,34 @@ steps:
                 - BUILDKITE_ANALYTICS_TAGS
                 - BUILDKITE_ANALYTICS_DEBUG_ENABLED
 
-      - label: ":swift: Swift: XCUITest (test-collector-swift)"
-        command: bktec run
+      # Build once: shards download relocatable Xcode 16+ test products instead
+      # of resolving packages and compiling the app on every hosted Mac.
+      - label: ":swift: XCUITest build and discover"
+        key: swift-xcuitest-build
+        command: swift-xcuitest/bin/build
+        agents:
+          queue: swift-macos-15-xcode-26-2
+        artifact_paths: swift-xcuitest/artifacts/tests.tar.gz
+        env:
+          TEST_SPLIT_BY: class
+
+      - label: ":swift: XCUITest shard %n"
+        key: swift-xcuitest-shards
+        depends_on: swift-xcuitest-build
+        parallelism: 2
+        commands:
+          - buildkite-agent artifact download swift-xcuitest/artifacts/tests.tar.gz . --step swift-xcuitest-build
+          - tar -xzf swift-xcuitest/artifacts/tests.tar.gz -C swift-xcuitest/artifacts
+          - bktec run
         agents:
           queue: swift-macos-15-xcode-26-2
         artifact_paths:
           - swift-xcuitest/artifacts/SwiftXCUITest.xcresult/**/*
         env:
+          # Switch BOTH steps to method for large classes. The setup hook uses
+          # this same value to tag each execution with its exact selector.
+          TEST_SPLIT_BY: class
+          BUILDKITE_TEST_ENGINE_SELECTOR_FILE: swift-xcuitest/artifacts/selectors.txt
           BUILDKITE_ANALYTICS_TAGS: '{"test.framework.name":"xcuitest","language.name":"swift","custom.tag.from":"upload"}'
           # Hand each finished test to bktec, which outlives the XCTest runner,
           # and batch the relay's uploads to Test Engine.
@@ -581,8 +602,7 @@ steps:
         plugins:
           - tests#v1.1.0:
               test-runner: custom
-              test-cmd: swift-xcuitest/bin/test
-              test-file-pattern: swift-xcuitest/ExampleAppUITests/**/*.swift
+              test-cmd: swift-xcuitest/bin/test {{testExamples}}
               suite-slug: test-engine-client-examples
               upload-results: false
               client-version: "3.5.0"

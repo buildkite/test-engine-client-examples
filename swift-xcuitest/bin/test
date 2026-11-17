@@ -6,7 +6,19 @@ root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 artifacts_dir="${XCUITEST_ARTIFACTS_DIR:-$root/artifacts}"
 result_bundle="$artifacts_dir/SwiftXCUITest.xcresult"
 
+# bktec can assign an empty shard. Never turn that into an unfiltered run.
+if [[ $# -eq 0 ]]; then
+  echo 'No selectors assigned; running no tests.'
+  exit 0
+fi
+only_testing=()
+for selector in "$@"; do
+  echo "Assigned selector: $selector"
+  only_testing+=("-only-testing:$selector")
+done
+
 for name in \
+  TEST_SPLIT_BY \
   BUILDKITE_ANALYTICS_BASE_URL \
   BUILDKITE_ANALYTICS_BRANCH \
   BUILDKITE_ANALYTICS_DEBUG_ENABLED \
@@ -40,34 +52,15 @@ do
   fi
 done
 
-destination="${XCUITEST_DESTINATION:-}"
-if [[ -z "$destination" ]]; then
-  device_id="$({
-    xcrun simctl list devices available \
-      | sed -nE '/iPhone/s/^.*\(([[:xdigit:]-]{36})\).*$/\1/p'
-  } | sed -n '1p')"
-
-  if [[ -z "$device_id" ]]; then
-    echo "No available iPhone Simulator found; set XCUITEST_DESTINATION" >&2
-    exit 1
-  fi
-
-  destination="platform=iOS Simulator,id=$device_id"
-fi
+destination="${XCUITEST_DESTINATION:-platform=iOS Simulator,name=iPhone 17}"
 
 rm -rf "$result_bundle"
 mkdir -p "$artifacts_dir"
 
 xcodebuild \
-  -project "$root/SwiftXCUITest.xcodeproj" \
-  -scheme SwiftXCUITest \
-  -resolvePackageDependencies
-
-xcodebuild \
-  -project "$root/SwiftXCUITest.xcodeproj" \
-  -scheme SwiftXCUITest \
-  -testPlan SwiftXCUITest \
+  test-without-building \
+  -testProductsPath "$artifacts_dir/Tests.xctestproducts" \
   -destination "$destination" \
-  -derivedDataPath "$artifacts_dir/DerivedData" \
   -resultBundlePath "$result_bundle" \
-  test
+  -parallel-testing-enabled NO \
+  "${only_testing[@]}"

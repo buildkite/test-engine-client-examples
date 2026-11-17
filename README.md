@@ -20,7 +20,7 @@ Configure one method to upload results from each test run:
   `upload-results: false`. bktec can still discover, split, run, and retry the
   tests. The Ruby, JavaScript, and Python examples use this configuration.
 - **Collector upload without bktec:** Let the collector upload results, set
-  `upload-results: false`, and set `install-client: false`. The Vitest, Swift,
+  `upload-results: false`, and set `install-client: false`. The Vitest, SwiftPM,
   and Android examples use this configuration (Vitest OpenTelemetry uses bktec).
 
 > [!IMPORTANT]
@@ -30,6 +30,14 @@ Configure one method to upload results from each test run:
 A Buildkite Test Collector is not a general prerequisite for using bktec. Some
 examples also demonstrate OpenTelemetry collection. Check the matching pipeline
 step for the complete configuration.
+
+## Swift examples
+
+- [`swift-xcuitest`](./swift-xcuitest): build an Xcode project once, discover
+  native XCTest selectors, and split UI tests across parallel hosted Macs with
+  the custom runner. Includes timing tags, a method-level option, and the OTLP
+  relay to preserve completed results across XCTest runner restarts.
+- [`swift-xctest`](./swift-xctest): run a Swift package's XCTest suite on Linux.
 
 The [versioned JavaScript OpenTelemetry guide](https://github.com/buildkite/bktest/blob/test-collector-javascript/v1.14.0/test-collector-javascript/docs/opentelemetry.md)
 defines supported versions, instrumentation, delivery and limitations.
