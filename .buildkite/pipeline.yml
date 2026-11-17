@@ -604,7 +604,7 @@ steps:
             --env ANDROID_COLLECTOR_SOURCE=/workdir/.collector-source/test-collector-android
             mobiledevops/android-sdk-image:34.0.0-jdk17
             sh /workdir/.buildkite/android-proof-env.sh
-            ./gradlew --no-daemon --console=plain --profile splitTests -PdiscoverTests
+            ./gradlew --no-daemon --no-configuration-cache --console=plain --profile splitTests -PdiscoverTests
         artifact_paths:
           - android/**/build/test-selectors/*.txt
           - android/build/reports/profile/*
@@ -657,7 +657,7 @@ steps:
               # Each Test task gets only its owned assignments; empty modules
               # skip. The script forces Test execution, not recompilation.
               # --continue lets other modules finish after intentional failures.
-              test-cmd: "./gradlew --no-daemon --console=plain --profile --continue splitTests -PtestClasses='{{testExamples}}'"
+              test-cmd: "./gradlew --no-daemon --no-configuration-cache --console=plain --profile --continue splitTests -PtestClasses='{{testExamples}}'"
               suite-slug: test-engine-client-examples
               # Only the Android collector uploads; bktec must not duplicate it.
               upload-results: false

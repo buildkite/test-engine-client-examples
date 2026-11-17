@@ -43,7 +43,7 @@ task that runs must produce a fresh discovery manifest.
 The discovery job runs Gradle once without an analytics token:
 
 ```sh
-env -u BUILDKITE_ANALYTICS_TOKEN ./gradlew --no-daemon splitTests -PdiscoverTests
+env -u BUILDKITE_ANALYTICS_TOKEN ./gradlew --no-daemon --no-configuration-cache splitTests -PdiscoverTests
 ```
 
 The root task runs each selected `Test` task in Gradle dry-run mode, merges the
@@ -61,7 +61,7 @@ with their outermost runnable class or suite. Binary names keep their literal
 `$` spelling. bktec substitutes its job's assigned classes into:
 
 ```sh
-./gradlew --no-daemon --profile --continue splitTests -PtestClasses='{{testExamples}}'
+./gradlew --no-daemon --no-configuration-cache --profile --continue splitTests -PtestClasses='{{testExamples}}'
 ```
 
 Each task receives only its owned assignments, using Gradle's `--tests` filters
@@ -178,6 +178,8 @@ cost again. These measurements demonstrate fewer discovery invocations, not a
 wall-clock speedup or the cost of the future published collector.
 
 Do not enable configuration cache as a substitute for the discovery step here.
+Both commands explicitly disable it, including in projects such as Now in Android
+that enable it by default in `gradle.properties`.
 With Gradle 8.9, the current discovery task cannot store its task-collection closure
 in the configuration cache; changing from discovery to assignments also invalidates
 the entry because the Gradle properties change. An assignment-only invocation
