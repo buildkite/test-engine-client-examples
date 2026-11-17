@@ -594,6 +594,7 @@ steps:
       # manifests; workers still compile their own task dependencies/cache hits.
       - label: ":android: Discover JVM tests"
         key: android-discover
+        if: build.env("ANDROID_PROOF_NATIVE_ONLY") != "true"
         commands:
           # Verification branch only; not part of the customer-facing PR.
           - git clone --depth 1 --branch android-selector-timings https://github.com/buildkite/bktest.git .collector-source
@@ -618,8 +619,14 @@ steps:
 
       - label: ":android: Android"
         key: android
+        if: build.env("ANDROID_PROOF_NATIVE_ONLY") != "true"
         depends_on: android-discover
-        parallelism: 2
+        parallelism: 3
+        # Verification only: exercise a real Buildkite retry, not a shell rerun.
+        retry:
+          automatic:
+            - exit_status: 1
+              limit: 1
         commands:
           # Download from this build's discovery job before Gradle reads ownership.
           - buildkite-agent artifact download "android/**/build/test-selectors/*.txt" . --step android-discover
@@ -669,6 +676,7 @@ steps:
       # no bktec or collector uploads. Compare its XML with the shard XML.
       - label: ":android: Native control (no uploads)"
         key: android-native-control
+        if: build.env("ANDROID_PROOF_NATIVE_ONLY") != "true"
         commands:
           - git clone --depth 1 --branch android-selector-timings https://github.com/buildkite/bktest.git .collector-source
           - git -C .collector-source fetch --depth 1 origin 4cc0984ebc4dec417effa882d5aae566de28783f
@@ -688,6 +696,38 @@ steps:
               image: "mobiledevops/android-sdk-image:34.0.0-jdk17"
               user: root
               propagate-environment: true
+
+      # Verification only, in a separate build so native uploads cannot inflate
+      # the split-versus-control proof's execution counts.
+      - label: ":android: Native collector upload control"
+        key: android-native-upload
+        if: build.env("ANDROID_PROOF_NATIVE_ONLY") == "true"
+        commands:
+          - git clone --depth 1 --branch android-selector-timings https://github.com/buildkite/bktest.git .collector-source
+          - git -C .collector-source fetch --depth 1 origin 4cc0984ebc4dec417effa882d5aae566de28783f
+          - git -C .collector-source checkout 4cc0984ebc4dec417effa882d5aae566de28783f
+          - git -C .collector-source fetch --depth 2 origin b5920c0f33ca1d297267ced6fd30748b6b8aaa20
+          - git -C .collector-source cherry-pick --no-commit b5920c0f33ca1d297267ced6fd30748b6b8aaa20
+          - export ANDROID_COLLECTOR_SOURCE="$$PWD/.collector-source/test-collector-android"
+          - cd android
+          - ./gradlew --no-daemon --console=plain --profile --continue testDebugUnitTest
+        artifact_paths:
+          - android/**/build/test-results/testDebugUnitTest/*.xml
+          - android/build/reports/profile/*
+        soft_fail:
+          - exit_status: 1
+        plugins:
+          - tests#v1.1.0:
+              test-runner: custom
+              suite-slug: test-engine-client-examples
+              upload-results: false
+              install-client: false
+          - docker#v5.13.0:
+              image: "mobiledevops/android-sdk-image:34.0.0-jdk17"
+              user: root
+              propagate-environment: true
+              environment:
+                - BUILDKITE_ANALYTICS_TOKEN
 
   - group: ":golang: Go"
     steps:
