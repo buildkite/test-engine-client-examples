@@ -35,7 +35,8 @@
           - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
           - export BUILDKITE_TESTS_OTLP_TOKEN="$$(../bin/otel-oidc-token)"
           - export BUILDKITE_ANALYTICS_KEY="$$BUILDKITE_BUILD_ID-verify-packages-sdk2"
-          - ../bin/expect-run 1 - npx vitest run --config packages.config.js
+          - "../bin/expect-run 1 '@opentelemetry/instrumentation-express cannot patch express in Vitest:' npx vitest run --config packages.config.js"
+          - node ../bin/check-vitest-results.cjs
         plugins:
           - mise#v1.1.4:
               dir: vitest-otel
@@ -48,7 +49,8 @@
           - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
           - export BUILDKITE_TESTS_OTLP_TOKEN="$$(../bin/otel-oidc-token)"
           - export BUILDKITE_ANALYTICS_KEY="$$BUILDKITE_BUILD_ID-verify-packages-sdk3"
-          - ../bin/expect-run 1 - npx vitest run --config packages.config.js
+          - "../bin/expect-run 1 '@opentelemetry/instrumentation-express cannot patch express in Vitest:' npx vitest run --config packages.config.js"
+          - node ../bin/check-vitest-results.cjs
         plugins:
           - mise#v1.1.4:
               dir: vitest-otel

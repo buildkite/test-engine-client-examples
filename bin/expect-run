@@ -27,5 +27,9 @@ elif ! grep -qF "${expected_output}" "${log}"; then
   echo "^^^ +++"
   echo "Expected collector output: ${expected_output}"
   exit 1
+elif grep -F '[buildkite-test-collector]' "${log}" | grep -vF "${expected_output}"; then
+  echo "^^^ +++"
+  echo "Unexpected collector output beyond: ${expected_output}"
+  exit 1
 fi
 echo "Exit status ${status} and collector output as expected"
