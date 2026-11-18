@@ -1,7 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<testsuite name="com.buildkite.examples.SlowTest" tests="1" skipped="0" failures="0" errors="0" timestamp="2026-11-17T06:19:02" hostname="e2b.local" time="15.002">
-  <properties/>
-  <testcase name="slowOperation" classname="com.buildkite.examples.SlowTest" time="15.002"/>
-  <system-out><![CDATA[]]></system-out>
-  <system-err><![CDATA[]]></system-err>
-</testsuite>

@@ -1,2 +1,0 @@
-com.buildkite.examples.PassingTest
-com.buildkite.examples.SkippedTest
