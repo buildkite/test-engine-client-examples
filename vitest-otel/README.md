@@ -1,7 +1,7 @@
 # Vitest OpenTelemetry
 
 Collect test results, hook, manual, HTTP and fetch spans with
-`buildkite-test-collector` 1.15.0. For JSON uploads, see [`vitest`](../vitest) or
+`buildkite-test-collector` 1.16.0. For JSON uploads, see [`vitest`](../vitest) or
 [`vitest-4`](../vitest-4).
 
 ## Setup
@@ -62,4 +62,4 @@ data before using real application data.
 
 See the [collector guide] for supported versions, instrumentation and limitations.
 
-[collector guide]: https://github.com/buildkite/bktest/blob/test-collector-javascript/v1.15.0/test-collector-javascript/docs/opentelemetry.md#setup-1
+[collector guide]: https://github.com/buildkite/bktest/blob/test-collector-javascript/v1.16.0/test-collector-javascript/docs/opentelemetry.md#setup-1

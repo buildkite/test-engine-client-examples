@@ -1,7 +1,7 @@
 # Playwright OpenTelemetry
 
 Collect test results and nested Playwright steps with
-`buildkite-test-collector` 1.15.0. For JSON uploads, see [`playwright`](../playwright).
+`buildkite-test-collector` 1.16.0. For JSON uploads, see [`playwright`](../playwright).
 
 ## Setup
 
@@ -56,4 +56,4 @@ sensitive data before using real application data.
 
 See the [collector guide] for supported versions, instrumentation and limitations.
 
-[collector guide]: https://github.com/buildkite/bktest/blob/test-collector-javascript/v1.15.0/test-collector-javascript/docs/opentelemetry.md#setup-1
+[collector guide]: https://github.com/buildkite/bktest/blob/test-collector-javascript/v1.16.0/test-collector-javascript/docs/opentelemetry.md#setup-1

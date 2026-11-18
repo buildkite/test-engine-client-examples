@@ -9,6 +9,6 @@
     "@opentelemetry/exporter-trace-otlp-proto": "~0.301.0",
     "@opentelemetry/sdk-trace": "^3",
     "@playwright/test": "^1.48.2",
-    "buildkite-test-collector": "1.15.0"
+    "buildkite-test-collector": "1.16.0"
   }
 }
