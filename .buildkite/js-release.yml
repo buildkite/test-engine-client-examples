@@ -1,0 +1,85 @@
+  - group: ":opentelemetry: SDK 2 and Vitest packages"
+    steps:
+      - label: ":jest: Jest SDK 2"
+        key: verify-sdk2-jest
+        commands:
+          - cd jest-otel
+          - ../bin/use-unreleased-js-collector $$COLLECTOR_SHA sdk2 '@opentelemetry/instrumentation-http@~0.223.0' '@opentelemetry/instrumentation-undici@^0.33.0'
+          - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
+          - export BUILDKITE_TESTS_OTLP_TOKEN="$$(../bin/otel-oidc-token)"
+          - export BUILDKITE_ANALYTICS_KEY="$$BUILDKITE_BUILD_ID-verify-sdk2-jest"
+          - ../bin/expect-run 0 - npx jest --runInBand
+        plugins:
+          - mise#v1.1.4:
+              dir: jest-otel
+
+      - label: ":playwright: Playwright SDK 2"
+        key: verify-sdk2-playwright
+        commands:
+          - cd playwright-otel
+          - ../bin/use-unreleased-js-collector $$COLLECTOR_SHA sdk2
+          - npx playwright install --with-deps chromium
+          - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
+          - export BUILDKITE_TESTS_OTLP_TOKEN="$$(../bin/otel-oidc-token)"
+          - export BUILDKITE_ANALYTICS_KEY="$$BUILDKITE_BUILD_ID-verify-sdk2-playwright"
+          - ../bin/expect-run 0 - npx playwright test
+        plugins:
+          - mise#v1.1.4:
+              dir: playwright-otel
+
+      - label: ":vitest: Vitest packages SDK 2"
+        key: verify-packages-sdk2
+        commands:
+          - cd vitest-otel
+          - ../bin/use-unreleased-js-collector $$COLLECTOR_SHA sdk2 '@opentelemetry/instrumentation-http@~0.223.0' '@opentelemetry/instrumentation-undici@^0.33.0' '@opentelemetry/instrumentation-express@0.71.1' '@opentelemetry/instrumentation-graphql@0.71.0' '@opentelemetry/instrumentation-redis@0.71.0' '@opentelemetry/instrumentation-pg@0.76.0' express@4 graphql@16 redis@5 pg@8
+          - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
+          - export BUILDKITE_TESTS_OTLP_TOKEN="$$(../bin/otel-oidc-token)"
+          - export BUILDKITE_ANALYTICS_KEY="$$BUILDKITE_BUILD_ID-verify-packages-sdk2"
+          - ../bin/expect-run 1 - npx vitest run --config packages.config.js
+        plugins:
+          - mise#v1.1.4:
+              dir: vitest-otel
+
+      - label: ":vitest: Vitest packages SDK 3"
+        key: verify-packages-sdk3
+        commands:
+          - cd vitest-otel
+          - ../bin/use-unreleased-js-collector $$COLLECTOR_SHA sdk3 '@opentelemetry/instrumentation-http@^0.301.0' '@opentelemetry/instrumentation-undici@^0.35.0' '@opentelemetry/instrumentation-express@^0.73.0' '@opentelemetry/instrumentation-graphql@^0.73.0' '@opentelemetry/instrumentation-redis@^0.73.0' '@opentelemetry/instrumentation-pg@^0.78.0' express@4 graphql@16 redis@5 pg@8
+          - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
+          - export BUILDKITE_TESTS_OTLP_TOKEN="$$(../bin/otel-oidc-token)"
+          - export BUILDKITE_ANALYTICS_KEY="$$BUILDKITE_BUILD_ID-verify-packages-sdk3"
+          - ../bin/expect-run 1 - npx vitest run --config packages.config.js
+        plugins:
+          - mise#v1.1.4:
+              dir: vitest-otel
+
+  - group: ":lock: JSON reporter credentials"
+    steps:
+      - label: ":lock: Jest JSON token redaction"
+        key: verify-token-jest
+        commands:
+          - cd jest
+          - npm install
+          - ../bin/use-unreleased-js-collector $$COLLECTOR_SHA keep
+          - export BUILDKITE_ANALYTICS_TOKEN="$$(../bin/otel-oidc-token)"
+          - export BUILDKITE_ANALYTICS_KEY="$$BUILDKITE_BUILD_ID-verify-token-jest"
+          - ../bin/expect-run 1 - npx jest --config token.config.cjs --runInBand --json --outputFile tmp/token-report.json
+          - node ../bin/check-token-report.cjs tmp/token-report.json tmp/token-config.json
+        plugins:
+          - mise#v1.1.4:
+              dir: jest
+
+      - label: ":lock: Playwright JSON token redaction"
+        key: verify-token-playwright
+        commands:
+          - cd playwright
+          - npm install
+          - ../bin/use-unreleased-js-collector $$COLLECTOR_SHA keep
+          - npx playwright install --with-deps chromium
+          - export BUILDKITE_ANALYTICS_TOKEN="$$(../bin/otel-oidc-token)"
+          - export BUILDKITE_ANALYTICS_KEY="$$BUILDKITE_BUILD_ID-verify-token-playwright"
+          - ../bin/expect-run 1 - npx playwright test --config token.config.cjs
+          - node ../bin/check-token-report.cjs tmp/token-report.json
+        plugins:
+          - mise#v1.1.4:
+              dir: playwright

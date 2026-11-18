@@ -1,0 +1,17 @@
+#!/usr/bin/env python3
+"""Verification branch only: run main's JavaScript steps with a packed collector."""
+import os
+from pathlib import Path
+import subprocess
+
+baseline = subprocess.check_output(
+    ['git', 'show', 'bf18b0e9d2a306cf0aa6e4762aff7ac820de0a55:.buildkite/pipeline.yml'], text=True)
+javascript = baseline[baseline.index('  - group: ":javascript:'):baseline.index('  - group: ":python:')]
+sha = os.environ.get('COLLECTOR_SHA', 'a714240713a3cdfa2bf038f02db4ef1dee560d4c')
+for install in ['npm ci', 'npm install', 'bin/setup']:
+    javascript = javascript.replace(
+        f'          - {install}\n',
+        f'          - {install}\n          - ../bin/use-unreleased-js-collector {sha} keep\n')
+print(f'env:\n  COLLECTOR_SHA: "{sha}"\nsteps:')
+print(javascript)
+print(Path('.buildkite/js-release.yml').read_text())

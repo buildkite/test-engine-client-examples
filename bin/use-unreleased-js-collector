@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+# Install buildkite-test-collector from buildkite/bktest at a pinned commit into
+# the example directory this runs from, the way a customer would upgrade.
+#   keep: keep the example's OpenTelemetry packages unchanged.
+#   sdk2: replace them with the SDK 2.9+ set from the collector's docs.
+#   sdk3: replace them with the SDK 3 set from the collector's docs.
+# Extra arguments are added as more devDependencies.
+set -euo pipefail
+
+SHA="${1:?usage: use-unreleased-js-collector <bktest sha> <keep|sdk2|sdk3> [package specs...]}"
+LINE="${2:?usage: use-unreleased-js-collector <bktest sha> <keep|sdk2|sdk3> [package specs...]}"
+shift 2
+
+WORKDIR="$(mktemp -d)"
+git -C "${WORKDIR}" init -q
+git -C "${WORKDIR}" fetch -q --depth 1 https://github.com/buildkite/bktest.git "${SHA}"
+git -C "${WORKDIR}" checkout -q FETCH_HEAD
+TARBALL="$(cd "${WORKDIR}/test-collector-javascript" && npm pack --silent --pack-destination "${WORKDIR}")"
+echo "Packed bktest ${SHA}: ${TARBALL}"
+sha256sum "${WORKDIR}/${TARBALL}"
+
+specs=("buildkite-test-collector@file:${WORKDIR}/${TARBALL}")
+case "${LINE}" in
+  keep) ;;
+  sdk2|sdk3)
+    for name in $(node -p 'Object.keys(require("./package.json").devDependencies).filter((name) => name.startsWith("@opentelemetry/")).join(" ")'); do
+      npm pkg delete "devDependencies.${name}"
+    done
+    if [ "${LINE}" = sdk3 ]; then
+      specs+=('@opentelemetry/api@^1.10' '@opentelemetry/sdk-trace@^3' '@opentelemetry/context-async-hooks@^3' '@opentelemetry/exporter-trace-otlp-proto@~0.301.0')
+    else
+      specs+=('@opentelemetry/api@~1.9.0' '@opentelemetry/sdk-trace@^2.9' '@opentelemetry/context-async-hooks@^2' '@opentelemetry/exporter-trace-otlp-proto@~0.223.0')
+    fi
+    ;;
+  *) echo "unknown SDK line: ${LINE}" >&2; exit 2 ;;
+esac
+
+rm -f package-lock.json
+npm install --save-dev --strict-peer-deps "${specs[@]}" "$@"
+npm ls --depth 0
