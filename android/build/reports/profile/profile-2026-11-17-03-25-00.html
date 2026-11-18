@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+<meta http-equiv="x-ua-compatible" content="IE=edge"/>
+<title>Profile report</title>
+<link href="css/base-style.css" rel="stylesheet" type="text/css"/>
+<link href="css/style.css" rel="stylesheet" type="text/css"/>
+<script src="js/report.js" type="text/javascript"></script>
+</head>
+<body>
+<div id="content">
+<h1>Profile report</h1>
+<div id="header">
+<p>Profiled build: :app:testDebugUnitTest --test-dry-run --rerun </p>
+<p>Started on: 2026/11/17 - 03:25:00</p>
+</div>
+<div id="tabs">
+<ul class="tabLinks">
+<li>
+<a href="#tab0">Summary</a>
+</li>
+<li>
+<a href="#tab1">Configuration</a>
+</li>
+<li>
+<a href="#tab2">Dependency Resolution</a>
+</li>
+<li>
+<a href="#tab3">Artifact Transforms</a>
+</li>
+<li>
+<a href="#tab4">Task Execution</a>
+</li>
+</ul>
+<div class="tab" id="tab0">
+<h2>Summary</h2>
+<table>
+<thead>
+<tr>
+<th>Description</th>
+<th class="numeric">Duration</th>
+</tr>
+</thead>
+<tr>
+<td>Total Build Time</td>
+<td class="numeric">1m36.04s</td>
+</tr>
+<tr>
+<td>Startup</td>
+<td class="numeric">8.008s</td>
+</tr>
+<tr>
+<td>Settings and buildSrc</td>
+<td class="numeric">0.363s</td>
+</tr>
+<tr>
+<td>Loading Projects</td>
+<td class="numeric">1.366s</td>
+</tr>
+<tr>
+<td>Configuring Projects</td>
+<td class="numeric">1m24.38s</td>
+</tr>
+<tr>
+<td>Artifact Transforms</td>
+<td class="numeric">13.063s</td>
+</tr>
+<tr>
+<td>Task Execution</td>
+<td class="numeric">32.814s</td>
+</tr>
+</table>
+</div>
+<div class="tab" id="tab1">
+<h2>Configuration</h2>
+<table>
+<thead>
+<tr>
+<th>Project</th>
+<th class="numeric">Duration</th>
+</tr>
+</thead>
+<tr>
+<td>All projects</td>
+<td class="numeric">1m24.38s</td>
+</tr>
+<tr>
+<td>:</td>
+<td class="numeric">37.409s</td>
+</tr>
+<tr>
+<td>:app</td>
+<td class="numeric">20.925s</td>
+</tr>
+<tr>
+<td>:convention</td>
+<td class="numeric">16.222s</td>
+</tr>
+<tr>
+<td>:example</td>
+<td class="numeric">6.454s</td>
+</tr>
+<tr>
+<td>:collector:instrumented-test-collector</td>
+<td class="numeric">2.003s</td>
+</tr>
+<tr>
+<td>:collector:unit-test-collector</td>
+<td class="numeric">0.771s</td>
+</tr>
+<tr>
+<td>:collector:test-data-uploader</td>
+<td class="numeric">0.589s</td>
+</tr>
+<tr>
+<td>:collector</td>
+<td class="numeric">0.005s</td>
+</tr>
+</table>
+</div>
+<div class="tab" id="tab2">
+<h2>Dependency Resolution</h2>
+<table>
+<thead>
+<tr>
+<th>Dependencies</th>
+<th class="numeric">Duration</th>
+</tr>
+</thead>
+<tr>
+<td>All dependencies</td>
+<td class="numeric">4.975s</td>
+</tr>
+<tr>
+<td>:app:debugUnitTestRuntimeClasspath</td>
+<td class="numeric">1.774s</td>
+</tr>
+<tr>
+<td>:convention:classpath</td>
+<td class="numeric">1.596s</td>
+</tr>
+<tr>
+<td>:app:kotlinCompilerClasspath</td>
+<td class="numeric">0.462s</td>
+</tr>
+<tr>
+<td>:convention:kotlinCompilerPluginClasspathMain</td>
+<td class="numeric">0.307s</td>
+</tr>
+<tr>
+<td>:convention:kotlinCompilerClasspath</td>
+<td class="numeric">0.176s</td>
+</tr>
+<tr>
+<td>:app:kotlinBuildToolsApiClasspath</td>
+<td class="numeric">0.162s</td>
+</tr>
+<tr>
+<td>detachedConfiguration3</td>
+<td class="numeric">0.111s</td>
+</tr>
+<tr>
+<td>:collector:test-data-uploader:kotlinCompilerPluginClasspathMain</td>
+<td class="numeric">0.105s</td>
+</tr>
+<tr>
+<td>:collector:unit-test-collector:compileClasspath</td>
+<td class="numeric">0.100s</td>
+</tr>
+<tr>
+<td>detachedConfiguration4</td>
+<td class="numeric">0.071s</td>
+</tr>
+<tr>
+<td>:app:detachedConfiguration2</td>
+<td class="numeric">0.041s</td>
+</tr>
+<tr>
+<td>:classpath</td>
+<td class="numeric">0.009s</td>
+</tr>
+<tr>
+<td>:app:debugCompileClasspath</td>
+<td class="numeric">0.006s</td>
+</tr>
+<tr>
+<td>:app:debugUnitTestCompileClasspath</td>
+<td class="numeric">0.005s</td>
+</tr>
+<tr>
+<td>:collector:test-data-uploader:classpath</td>
+<td class="numeric">0.005s</td>
+</tr>
+<tr>
+<td>:collector:test-data-uploader:compileClasspath</td>
+<td class="numeric">0.005s</td>
+</tr>
+<tr>
+<td>:collector:unit-test-collector:classpath</td>
+<td class="numeric">0.005s</td>
+</tr>
+<tr>
+<td>:convention:compileClasspath</td>
+<td class="numeric">0.005s</td>
+</tr>
+<tr>
+<td>:collector:test-data-uploader:kotlinCompilerClasspath</td>
+<td class="numeric">0.003s</td>
+</tr>
+<tr>
+<td>detachedConfiguration2</td>
+<td class="numeric">0.003s</td>
+</tr>
+<tr>
+<td>:app:androidApis</td>
+<td class="numeric">0.002s</td>
+</tr>
+<tr>
+<td>:app:classpath</td>
+<td class="numeric">0.002s</td>
+</tr>
+<tr>
+<td>:collector:instrumented-test-collector:classpath</td>
+<td class="numeric">0.002s</td>
+</tr>
+<tr>
+<td>:collector:unit-test-collector:kotlinCompilerClasspath</td>
+<td class="numeric">0.002s</td>
+</tr>
+<tr>
+<td>:collector:unit-test-collector:kotlinCompilerPluginClasspathMain</td>
+<td class="numeric">0.002s</td>
+</tr>
+<tr>
+<td>detachedConfiguration1</td>
+<td class="numeric">0.002s</td>
+</tr>
+<tr>
+<td>:app:androidJdkImage</td>
+<td class="numeric">0.001s</td>
+</tr>
+<tr>
+<td>:app:debugAnnotationProcessorClasspath</td>
+<td class="numeric">0.001s</td>
+</tr>
+<tr>
+<td>:app:debugRuntimeClasspath</td>
+<td class="numeric">0.001s</td>
+</tr>
+<tr>
+<td>:app:debugUnitTestAnnotationProcessorClasspath</td>
+<td class="numeric">0.001s</td>
+</tr>
+<tr>
+<td>:app:detachedConfiguration5</td>
+<td class="numeric">0.001s</td>
+</tr>
+<tr>
+<td>:app:detachedConfiguration6</td>
+<td class="numeric">0.001s</td>
+</tr>
+<tr>
+<td>:collector:classpath</td>
+<td class="numeric">0.001s</td>
+</tr>
+<tr>
+<td>:collector:test-data-uploader:detachedConfiguration1</td>
+<td class="numeric">0.001s</td>
+</tr>
+<tr>
+<td>:collector:unit-test-collector:detachedConfiguration1</td>
+<td class="numeric">0.001s</td>
+</tr>
+<tr>
+<td>:convention:detachedConfiguration1</td>
+<td class="numeric">0.001s</td>
+</tr>
+<tr>
+<td>classpath</td>
+<td class="numeric">0.001s</td>
+</tr>
+<tr>
+<td>incomingCatalogForLibs0</td>
+<td class="numeric">0.001s</td>
+</tr>
+<tr>
+<td>:app:debugReverseMetadataValues</td>
+<td class="numeric">0s</td>
+</tr>
+<tr>
+<td>:app:kotlinCompilerPluginClasspathDebug</td>
+<td class="numeric">0s</td>
+</tr>
+<tr>
+<td>:app:kotlinCompilerPluginClasspathDebugUnitTest</td>
+<td class="numeric">0s</td>
+</tr>
+<tr>
+<td>:collector:test-data-uploader:annotationProcessor</td>
+<td class="numeric">0s</td>
+</tr>
+<tr>
+<td>:collector:test-data-uploader:kotlinScriptDefExtensions</td>
+<td class="numeric">0s</td>
+</tr>
+<tr>
+<td>:collector:unit-test-collector:annotationProcessor</td>
+<td class="numeric">0s</td>
+</tr>
+<tr>
+<td>:collector:unit-test-collector:kotlinScriptDefExtensions</td>
+<td class="numeric">0s</td>
+</tr>
+<tr>
+<td>:convention:annotationProcessor</td>
+<td class="numeric">0s</td>
+</tr>
+<tr>
+<td>:convention:kotlinScriptDefExtensions</td>
+<td class="numeric">0s</td>
+</tr>
+<tr>
+<td>:example:classpath</td>
+<td class="numeric">0s</td>
+</tr>
+</table>
+</div>
+<div class="tab" id="tab3">
+<h2>Artifact Transforms</h2>
+<table>
+<thead>
+<tr>
+<th>Transform</th>
+<th class="numeric">Duration</th>
+</tr>
+</thead>
+<tr>
+<td>All transforms</td>
+<td class="numeric">13.063s</td>
+</tr>
+<tr>
+<td>gradle-api-8.9.jar with ClasspathEntrySnapshotTransform</td>
+<td class="numeric">4.410s</td>
+</tr>
+<tr>
+<td>groovy-3.0.21.jar with ClasspathEntrySnapshotTransform</td>
+<td class="numeric">1.449s</td>
+</tr>
+<tr>
+<td>kotlin-stdlib-1.9.23.jar with ClasspathEntrySnapshotTransform</td>
+<td class="numeric">1.275s</td>
+</tr>
+<tr>
+<td>kotlin-reflect-1.9.23.jar with ClasspathEntrySnapshotTransform</td>
+<td class="numeric">0.933s</td>
+</tr>
+<tr>
+<td>kotlin-stdlib-2.0.21.jar with BuildToolsApiClasspathEntrySnapshotTransform</td>
+<td class="numeric">0.769s</td>
+</tr>
+<tr>
+<td>android.jar with MockableJarTransform</td>
+<td class="numeric">0.602s</td>
+</tr>
+<tr>
+<td>android.jar with BuildToolsApiClasspathEntrySnapshotTransform</td>
+<td class="numeric">0.507s</td>
+</tr>
+<tr>
+<td>kotlin-stdlib-1.9.25.jar with ClasspathEntrySnapshotTransform</td>
+<td class="numeric">0.461s</td>
+</tr>
+<tr>
+<td>javaparser-core-3.17.0.jar with ClasspathEntrySnapshotTransform</td>
+<td class="numeric">0.367s</td>
+</tr>
+<tr>
+<td>okhttp-jvm-5.0.0-alpha.12.jar with ClasspathEntrySnapshotTransform</td>
+<td class="numeric">0.304s</td>
+</tr>
+<tr>
+<td>groovy-console-3.0.21.jar with ClasspathEntrySnapshotTransform</td>
+<td class="numeric">0.302s</td>
+</tr>
+<tr>
+<td>gradle-kotlin-dsl-8.9.jar with ClasspathEntrySnapshotTransform</td>
+<td class="numeric">0.270s</td>
+</tr>
+<tr>
+<td>okio-jvm-3.7.0.jar with ClasspathEntrySnapshotTransform</td>
+<td class="numeric">0.257s</td>
+</tr>
+<tr>
+<td>junit-4.13.2.jar with BuildToolsApiClasspathEntrySnapshotTransform</td>
+<td class="numeric">0.183s</td>
+</tr>
+<tr>
+<td>R.jar with BuildToolsApiClasspathEntrySnapshotTransform</td>
+<td class="numeric">0.112s</td>
+</tr>
+<tr>
+<td>classes.jar with BuildToolsApiClasspathEntrySnapshotTransform</td>
+<td class="numeric">0.112s</td>
+</tr>
+<tr>
+<td>retrofit-2.9.0.jar with ClasspathEntrySnapshotTransform</td>
+<td class="numeric">0.112s</td>
+</tr>
+<tr>
+<td>gradle-kotlin-dsl-extensions-8.9.jar with ClasspathEntrySnapshotTransform</td>
+<td class="numeric">0.090s</td>
+</tr>
+<tr>
+<td>groovy-ant-3.0.21.jar with ClasspathEntrySnapshotTransform</td>
+<td class="numeric">0.073s</td>
+</tr>
+<tr>
+<td>groovy-astbuilder-3.0.21.jar with ClasspathEntrySnapshotTransform</td>
+<td class="numeric">0.063s</td>
+</tr>
+<tr>
+<td>groovy-xml-3.0.21.jar with ClasspathEntrySnapshotTransform</td>
+<td class="numeric">0.050s</td>
+</tr>
+<tr>
+<td>converter-gson-2.9.0.jar with ClasspathEntrySnapshotTransform</td>
+<td class="numeric">0.047s</td>
+</tr>
+<tr>
+<td>aapt2-8.7.3-12006047-linux.jar (com.android.tools.build:aapt2:8.7.3-12006047) with Aapt2Extractor</td>
+<td class="numeric">0.045s</td>
+</tr>
+<tr>
+<td>groovy-test-3.0.21.jar with ClasspathEntrySnapshotTransform</td>
+<td class="numeric">0.045s</td>
+</tr>
+<tr>
+<td>groovy-json-3.0.21.jar with ClasspathEntrySnapshotTransform</td>
+<td class="numeric">0.031s</td>
+</tr>
+<tr>
+<td>android.jar with PlatformAttrTransform</td>
+<td class="numeric">0.030s</td>
+</tr>
+<tr>
+<td>gson-2.8.5.jar with ClasspathEntrySnapshotTransform</td>
+<td class="numeric">0.028s</td>
+</tr>
+<tr>
+<td>gradle-kotlin-dsl-shared-runtime-8.9.jar with ClasspathEntrySnapshotTransform</td>
+<td class="numeric">0.020s</td>
+</tr>
+<tr>
+<td>groovy-templates-3.0.21.jar with ClasspathEntrySnapshotTransform</td>
+<td class="numeric">0.018s</td>
+</tr>
+<tr>
+<td>detekt-gradle-plugin-1.23.1.jar with ClasspathEntrySnapshotTransform</td>
+<td class="numeric">0.017s</td>
+</tr>
+<tr>
+<td>groovy-sql-3.0.21.jar with ClasspathEntrySnapshotTransform</td>
+<td class="numeric">0.017s</td>
+</tr>
+<tr>
+<td>test-data-uploader.jar with ClasspathEntrySnapshotTransform</td>
+<td class="numeric">0.016s</td>
+</tr>
+<tr>
+<td>groovy-groovydoc-3.0.21.jar with ClasspathEntrySnapshotTransform</td>
+<td class="numeric">0.014s</td>
+</tr>
+<tr>
+<td>groovy-datetime-3.0.21.jar with ClasspathEntrySnapshotTransform</td>
+<td class="numeric">0.006s</td>
+</tr>
+<tr>
+<td>hamcrest-core-1.3.jar with BuildToolsApiClasspathEntrySnapshotTransform</td>
+<td class="numeric">0.006s</td>
+</tr>
+<tr>
+<td>annotations-13.0.jar with ClasspathEntrySnapshotTransform</td>
+<td class="numeric">0.005s</td>
+</tr>
+<tr>
+<td>core-lambda-stubs.jar with BuildToolsApiClasspathEntrySnapshotTransform</td>
+<td class="numeric">0.005s</td>
+</tr>
+<tr>
+<td>annotations-13.0.jar with BuildToolsApiClasspathEntrySnapshotTransform</td>
+<td class="numeric">0.004s</td>
+</tr>
+<tr>
+<td>groovy-nio-3.0.21.jar with ClasspathEntrySnapshotTransform</td>
+<td class="numeric">0.004s</td>
+</tr>
+<tr>
+<td>groovy-dateutil-3.0.21.jar with ClasspathEntrySnapshotTransform</td>
+<td class="numeric">0.003s</td>
+</tr>
+<tr>
+<td>gradle-installation-beacon-8.9.jar with ClasspathEntrySnapshotTransform</td>
+<td class="numeric">0.001s</td>
+</tr>
+<tr>
+<td>annotations-13.0.jar (org.jetbrains:annotations:13.0) with IdentityTransform</td>
+<td class="numeric">0s</td>
+</tr>
+<tr>
+<td>gradle-kotlin-dsl-tooling-models-8.9.jar with ClasspathEntrySnapshotTransform</td>
+<td class="numeric">0s</td>
+</tr>
+<tr>
+<td>hamcrest-core-1.3.jar (org.hamcrest:hamcrest-core:1.3) with IdentityTransform</td>
+<td class="numeric">0s</td>
+</tr>
+<tr>
+<td>junit-4.13.2.jar (junit:junit:4.13.2) with IdentityTransform</td>
+<td class="numeric">0s</td>
+</tr>
+<tr>
+<td>kotlin-stdlib-2.0.21.jar (org.jetbrains.kotlin:kotlin-stdlib:2.0.21) with IdentityTransform</td>
+<td class="numeric">0s</td>
+</tr>
+</table>
+</div>
+<div class="tab" id="tab4">
+<h2>Task Execution</h2>
+<table>
+<thead>
+<tr>
+<th>Task</th>
+<th class="numeric">Duration</th>
+<th>Result</th>
+</tr>
+</thead>
+<tr>
+<td>:collector:test-data-uploader</td>
+<td class="numeric">10.353s</td>
+<td>(total)</td>
+</tr>
+<tr>
+<td class="indentPath">:collector:test-data-uploader:compileKotlin</td>
+<td class="numeric">10.329s</td>
+<td></td>
+</tr>
+<tr>
+<td class="indentPath">:collector:test-data-uploader:jar</td>
+<td class="numeric">0.017s</td>
+<td></td>
+</tr>
+<tr>
+<td class="indentPath">:collector:test-data-uploader:checkKotlinGradlePluginConfigurationErrors</td>
+<td class="numeric">0.003s</td>
+<td></td>
+</tr>
+<tr>
+<td class="indentPath">:collector:test-data-uploader:processResources</td>
+<td class="numeric">0.003s</td>
+<td>NO-SOURCE</td>
+</tr>
+<tr>
+<td class="indentPath">:collector:test-data-uploader:compileJava</td>
+<td class="numeric">0.001s</td>
+<td>NO-SOURCE</td>
+</tr>
+<tr>
+<td class="indentPath">:collector:test-data-uploader:classes</td>
+<td class="numeric">0s</td>
+<td>UP-TO-DATE</td>
+</tr>
+<tr>
+<td>:convention</td>
+<td class="numeric">8.907s</td>
+<td>(total)</td>
+</tr>
+<tr>
+<td class="indentPath">:convention:compileKotlin</td>
+<td class="numeric">8.798s</td>
+<td></td>
+</tr>
+<tr>
+<td class="indentPath">:convention:processResources</td>
+<td class="numeric">0.032s</td>
+<td></td>
+</tr>
+<tr>
+<td class="indentPath">:convention:jar</td>
+<td class="numeric">0.031s</td>
+<td></td>
+</tr>
+<tr>
+<td class="indentPath">:convention:pluginDescriptors</td>
+<td class="numeric">0.022s</td>
+<td></td>
+</tr>
+<tr>
+<td class="indentPath">:convention:checkKotlinGradlePluginConfigurationErrors</td>
+<td class="numeric">0.020s</td>
+<td></td>
+</tr>
+<tr>
+<td class="indentPath">:convention:compileJava</td>
+<td class="numeric">0.003s</td>
+<td>NO-SOURCE</td>
+</tr>
+<tr>
+<td class="indentPath">:convention:classes</td>
+<td class="numeric">0.001s</td>
+<td>Did No Work</td>
+</tr>
+<tr>
+<td>:app</td>
+<td class="numeric">7.896s</td>
+<td>(total)</td>
+</tr>
+<tr>
+<td class="indentPath">:app:compileDebugUnitTestKotlin</td>
+<td class="numeric">4.640s</td>
+<td></td>
+</tr>
+<tr>
+<td class="indentPath">:app:testDebugUnitTest</td>
+<td class="numeric">1.388s</td>
+<td></td>
+</tr>
+<tr>
+<td class="indentPath">:app:parseDebugLocalResources</td>
+<td class="numeric">1.169s</td>
+<td></td>
+</tr>
+<tr>
+<td class="indentPath">:app:processDebugResources</td>
+<td class="numeric">0.334s</td>
+<td></td>
+</tr>
+<tr>
+<td class="indentPath">:app:processDebugMainManifest</td>
+<td class="numeric">0.114s</td>
+<td></td>
+</tr>
+<tr>
+<td class="indentPath">:app:processDebugManifest</td>
+<td class="numeric">0.068s</td>
+<td></td>
+</tr>
+<tr>
+<td class="indentPath">:app:mergeDebugResources</td>
+<td class="numeric">0.040s</td>
+<td></td>
+</tr>
+<tr>
+<td class="indentPath">:app:checkDebugAarMetadata</td>
+<td class="numeric">0.037s</td>
+<td></td>
+</tr>
+<tr>
+<td class="indentPath">:app:processDebugManifestForPackage</td>
+<td class="numeric">0.024s</td>
+<td></td>
+</tr>
+<tr>
+<td class="indentPath">:app:javaPreCompileDebug</td>
+<td class="numeric">0.012s</td>
+<td></td>
+</tr>
+<tr>
+<td class="indentPath">:app:bundleDebugClassesToRuntimeJar</td>
+<td class="numeric">0.011s</td>
+<td></td>
+</tr>
+<tr>
+<td class="indentPath">:app:createDebugCompatibleScreenManifests</td>
+<td class="numeric">0.011s</td>
+<td></td>
+</tr>
+<tr>
+<td class="indentPath">:app:mapDebugSourceSetPaths</td>
+<td class="numeric">0.008s</td>
+<td></td>
+</tr>
+<tr>
+<td class="indentPath">:app:javaPreCompileDebugUnitTest</td>
+<td class="numeric">0.007s</td>
+<td></td>
+</tr>
+<tr>
+<td class="indentPath">:app:processDebugUnitTestJavaRes</td>
+<td class="numeric">0.007s</td>
+<td></td>
+</tr>
+<tr>
+<td class="indentPath">:app:packageDebugResources</td>
+<td class="numeric">0.006s</td>
+<td></td>
+</tr>
+<tr>
+<td class="indentPath">:app:bundleDebugClassesToCompileJar</td>
+<td class="numeric">0.005s</td>
+<td></td>
+</tr>
+<tr>
+<td class="indentPath">:app:extractDeepLinksDebug</td>
+<td class="numeric">0.004s</td>
+<td></td>
+</tr>
+<tr>
+<td class="indentPath">:app:generateDebugResValues</td>
+<td class="numeric">0.003s</td>
+<td></td>
+</tr>
+<tr>
+<td class="indentPath">:app:compileDebugKotlin</td>
+<td class="numeric">0.002s</td>
+<td>NO-SOURCE</td>
+</tr>
+<tr>
+<td class="indentPath">:app:generateDebugResources</td>
+<td class="numeric">0.002s</td>
+<td></td>
+</tr>
+<tr>
+<td class="indentPath">:app:processDebugJavaRes</td>
+<td class="numeric">0.002s</td>
+<td>NO-SOURCE</td>
+</tr>
+<tr>
+<td class="indentPath">:app:compileDebugJavaWithJavac</td>
+<td class="numeric">0.001s</td>
+<td>NO-SOURCE</td>
+</tr>
+<tr>
+<td class="indentPath">:app:compileDebugUnitTestJavaWithJavac</td>
+<td class="numeric">0.001s</td>
+<td>NO-SOURCE</td>
+</tr>
+<tr>
+<td class="indentPath">:app:checkKotlinGradlePluginConfigurationErrors</td>
+<td class="numeric">0s</td>
+<td>SKIPPED</td>
+</tr>
+<tr>
+<td class="indentPath">:app:preBuild</td>
+<td class="numeric">0s</td>
+<td>UP-TO-DATE</td>
+</tr>
+<tr>
+<td class="indentPath">:app:preDebugBuild</td>
+<td class="numeric">0s</td>
+<td>UP-TO-DATE</td>
+</tr>
+<tr>
+<td class="indentPath">:app:preDebugUnitTestBuild</td>
+<td class="numeric">0s</td>
+<td>UP-TO-DATE</td>
+</tr>
+<tr>
+<td>:collector:unit-test-collector</td>
+<td class="numeric">5.658s</td>
+<td>(total)</td>
+</tr>
+<tr>
+<td class="indentPath">:collector:unit-test-collector:compileKotlin</td>
+<td class="numeric">5.629s</td>
+<td></td>
+</tr>
+<tr>
+<td class="indentPath">:collector:unit-test-collector:jar</td>
+<td class="numeric">0.014s</td>
+<td></td>
+</tr>
+<tr>
+<td class="indentPath">:collector:unit-test-collector:processResources</td>
+<td class="numeric">0.008s</td>
+<td></td>
+</tr>
+<tr>
+<td class="indentPath">:collector:unit-test-collector:pluginDescriptors</td>
+<td class="numeric">0.004s</td>
+<td></td>
+</tr>
+<tr>
+<td class="indentPath">:collector:unit-test-collector:compileJava</td>
+<td class="numeric">0.002s</td>
+<td>NO-SOURCE</td>
+</tr>
+<tr>
+<td class="indentPath">:collector:unit-test-collector:classes</td>
+<td class="numeric">0.001s</td>
+<td>Did No Work</td>
+</tr>
+<tr>
+<td class="indentPath">:collector:unit-test-collector:checkKotlinGradlePluginConfigurationErrors</td>
+<td class="numeric">0s</td>
+<td></td>
+</tr>
+<tr>
+<td>:</td>
+<td class="numeric">0s</td>
+<td>(total)</td>
+</tr>
+<tr>
+<td>:collector</td>
+<td class="numeric">0s</td>
+<td>(total)</td>
+</tr>
+<tr>
+<td>:collector:instrumented-test-collector</td>
+<td class="numeric">0s</td>
+<td>(total)</td>
+</tr>
+<tr>
+<td>:example</td>
+<td class="numeric">0s</td>
+<td>(total)</td>
+</tr>
+</table>
+</div>
+</div>
+<div id="footer">
+<p>
+<div>
+<label class="hidden" id="label-for-line-wrapping-toggle" for="line-wrapping-toggle">Wrap lines
+<input id="line-wrapping-toggle" type="checkbox" autocomplete="off"/>
+</label>
+</div>Generated by 
+<a href="http://www.gradle.org">Gradle 8.9</a> at Nov 17, 2026, 3:26:28 AM</p>
+</div>
+</div>
+</body>
+</html>

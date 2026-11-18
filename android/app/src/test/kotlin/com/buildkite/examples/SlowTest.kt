@@ -6,8 +6,7 @@ import org.junit.Test
 class SlowTest {
     @Test
     fun slowOperation() {
-        // Deliberately dominate the suite so timing-based splitting is visible:
-        // a warm plan should put this class alone, not split by class count.
+        // Give timing-based splitting one slow class.
         Thread.sleep(15000)
         assertEquals(4, 2 + 2)
     }

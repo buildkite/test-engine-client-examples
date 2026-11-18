@@ -1,0 +1,3 @@
+com.buildkite.examples.FailingTest
+com.buildkite.examples.FlakyTest
+com.buildkite.examples.SlowTest

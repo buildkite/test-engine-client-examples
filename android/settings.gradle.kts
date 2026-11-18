@@ -1,5 +1,5 @@
 pluginManagement {
-    // Verification branch only; never changes the collector's checked-in source.
+    // Verification only: use the exact reviewed collector sources before release.
     System.getenv("ANDROID_COLLECTOR_SOURCE")?.let { includeBuild(it) }
     repositories {
         google()

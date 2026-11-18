@@ -1,0 +1,7 @@
+com.buildkite.examples.app-pngs-0 /home/user/workspace/repo/android/app/build/generated/res/pngs/debug
+com.buildkite.examples.app-resValues-1 /home/user/workspace/repo/android/app/build/generated/res/resValues/debug
+com.buildkite.examples.app-packageDebugResources-2 /home/user/workspace/repo/android/app/build/intermediates/incremental/debug/packageDebugResources/merged.dir
+com.buildkite.examples.app-packageDebugResources-3 /home/user/workspace/repo/android/app/build/intermediates/incremental/debug/packageDebugResources/stripped.dir
+com.buildkite.examples.app-debug-4 /home/user/workspace/repo/android/app/build/intermediates/merged_res/debug/mergeDebugResources
+com.buildkite.examples.app-debug-5 /home/user/workspace/repo/android/app/src/debug/res
+com.buildkite.examples.app-main-6 /home/user/workspace/repo/android/app/src/main/res

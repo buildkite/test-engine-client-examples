@@ -1,8 +1,6 @@
 import org.gradle.api.tasks.testing.Test
 import org.gradle.api.tasks.testing.junitplatform.JUnitPlatformOptions
 
-// Apply once from the root project. Select one variant across every module;
-// JVM-only builds use -PsplitTestTask=test instead of testDebugUnitTest.
 def testTaskName = providers.gradleProperty('splitTestTask').getOrElse('testDebugUnitTest')
 def discovering = providers.gradleProperty('discoverTests').isPresent()
 def assignedClasses = providers.gradleProperty('testClasses')
@@ -26,8 +24,7 @@ tasks.register('splitTests') {
             selectedTasks.each { tasks -> tasks.each { task ->
                 def manifest = task.project.layout.buildDirectory.file("test-selectors/${task.name}.txt").get().asFile
                 if (task.state.skipped) {
-                    // Disabled/onlyIf/NO-SOURCE tasks produce no discovery output.
-                    // Never transfer an old ownership manifest for a skipped task.
+                    // Skipped tasks must not transfer stale ownership.
                     manifest.delete()
                 } else {
                     if (!manifest.exists()) throw new GradleException("Discovery task ${task.path} ran but did not write its selector manifest")
@@ -43,6 +40,23 @@ tasks.register('splitTests') {
             combinedSelectors.text = owners.keySet().join('\n') + '\n'
             logger.lifecycle("Discovered ${owners.size()} selectors across modules: ${owners}")
         }
+    } else if (assignedClasses.isPresent()) {
+        doLast {
+            def assignmentCounts = [:].withDefault { 0 }
+            selectedTasks.each { tasks -> tasks.each { task ->
+                def manifest = task.project.layout.buildDirectory.file("test-selectors/${task.name}.txt").get().asFile
+                def owned = manifest.exists() ? manifest.readLines() : []
+                def classes = assignments.findAll { it in owned }
+                if (!classes.empty && task.state.skipped) {
+                    throw new GradleException("Assigned test task ${task.path} was skipped: ${classes}")
+                }
+                classes.each { assignmentCounts[it]++ }
+            } }
+            def invalid = assignments.findAll { assignmentCounts[it] != 1 }
+            if (!invalid.empty) {
+                throw new GradleException("Assigned classes must have exactly one owning Test task; check transferred selector manifests and splitTestTask: ${invalid}")
+            }
+        }
     }
 }
 
@@ -50,15 +64,13 @@ allprojects {
     tasks.withType(Test).matching { it.name == testTaskName }.configureEach {
         def selectors = project.layout.buildDirectory.file("test-selectors/${name}.txt").get().asFile
         if (discovering || assignedClasses.isPresent()) {
-            // Force only Test tasks, not their compilation dependencies. The root
-            // task's --rerun alone would not force its dependent Test tasks.
+            // Rerun tests without forcing compilation dependencies to rebuild.
             outputs.upToDateWhen { false }
             outputs.cacheIf { false }
         }
         if (discovering) {
             dryRun.set(true)
-            // Dry-run XML would look like extra skipped executions on modules
-            // that receive no assignments later. Publish only real run reports.
+            // Dry-run XML must not be mistaken for real executions.
             reports.junitXml.required.set(false)
             reports.html.required.set(false)
             def classes = new TreeSet<String>()
@@ -75,8 +87,8 @@ allprojects {
                     if (current.className != null) selector = current.className
                 }
                 if (selector != null) {
-                    if (selector =~ /[\s']/) {
-                        throw new GradleException("Cannot split selector '${selector}': bktec joins selectors with spaces inside a single-quoted argument; class names must not contain whitespace or apostrophes")
+                    if (selector =~ /[\s'*]/) {
+                        throw new GradleException("Cannot split selector '${selector}': class names must not contain whitespace, apostrophes or '*' (a Gradle test-filter wildcard)")
                     }
                     classes.add(selector)
                 }
@@ -84,8 +96,7 @@ allprojects {
             // Atomic callbacks omit empty JUnit 4 suites and Enclosed placeholders.
             beforeTest { descriptor -> discover(descriptor) }
             beforeSuite { descriptor ->
-                // Platform templates/factories have method containers but no
-                // atomic dry-run callbacks. Class containers aren't enough.
+                // Platform templates/factories have no atomic dry-run callbacks.
                 if (options instanceof JUnitPlatformOptions && descriptor.className != null &&
                     descriptor.parent?.className == descriptor.className && descriptor.name != descriptor.className) {
                     discover(descriptor)
@@ -102,7 +113,6 @@ allprojects {
             def classes = assignments.findAll { it in owned }
             onlyIf("this module owns assigned classes") { !classes.empty }
             doFirst {
-                // --tests filters intersect existing includes and keep exclusions.
                 setTestNameIncludePatterns(classes)
                 logger.lifecycle("Assigned test classes for ${path}: ${classes.join(' ')}")
             }

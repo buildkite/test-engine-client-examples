@@ -619,7 +619,7 @@ steps:
         retry:
           automatic:
             - exit_status: 1
-              limit: 1
+              limit: ${ANDROID_PROOF_RETRY_LIMIT:-0}
         commands:
           # Download from this build's discovery job before Gradle reads ownership.
           # Download '*' spans path separators, unlike upload globs: include the
