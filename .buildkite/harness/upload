@@ -1,0 +1,61 @@
+#!/usr/bin/env bash
+set -euo pipefail
+[[ $# == 1 && $1 =~ ^(check|run)$ ]] || { echo 'Usage: upload <check|run> (optional: EXAMPLES=rspec,rspec-collector BKTEC_VERSION=...)' >&2; exit 1; }
+cd "$(dirname "$0")/../.."
+work=$(mktemp -d)
+trap 'rm -rf "$work"' EXIT
+fail() { echo "upload: $*" >&2; exit 1; }
+
+for dir in $(sed -n '/^| Runner /,/^$/p' README.md | grep -oE '\]\(\./[a-z0-9-]+\)' | sed 's@](./@@; s@)@@'); do
+  [[ -f $dir/pipeline.yml ]] || fail "$dir needs pipeline.yml"
+done
+# Only directories with pipeline.yml have migrated to the reference layout.
+for pipeline in */pipeline.yml; do
+  dir=${pipeline%/*}
+  [[ -f $dir/README.md ]] || fail "$dir needs README.md"
+  grep -Fq "](./$dir)" README.md || fail "$dir needs a row in README.md"
+  if grep -REn 'soft_fail|\bunset\b|BUILDKITE_ANALYTICS_KEY|LOCATION_PREFIX|location-prefix' "$dir" --exclude=Gemfile.lock; then
+    fail "$dir contains pipeline workarounds that do not belong in an example"
+  fi
+  BUILDKITE_AGENT_ACCESS_TOKEN=${BUILDKITE_AGENT_ACCESS_TOKEN:-dry-run} buildkite-agent pipeline upload --dry-run --format json "$pipeline" > "$work/$dir.json"
+  jq -e '.steps | all(.key != null)' "$work/$dir.json" >/dev/null || fail "$dir needs a key on each step"
+  if [[ $dir == *-collector || $dir == *-otel ]]; then
+    base=${dir%-*}
+    # The OTel checkout is the one additional fixture; all shared specs must match.
+    extra=()
+    [[ $dir != *-otel ]] || extra=(--exclude=orders)
+    diff -ru --exclude=spec_helper.rb "${extra[@]}" "$base/spec" "$dir/spec"
+    diff -ru "$base/lib" "$dir/lib"
+  fi
+done
+
+versions=$(sed -nE 's/.*(client-version: |\&bktec_version )"(\$\{BKTEC_VERSION:-)?([^"}]+)\}?".*/\3/p; s/.*version = "([^"]+)", bin = "bktec".*/\1/p' .buildkite/pipeline.yml .buildkite/failures.yml */pipeline.yml */mise.toml | sort -u)
+[[ $(echo "$versions" | wc -l) == 1 ]] || fail "bktec pins differ: $versions"
+for plugin in tests mise; do
+  versions=$(grep -hoE "$plugin#v[0-9.]+" .buildkite/pipeline.yml */pipeline.yml .buildkite/failures.yml | sort -u)
+  [[ $(echo "$versions" | wc -l) == 1 ]] || fail "$plugin plugin pins differ: $versions"
+done
+
+IFS=, read -ra selected <<< "${EXAMPLES:-$(printf '%s\n' */pipeline.yml | sed 's@/pipeline.yml@@' | paste -sd,)}"
+for dir in "${selected[@]}"; do
+  [[ -f $work/$dir.json ]] || fail "unknown example: $dir"
+  jq --arg dir "$dir" --arg version "${BKTEC_VERSION:-}" '
+    .steps[] |= (.env.EXAMPLE = $dir |
+      if $version != "" then .plugins |= map(with_entries(
+        if .key | contains("tests-buildkite-plugin#") then .value["client-version"] = $version else . end)) else . end)
+  ' "$work/$dir.json" > "$work/selected-$dir.json"
+done
+jq -s '{steps: [.[].steps[]]}' "$work"/selected-*.json > "$work/pipeline.json"
+jq -e '.steps as $steps | [$steps[] | (.env.BUILDKITE_TEST_ENGINE_SUITE_SLUG // (.plugins[] | .[] | .["suite-slug"]? // empty))] |
+  length == ($steps | length) and length == (unique | length)' "$work/pipeline.json" >/dev/null || fail 'each step needs its own suite'
+if [[ $1 == check ]]; then
+  echo 'upload: example rules passed'
+  exit 0
+fi
+: "${BUILDKITE_BUILD_ID:?run upload on a Buildkite build}"
+jq --arg build "$BUILDKITE_BUILD_ID" '
+  .steps += [{label: ":white_check_mark: Verify Test Engine", key: "verify-examples",
+    depends_on: [.steps[].key], allow_dependency_failure: true,
+    command: (".buildkite/harness/verify " + $build + " " +
+      ([.steps[] | (.env.BUILDKITE_TEST_ENGINE_SUITE_SLUG // (.plugins[] | .[] | .["suite-slug"]? // empty))] | join(" ")))}]
+' "$work/pipeline.json" | buildkite-agent pipeline upload --no-interpolation

@@ -1,0 +1,18 @@
+steps:
+  - label: ":rspec: RSpec"
+    key: rspec
+    parallelism: 2
+    commands:
+      - cd rspec
+      - bundle install
+      - bktec run
+    plugins:
+      - tests#v1.1.0:
+          test-runner: rspec
+          result-path: tmp/rspec.json
+          suite-slug: examples-rspec
+          client-version: "3.5.0"
+          # Remove once the Tests plugin defaults to a two-hour token.
+          oidc-lifetime: 7200
+      - mise#v1.1.6:
+          dir: rspec

@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+if [[ -n ${EXAMPLE:-} && -s ${BUILDKITE_TEST_ENGINE_PLAN_OUT:-} ]]; then
+  if ! jq -e '.fallback != true' "$BUILDKITE_TEST_ENGINE_PLAN_OUT" >/dev/null; then
+    echo 'Test Engine plan is unreadable or bktec ran on a fallback split.' >&2
+    exit 1
+  fi
+  rm -f "$BUILDKITE_TEST_ENGINE_PLAN_OUT"
+fi

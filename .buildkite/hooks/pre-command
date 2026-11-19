@@ -1,0 +1,14 @@
+#!/usr/bin/env bash
+set -euo pipefail
+# Only migrated examples opt into repository harness behavior.
+if [[ -n ${EXAMPLE:-} ]]; then
+  BUILDKITE_TEST_ENGINE_PLAN_OUT=$(mktemp "${TMPDIR:-/tmp}/example-plan.XXXXXX")
+  export BUILDKITE_TEST_ENGINE_PLAN_OUT
+  if [[ -n ${BKTEC_VERSION:-} && $EXAMPLE != rspec ]]; then
+    [[ $BKTEC_VERSION =~ ^[0-9]+\.[0-9]+\.[0-9]+(-[[:alnum:].-]+)?$ ]] || { echo 'BKTEC_VERSION must be a release version' >&2; exit 1; }
+    # mise itself is installed by the plugin's later pre-command hook.
+    override=$(mktemp)
+    sed -E "/^\"github:buildkite\/test-engine-client\" = /s/version = \"[^\"]+\"/version = \"$BKTEC_VERSION\"/" "$EXAMPLE/mise.toml" > "$override"
+    mv "$override" "$EXAMPLE/mise.toml"
+  fi
+fi

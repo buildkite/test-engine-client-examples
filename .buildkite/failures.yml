@@ -1,0 +1,30 @@
+# Run daily on main in the separate failure-demo pipeline, never in the green pipeline.
+steps:
+  - label: ":information_source: About this failure demo"
+    command: >-
+      buildkite-agent annotate --style info --context failure-demo
+      'This build is red on purpose. Repairs always fails. Forecast fails once, then passes on retry.
+      Flight test fails on odd build numbers until flaky-test quarantine mutes it.
+      Setup, authentication and upload errors are not intended failures. See Test Engine for every attempt.'
+
+  - label: ":rspec: RSpec intentional failures"
+    key: rspec-failures
+    env:
+      EXAMPLE: rspec
+    commands:
+      - cp .buildkite/fixtures/rspec/*_spec.rb rspec/spec/
+      - cd rspec
+      - bundle install
+      - export TMPDIR="$$(mktemp -d)"
+      - bktec run
+    plugins:
+      - tests#v1.1.0:
+          test-runner: rspec
+          result-path: tmp/rspec.json
+          suite-slug: examples-rspec-failures
+          client-version: "${BKTEC_VERSION:-3.5.0}"
+          retry-count: 2
+          # Remove once the Tests plugin defaults to a two-hour token.
+          oidc-lifetime: 7200
+      - mise#v1.1.6:
+          dir: rspec

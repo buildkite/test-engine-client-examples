@@ -1,0 +1,16 @@
+steps:
+  - label: ":rspec: RSpec with OpenTelemetry"
+    key: rspec-otel
+    parallelism: 2
+    commands:
+      - cd rspec-otel
+      - bundle install
+      - bktec run
+    env:
+      BUILDKITE_TEST_ENGINE_SUITE_SLUG: examples-rspec-otel
+      BUILDKITE_TEST_ENGINE_TEST_RUNNER: rspec
+      BUILDKITE_TEST_ENGINE_RESULT_PATH: tmp/rspec.json
+      BUILDKITE_TESTS_OTLP_RELAY: "true"
+    plugins:
+      - mise#v1.1.6:
+          dir: rspec-otel

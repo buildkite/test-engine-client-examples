@@ -1,0 +1,78 @@
+#!/usr/bin/env bash
+set -euo pipefail
+[[ $# -ge 2 ]] || { echo 'Usage: verify <build-uuid> <suite-slug>... (BUILDKITE_ORGANIZATION_SLUG required; optional BUILDKITE_API_TOKEN for local use)' >&2; exit 2; }
+cd "$(dirname "$0")/../.."
+build=$1; shift
+org=${BUILDKITE_ORGANIZATION_SLUG:?set BUILDKITE_ORGANIZATION_SLUG}
+work=$(mktemp -d)
+trap 'rm -rf "$work"' EXIT
+api="https://api.buildkite.com/v2/analytics/organizations/$org"
+regression() { echo "verify: REGRESSION: $*" >&2; exit 1; }
+unavailable() { echo "verify: API/AUTH UNAVAILABLE: $*" >&2; exit 2; }
+get() {
+  curl --fail --silent --show-error --max-time 15 -H "Authorization: Bearer $token" "$api/$1" || unavailable "$1"
+}
+identities() {
+  local id=$1 suite=$2 page=1 data
+  while :; do
+    data=$(get "builds/$id/tests?per_page=100&page=$page") || return 2
+    jq -e 'type == "array"' <<< "$data" >/dev/null || unavailable 'invalid tests response'
+    jq --arg suite "$suite" '.[] | select(.url | contains("/suites/" + $suite + "/tests/")) |
+      [.scope, .name, .file_name]' <<< "$data"
+    [[ $(jq length <<< "$data") == 100 ]] || break
+    page=$((page + 1))
+  done | jq -s 'sort'
+}
+
+for suite in "$@"; do
+  if [[ -n ${BUILDKITE_API_TOKEN:-} ]]; then
+    token=$BUILDKITE_API_TOKEN
+  else
+    token=$(buildkite-agent oidc request-token --audience "$api/suites/$suite" --lifetime 300) || unavailable "cannot mint token for $suite"
+  fi
+  expected=$(jq -c --arg suite "$suite" '.[$suite] // {passed: 8, skipped: 1}' .buildkite/harness/expected.yml)
+  expected_total=$(jq 'add' <<< "$expected")
+  deadline=$((SECONDS + 120))
+  while :; do
+    runs=$(get "suites/$suite/runs?build_id=$build") || exit 2
+    jq -e 'type == "array"' <<< "$runs" >/dev/null || unavailable "invalid runs response for $suite"
+    counts=$(jq -c '[.[].executions_count_by_result | to_entries[] | select(.value != 0)] | from_entries' <<< "$runs")
+    if jq -e 'length == 1 and .[0].state == "finished"' <<< "$runs" >/dev/null &&
+       jq -en --argjson actual "$counts" --argjson expected "$expected" '$actual == $expected' >/dev/null; then
+      identities "$build" "$suite" > "$work/$suite.json" || exit 2
+      [[ $(jq length "$work/$suite.json") == "$expected_total" ]] && break
+    fi
+    if (( SECONDS >= deadline )); then
+      regression "$suite: expected one finished run with $expected and $expected_total identities; got runs=$runs"
+    fi
+    sleep 5
+  done
+  echo "verify: $suite recorded $counts with $expected_total test identities"
+
+  # Use the last completed main run BEFORE this run, never a newer overlapping build.
+  created=$(jq -r '.[0].created_at' <<< "$runs")
+  page=1
+  baseline=''
+  while :; do
+    history=$(get "suites/$suite/runs?per_page=100&page=$page") || exit 2
+    jq -e 'type == "array"' <<< "$history" >/dev/null || unavailable "invalid history for $suite"
+    baseline=$(jq -r --arg created "$created" --arg build "$build" '
+      [.[] | select(.branch == "main" and .state == "finished" and .created_at < $created and .build_id != $build)] |
+      sort_by(.created_at) | last | .build_id // empty' <<< "$history")
+    [[ -n $baseline || $(jq length <<< "$history") != 100 ]] && break
+    page=$((page + 1))
+  done
+  if [[ -n $baseline ]]; then
+    identities "$baseline" "$suite" > "$work/baseline.json" || exit 2
+    diff -u "$work/baseline.json" "$work/$suite.json" || regression "$suite identities differ from main build $baseline"
+    echo "verify: $suite identities match main build $baseline"
+  else
+    echo "verify: $suite BOOTSTRAP: no earlier finished main run; baseline comparison starts after the first main build"
+  fi
+done
+
+if [[ -f $work/examples-rspec.json && -f $work/examples-rspec-collector.json ]]; then
+  diff -u "$work/examples-rspec.json" "$work/examples-rspec-collector.json" || regression 'quick start and collector identities differ'
+  echo 'verify: quick start and collector identities match'
+fi
+echo 'verify: all requested suites passed'

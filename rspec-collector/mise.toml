@@ -1,0 +1,6 @@
+[tools]
+ruby = "3.4"
+"github:buildkite/test-engine-client" = { version = "3.5.0", bin = "bktec" }
+
+[settings.ruby]
+compile = false

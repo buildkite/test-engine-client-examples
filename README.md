@@ -5,12 +5,21 @@
 This repository contains examples for using the
 [Buildkite Test Engine Client](https://github.com/buildkite/test-engine-client).
 
-Each example directory contains application and test runner configuration. Some
-directories contain multiple variants. The corresponding Buildkite pipeline
-steps are in [`.buildkite/pipeline.yml`](./.buildkite/pipeline.yml). Read both
-when adapting an example because the pipeline configuration determines how test
-results are uploaded. See the [public Buildkite pipeline](https://buildkite.com/buildkite/test-engine-client-examples)
-for build results and job logs.
+Start with your runner, then choose how to collect results. RSpec demonstrates
+the reference layout: each directory contains a complete, copyable setup and
+its own `pipeline.yml`. Other runners still use steps in
+[`.buildkite/pipeline.yml`](./.buildkite/pipeline.yml) while they migrate.
+
+| Runner | Quick start: plugin, built-in upload | Collector: direct bktec | OpenTelemetry | Features |
+| --- | --- | --- | --- | --- |
+| RSpec | [rspec](./rspec) | [rspec-collector](./rspec-collector) | [rspec-otel](./rspec-otel) | [Pool, preview](./rspec-collector/pipeline.yml) |
+
+The quick start is the default for a new suite. Choose a collector for execution
+tags, or OpenTelemetry for test traces. Use **one upload method per run**.
+See the [public pipeline](https://buildkite.com/buildkite/test-engine-client-examples)
+for build results. To see retries and flaky-test quarantine, run the separate
+[failure-demo pipeline](./.buildkite/failures.yml): it is red on purpose and
+does not change the passing example fixtures.
 
 ## Result uploads
 
@@ -18,11 +27,12 @@ Configure one method to upload results from each test run:
 
 - **Built-in bktec upload:** The Tests Buildkite plugin enables built-in uploads
   by default. Do not configure a Buildkite Test Collector to upload the same
-  results. The Go example uses this configuration.
+  results. The RSpec quick start and Go example use this configuration.
 - **Collector upload with bktec:** Let the collector upload results and set
   `upload-results: false`. bktec can still discover, split, run, and retry the
-  tests (depending on runner support). The Ruby, JavaScript, Python, and
-  [Android](./android/README.md) examples use this configuration.
+  tests (depending on runner support). The legacy Ruby, JavaScript, Python, and
+  [Android](./android/README.md) examples use this plugin configuration. The new
+  RSpec collector and OpenTelemetry examples run bktec directly instead.
 - **Collector upload without bktec:** Let the collector upload results, set
   `upload-results: false`, and set `install-client: false`. The Vitest and SwiftPM
   examples use this configuration (Vitest OpenTelemetry uses bktec).
@@ -69,3 +79,27 @@ The JSON examples run Vitest directly and upload results using the Buildkite Tes
 Collector. They have independent npm installs to keep their Vitest versions
 isolated. Use the Node version in each example's `mise.toml`, run `npm ci` and
 `npm test` in that directory, and set `BUILDKITE_ANALYTICS_TOKEN` to upload.
+
+## Developing the examples
+
+Customer configuration lives in example directories; release checks live in
+`.buildkite/harness/`. With Bash, jq and the Buildkite agent installed, run
+`.buildkite/harness/upload check` to lint migrated examples. CI uploads those
+same pipelines and adds `verify`, which waits up to two minutes per suite for
+Test Engine to record the expected counts, then compares scopes, names and files
+with an earlier main build and between the quick start and collector. A new
+suite explicitly bootstraps its main baseline on its first main build.
+
+Set `BKTEC_VERSION=3.6.0-rc.2` on a build to override RSpec's bktec pins without
+editing customer examples. `EXAMPLES=rspec,rspec-collector` selects migrated
+directories; it does not filter legacy steps. Collector-version overrides are
+not implemented yet.
+
+To check an existing build locally, set `BUILDKITE_ORGANIZATION_SLUG` and a
+`BUILDKITE_API_TOKEN` with `read_suites`, then run
+`.buildkite/harness/verify <build-uuid> <suite-slug>...`. In CI, verification uses
+short-lived suite-audience OIDC tokens. Exit 1 reports missing results or a
+regression; exit 2 reports an unavailable API or authentication failure.
+
+Use the [example README template](./.buildkite/README.example.md) and
+[repository guidance](./AGENTS.md) when adding another runner.

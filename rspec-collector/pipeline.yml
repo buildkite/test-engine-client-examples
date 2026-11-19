@@ -1,0 +1,31 @@
+steps:
+  - label: ":rspec: RSpec with the Ruby collector"
+    key: rspec-collector
+    parallelism: 2
+    commands:
+      - cd rspec-collector
+      - bundle install
+      - bktec run
+    env:
+      BUILDKITE_TEST_ENGINE_SUITE_SLUG: examples-rspec-collector
+      BUILDKITE_TEST_ENGINE_TEST_RUNNER: rspec
+      BUILDKITE_TEST_ENGINE_RESULT_PATH: tmp/rspec.json
+    plugins:
+      - mise#v1.1.6:
+          dir: rspec-collector
+
+  # Preview: workers lease batches using one persistent RSpec process per job.
+  - label: ":rspec: RSpec collector (Test Scheduler pool, preview)"
+    key: rspec-collector-pool
+    parallelism: 2
+    commands:
+      - cd rspec-collector
+      - bundle install
+      - bktec pool exec --pool-lease-max-attempts 2 -- bundle exec buildkite-rspec
+    env:
+      BUILDKITE_TEST_ENGINE_SUITE_SLUG: examples-rspec-collector-pool
+      BUILDKITE_TEST_ENGINE_TEST_RUNNER: rspec
+      BUILDKITE_TEST_ENGINE_RESULT_PATH: tmp/rspec.json
+    plugins:
+      - mise#v1.1.6:
+          dir: rspec-collector
