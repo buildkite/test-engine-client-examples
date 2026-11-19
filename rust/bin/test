@@ -1,0 +1,35 @@
+#!/usr/bin/env python3
+import re
+import subprocess
+import sys
+import xml.etree.ElementTree as ET
+from pathlib import Path
+
+raw_report = Path("target/nextest/ci/junit.xml")
+result_path = raw_report.with_name("buildkite.xml")
+raw_report.unlink(missing_ok=True)
+result_path.unlink(missing_ok=True)
+
+selectors = sys.argv[1:]
+if not selectors or any(not re.fullmatch(r"[A-Za-z0-9_:/-]+", selector) for selector in selectors):
+    raise SystemExit("Pass one or more nextest binary IDs from bin/discover")
+
+filterset = " | ".join(f"binary_id(={selector})" for selector in selectors)
+run = subprocess.run(["cargo", "nextest", "run", "--profile", "ci", "-E", filterset])
+if run.returncode != 0 and not raw_report.exists():
+    sys.exit(run.returncode)
+
+report = ET.parse(raw_report)
+testcases = report.findall(".//testcase")
+if {case.attrib["classname"] for case in testcases} != set(selectors):
+    raise SystemExit("JUnit results do not match the assigned binary IDs")
+
+# Nextest uses the binary ID as classname and keeps the full test name in name.
+for case in testcases:
+    properties = case.find("properties")
+    if properties is None:
+        properties = ET.SubElement(case, "properties")
+    ET.SubElement(properties, "property", name="buildkite.tag.test.selector.primary", value=case.attrib["classname"])
+
+report.write(result_path, encoding="utf-8", xml_declaration=True)
+sys.exit(run.returncode)
