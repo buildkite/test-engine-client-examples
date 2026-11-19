@@ -18,10 +18,11 @@ Configure one method to upload results from each test run:
   results. The Go example uses this configuration.
 - **Collector upload with bktec:** Let the collector upload results and set
   `upload-results: false`. bktec can still discover, split, run, and retry the
-  tests. The Ruby, JavaScript, and Python examples use this configuration.
+  tests (depending on runner support). The Ruby, JavaScript, Python, and
+  [Android](./android/README.md) examples use this configuration.
 - **Collector upload without bktec:** Let the collector upload results, set
-  `upload-results: false`, and set `install-client: false`. The Vitest, Swift,
-  and Android examples use this configuration (Vitest OpenTelemetry uses bktec).
+  `upload-results: false`, and set `install-client: false`. The Vitest and SwiftPM
+  examples use this configuration (Vitest OpenTelemetry uses bktec).
 
 > [!IMPORTANT]
 > If bktec and a Buildkite Test Collector both upload results from the same test

@@ -589,26 +589,42 @@ steps:
 
   - group: ":android: Android"
     steps:
-      - label: ":android: Android"
+      - label: ":android: Discover JVM tests"
+        key: android-discover
         commands:
           - cd android
-          # Run Android unit tests
-          # The test-collector-android Gradle plugin uploads results to Test Engine automatically.
-          # No bktec client is needed for this example.
-          - ./gradlew --no-daemon :app:testDebugUnitTest
+          - ./gradlew --no-configuration-cache splitTests -PdiscoverTests
+        artifact_paths:
+          - android/**/build/test-selectors/*.txt
+        plugins:
+          - docker#v5.11.0:
+              image: ghcr.io/cirruslabs/android-sdk:34
+              user: "0:0"
+
+      - label: ":android: Android"
+        key: android
+        depends_on: android-discover
+        parallelism: 2
+        commands:
+          - buildkite-agent artifact download "android/*/test-selectors/*.txt" . --step android-discover
+          - cd android
+          - bktec run
+        env:
+          BUILDKITE_TEST_ENGINE_SELECTOR_FILE: build/test-selectors/all.txt
         soft_fail:
           - exit_status: 1
         plugins:
-          - tests#v1.0.0:
+          - tests#v1.1.0:
               test-runner: custom
+              test-cmd: >-
+                sh -c 'docker run --rm --user 0:0 --volume "$$PWD:/workdir" --workdir /workdir
+                --env BUILDKITE_ANALYTICS_TOKEN --env BUILDKITE_BUILD_ID --env BUILDKITE_JOB_ID
+                --env BUILDKITE_BUILD_NUMBER --env BUILDKITE_BUILD_URL --env BUILDKITE_BRANCH --env BUILDKITE_COMMIT
+                ghcr.io/cirruslabs/android-sdk:34
+                ./gradlew --no-configuration-cache --continue splitTests -PtestClasses="$$1"' sh '{{testExamples}}'
               suite-slug: test-engine-client-examples
               upload-results: false
-              install-client: false
-          - docker#v5.11.0:
-              image: "ghcr.io/cirruslabs/android-sdk:34"
-              propagate-environment: true
-              environment:
-                - BUILDKITE_ANALYTICS_TOKEN
+              client-version: "3.5.0"
 
   - group: ":golang: Go"
     steps:
