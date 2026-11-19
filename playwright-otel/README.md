@@ -45,7 +45,7 @@ test.execution "confirms an order"
 
 ## CI
 
-The [pipeline](../.buildkite/pipeline.yml) runs `bktec run` with its OTLP relay.
+The [pipeline](../.buildkite/pipeline.yml) runs `bktest run` with its OTLP relay.
 Keep `upload-results: false` so only the collector uploads results.
 
 ## Notes

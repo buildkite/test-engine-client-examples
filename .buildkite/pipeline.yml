@@ -1,8 +1,3 @@
-# To run every example on another bktec release, such as a release candidate,
-# set BKTEC_VERSION on a new build, for example BKTEC_VERSION=3.6.0-rc.2.
-common:
-  - &bktec_version "${BKTEC_VERSION:-3.5.0}"
-
 steps:
   - group: ":ruby: Ruby"
     steps:
@@ -11,7 +6,7 @@ steps:
         commands:
           - cd rspec
           - bundle install
-          - bktec run
+          - '"$$BUILDKITE_BUILD_CHECKOUT_PATH/.buildkite/run-bktest" run'
         env:
           BUILDKITE_TESTS_OTLP_RELAY: "true"
         soft_fail:
@@ -22,11 +17,11 @@ steps:
               result-path: tmp/rspec.json
               suite-slug: test-engine-client-examples
               upload-results: false
-              client-version: *bktec_version
+              install-client: false
           - mise#v1.1.6:
               dir: rspec
 
-      # bktec pool exec runs one persistent buildkite-rspec process that leases
+      # bktest pool exec runs one persistent buildkite-rspec process that leases
       # batches from a Test Scheduler pool shared by this step's jobs.
       # --pool-lease-max-attempts 2 caps attempts per lease so jobs cycle
       # through several leases from the pool instead of one big lease.
@@ -39,7 +34,7 @@ steps:
           - cd rspec
           - bundle install
           - unset BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
-          - bktec pool exec --pool-lease-max-attempts 2 -- bundle exec buildkite-rspec
+          - '"$$BUILDKITE_BUILD_CHECKOUT_PATH/.buildkite/run-bktest" pool exec --pool-lease-max-attempts 2 -- bundle exec buildkite-rspec'
         soft_fail:
           - exit_status: 1
         plugins:
@@ -48,7 +43,7 @@ steps:
               result-path: tmp/rspec.json
               suite-slug: test-engine-client-examples
               upload-results: false
-              client-version: *bktec_version
+              install-client: false
           - mise#v1.1.6:
               dir: rspec
 
@@ -56,7 +51,7 @@ steps:
         commands:
           - cd rspec-otel/suite-setup
           - bundle install
-          - bktec run
+          - '"$$BUILDKITE_BUILD_CHECKOUT_PATH/.buildkite/run-bktest" run'
         env:
           BUILDKITE_TESTS_OTLP_RELAY: "true"
         plugins:
@@ -65,7 +60,7 @@ steps:
               result-path: tmp/rspec.json
               suite-slug: test-engine-client-examples
               upload-results: false
-              client-version: *bktec_version
+              install-client: false
           - mise#v1.1.6:
               dir: rspec-otel/suite-setup
 
@@ -73,7 +68,7 @@ steps:
         commands:
           - cd rspec-otel/collector-setup
           - bundle install
-          - bktec run
+          - '"$$BUILDKITE_BUILD_CHECKOUT_PATH/.buildkite/run-bktest" run'
         env:
           BUILDKITE_TESTS_OTLP_RELAY: "true"
         plugins:
@@ -82,7 +77,7 @@ steps:
               result-path: tmp/rspec.json
               suite-slug: test-engine-client-examples
               upload-results: false
-              client-version: *bktec_version
+              install-client: false
           - mise#v1.1.6:
               dir: rspec-otel/collector-setup
 
@@ -91,7 +86,7 @@ steps:
         commands:
           - cd ruby-minitest
           - bundle install
-          - bktec run
+          - '"$$BUILDKITE_BUILD_CHECKOUT_PATH/.buildkite/run-bktest" run'
         soft_fail:
           - exit_status: 1
         plugins:
@@ -101,7 +96,7 @@ steps:
               test-file-pattern: "**/*_test.rb"
               suite-slug: test-engine-client-examples
               upload-results: false
-              client-version: *bktec_version
+              install-client: false
           - mise#v1.1.6:
               dir: ruby-minitest
         env:
@@ -113,7 +108,7 @@ steps:
           - cd cucumber
           - bundle install
           - mkdir -p tmp
-          - bktec run
+          - '"$$BUILDKITE_BUILD_CHECKOUT_PATH/.buildkite/run-bktest" run'
         soft_fail:
           - exit_status: 1
         plugins:
@@ -122,14 +117,14 @@ steps:
               result-path: tmp/cucumber.json
               suite-slug: test-engine-client-examples
               upload-results: false
-              client-version: *bktec_version
+              install-client: false
           - mise#v1.1.6:
               dir: cucumber
         env:
           BUILDKITE_ANALYTICS_LOCATION_PREFIX: cucumber
 
   # The tests plugin exports a short-lived token before setup. Unset it before
-  # bktec so long dependency installs cannot leave it with stale credentials.
+  # bktest so long dependency installs cannot leave it with stale credentials.
   - group: ":javascript: JavaScript"
     steps:
       - label: ":vitest: Vitest 4"
@@ -173,7 +168,7 @@ steps:
           - npm ci
           - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN BUILDKITE_TESTS_OTLP_TOKEN
           - export BUILDKITE_ANALYTICS_KEY="$$BUILDKITE_BUILD_ID-vitest-otel-$$BUILDKITE_JOB_ID"
-          - bktec run
+          - '"$$BUILDKITE_BUILD_CHECKOUT_PATH/.buildkite/run-bktest" run'
         env:
           BUILDKITE_TESTS_OTLP_RELAY: "true"
           BUILDKITE_TESTS_OTLP_RELAY_BATCHING: "true"
@@ -187,7 +182,7 @@ steps:
               result-path: tmp/vitest-results.json
               suite-slug: test-engine-client-examples
               upload-results: false
-              client-version: *bktec_version
+              install-client: false
           - mise#v1.1.6:
               dir: vitest-otel
 
@@ -197,7 +192,7 @@ steps:
           - cd jest
           - npm install
           - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
-          - bktec run
+          - '"$$BUILDKITE_BUILD_CHECKOUT_PATH/.buildkite/run-bktest" run'
         soft_fail:
           - exit_status: 1
         plugins:
@@ -206,7 +201,7 @@ steps:
               result-path: jest-result.json
               suite-slug: test-engine-client-examples
               upload-results: false
-              client-version: *bktec_version
+              install-client: false
           - mise#v1.1.6:
               dir: jest
         env:
@@ -217,7 +212,7 @@ steps:
           - cd jest
           - npm install
           - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
-          - bktec run
+          - '"$$BUILDKITE_BUILD_CHECKOUT_PATH/.buildkite/run-bktest" run'
         soft_fail:
           - exit_status: 1
         plugins:
@@ -228,7 +223,7 @@ steps:
               retry-cmd: "npx jest {{testExamples}} --testNamePattern '{{testNamePattern}}' --json --testLocationInResults --outputFile {{resultPath}}"
               suite-slug: test-engine-client-examples
               upload-results: false
-              client-version: *bktec_version
+              install-client: false
           - mise#v1.1.6:
               dir: jest
         env:
@@ -241,7 +236,7 @@ steps:
           - npm ci
           - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN BUILDKITE_TESTS_OTLP_TOKEN
           - export BUILDKITE_ANALYTICS_KEY="$$BUILDKITE_BUILD_ID-jest-otel-$$BUILDKITE_JOB_ID"
-          - bktec run
+          - '"$$BUILDKITE_BUILD_CHECKOUT_PATH/.buildkite/run-bktest" run'
         env:
           BUILDKITE_TESTS_OTLP_RELAY: "true"
           BUILDKITE_TESTS_OTLP_RELAY_BATCHING: "true"
@@ -252,11 +247,11 @@ steps:
               result-path: jest-result.json
               suite-slug: test-engine-client-examples
               upload-results: false
-              client-version: *bktec_version
+              install-client: false
           - mise#v1.1.6:
               dir: jest-otel
 
-      # bktec pool consume starts a fresh Jest process for each leased batch,
+      # bktest pool consume starts a fresh Jest process for each leased batch,
       # drawing from a Test Scheduler pool shared by this step's jobs.
       # --pool-lease-max-attempts 2 caps attempts per lease so jobs cycle
       # through several leases from the pool instead of one big lease.
@@ -266,7 +261,7 @@ steps:
           - cd jest
           - npm install
           - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
-          - bktec pool consume --pool-lease-max-attempts 2
+          - '"$$BUILDKITE_BUILD_CHECKOUT_PATH/.buildkite/run-bktest" pool consume --pool-lease-max-attempts 2'
         soft_fail:
           - exit_status: 1
         plugins:
@@ -275,7 +270,7 @@ steps:
               result-path: jest-result.json
               suite-slug: test-engine-client-examples
               upload-results: false
-              client-version: *bktec_version
+              install-client: false
           - mise#v1.1.6:
               dir: jest
         env:
@@ -287,7 +282,7 @@ steps:
           - cd cypress
           - bin/setup
           - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
-          - bktec run
+          - '"$$BUILDKITE_BUILD_CHECKOUT_PATH/.buildkite/run-bktest" run'
         soft_fail:
           - exit_status: 1
         plugins:
@@ -295,7 +290,7 @@ steps:
               test-runner: cypress
               suite-slug: test-engine-client-examples
               upload-results: false
-              client-version: *bktec_version
+              install-client: false
           - mise#v1.1.6:
               dir: cypress
 
@@ -306,7 +301,7 @@ steps:
           - npm install
           - npx playwright install --with-deps chromium
           - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
-          - bktec run
+          - '"$$BUILDKITE_BUILD_CHECKOUT_PATH/.buildkite/run-bktest" run'
         soft_fail:
           - exit_status: 1
         plugins:
@@ -315,7 +310,7 @@ steps:
               result-path: tmp/playwright-results.json
               suite-slug: test-engine-client-examples
               upload-results: false
-              client-version: *bktec_version
+              install-client: false
           - mise#v1.1.6:
               dir: playwright
         env:
@@ -329,7 +324,7 @@ steps:
           - npx playwright install --with-deps chromium
           - export BUILDKITE_ANALYTICS_KEY="$$BUILDKITE_BUILD_ID-playwright-otel-$$BUILDKITE_JOB_ID"
           - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN BUILDKITE_TESTS_OTLP_TOKEN
-          - bktec run
+          - '"$$BUILDKITE_BUILD_CHECKOUT_PATH/.buildkite/run-bktest" run'
         env:
           BUILDKITE_ANALYTICS_LOCATION_PREFIX: playwright-otel
           BUILDKITE_TESTS_OTLP_RELAY: "true"
@@ -341,11 +336,11 @@ steps:
               test-file-pattern: "tests/**/*.spec.js"
               suite-slug: test-engine-client-examples
               upload-results: false
-              client-version: *bktec_version
+              install-client: false
           - mise#v1.1.6:
               dir: playwright-otel
 
-      # bktec pool consume starts a fresh Playwright process for each leased
+      # bktest pool consume starts a fresh Playwright process for each leased
       # batch, drawing from a Test Scheduler pool shared by this step's jobs.
       # --pool-lease-max-attempts 2 caps attempts per lease so jobs cycle
       # through several leases from the pool instead of one big lease.
@@ -356,7 +351,7 @@ steps:
           - npm install
           - npx playwright install --with-deps chromium
           - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
-          - bktec pool consume --pool-lease-max-attempts 2
+          - '"$$BUILDKITE_BUILD_CHECKOUT_PATH/.buildkite/run-bktest" pool consume --pool-lease-max-attempts 2'
         soft_fail:
           - exit_status: 1
         plugins:
@@ -366,7 +361,7 @@ steps:
               result-path: tmp/playwright-results.json
               suite-slug: test-engine-client-examples
               upload-results: false
-              client-version: *bktec_version
+              install-client: false
           - mise#v1.1.6:
               dir: playwright
         env:
@@ -379,7 +374,7 @@ steps:
         commands:
           - cd pytest
           - pip install -e '.[dev]'
-          - bktec run
+          - '"$$BUILDKITE_BUILD_CHECKOUT_PATH/.buildkite/run-bktest" run'
         soft_fail:
           - exit_status: 1
         plugins:
@@ -387,7 +382,7 @@ steps:
               test-runner: pytest
               suite-slug: test-engine-client-examples
               upload-results: false
-              client-version: *bktec_version
+              install-client: false
           - mise#v1.1.6:
               dir: pytest
 
@@ -396,7 +391,7 @@ steps:
         commands:
           - cd pytest
           - pip install -e '.[dev]'
-          - bktec run
+          - '"$$BUILDKITE_BUILD_CHECKOUT_PATH/.buildkite/run-bktest" run'
         soft_fail:
           - exit_status: 1
         env:
@@ -407,7 +402,7 @@ steps:
               test-runner: pytest
               suite-slug: test-engine-client-examples
               upload-results: false
-              client-version: *bktec_version
+              install-client: false
           - mise#v1.1.6:
               dir: pytest
 
@@ -416,7 +411,7 @@ steps:
         commands:
           - cd pytest-tag-filters
           - pip install -e '.[dev]'
-          - bktec run
+          - '"$$BUILDKITE_BUILD_CHECKOUT_PATH/.buildkite/run-bktest" run'
         soft_fail:
           - exit_status: 1
         plugins:
@@ -425,11 +420,11 @@ steps:
               tag-filters: "component:frontend"
               suite-slug: test-engine-client-examples
               upload-results: false
-              client-version: *bktec_version
+              install-client: false
           - mise#v1.1.6:
               dir: pytest-tag-filters
 
-      # bktec pool consume starts a fresh pytest process for each leased batch,
+      # bktest pool consume starts a fresh pytest process for each leased batch,
       # drawing from a Test Scheduler pool shared by this step's jobs.
       # --pool-lease-max-attempts 2 caps attempts per lease so jobs cycle
       # through several leases from the pool instead of one big lease.
@@ -439,7 +434,7 @@ steps:
           - cd pytest
           - pip install -e '.[dev]'
           - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
-          - bktec pool consume --pool-lease-max-attempts 2
+          - '"$$BUILDKITE_BUILD_CHECKOUT_PATH/.buildkite/run-bktest" pool consume --pool-lease-max-attempts 2'
         soft_fail:
           - exit_status: 1
         plugins:
@@ -447,11 +442,11 @@ steps:
               test-runner: pytest
               suite-slug: test-engine-client-examples
               upload-results: false
-              client-version: *bktec_version
+              install-client: false
           - mise#v1.1.6:
               dir: pytest
 
-      # bktec pool exec runs one persistent buildkite-pytest process that
+      # bktest pool exec runs one persistent buildkite-pytest process that
       # leases batches from a Test Scheduler pool shared by this step's jobs,
       # so pytest startup and session fixtures run once per job.
       # --pool-lease-max-attempts 2 caps attempts per lease so jobs cycle
@@ -470,7 +465,7 @@ steps:
           # already installed by `pip install -e '.[dev]'`.
           - pip install --force-reinstall 'buildkite-test-collector==1.10.0'
           - unset BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
-          - bktec pool exec --pool-lease-max-attempts 2 -- buildkite-pytest
+          - '"$$BUILDKITE_BUILD_CHECKOUT_PATH/.buildkite/run-bktest" pool exec --pool-lease-max-attempts 2 -- buildkite-pytest'
         soft_fail:
           - exit_status: 1
         plugins:
@@ -478,7 +473,7 @@ steps:
               test-runner: pytest
               suite-slug: test-engine-client-examples
               upload-results: false
-              client-version: *bktec_version
+              install-client: false
           - mise#v1.1.6:
               dir: pytest
 
@@ -490,7 +485,7 @@ steps:
           - mkdir -p tmp
           - export BUILDKITE_ANALYTICS_KEY="$$BUILDKITE_BUILD_ID-python-otel-relay-$$BUILDKITE_JOB_ID"
           - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
-          - bktec run
+          - '"$$BUILDKITE_BUILD_CHECKOUT_PATH/.buildkite/run-bktest" run'
         artifact_paths: pytest-otel/collector-setup/tmp/otel-relay.json
         soft_fail:
           - exit_status: 1
@@ -504,7 +499,7 @@ steps:
               result-path: tmp/otel-relay.json
               suite-slug: test-engine-client-examples
               upload-results: false
-              client-version: *bktec_version
+              install-client: false
           - mise#v1.1.6:
               dir: pytest-otel/collector-setup
 
@@ -516,7 +511,7 @@ steps:
           - mkdir -p tmp
           - export BUILDKITE_ANALYTICS_KEY="$$BUILDKITE_BUILD_ID-python-otel-suite-$$BUILDKITE_JOB_ID"
           - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
-          - bktec run
+          - '"$$BUILDKITE_BUILD_CHECKOUT_PATH/.buildkite/run-bktest" run'
         artifact_paths: pytest-otel/suite-setup/tmp/otel-relay.json
         soft_fail:
           - exit_status: 1
@@ -530,7 +525,7 @@ steps:
               result-path: tmp/otel-relay.json
               suite-slug: test-engine-client-examples
               upload-results: false
-              client-version: *bktec_version
+              install-client: false
           - mise#v1.1.6:
               dir: pytest-otel/suite-setup
 
@@ -577,7 +572,7 @@ steps:
         commands:
           - buildkite-agent artifact download swift-xcuitest/artifacts/tests.tar.gz . --step swift-xcuitest-build
           - tar -xzf swift-xcuitest/artifacts/tests.tar.gz -C swift-xcuitest/artifacts
-          - bktec run --plan-out swift-xcuitest/artifacts/plan.json
+          - '"$$BUILDKITE_BUILD_CHECKOUT_PATH/.buildkite/run-bktest" run --plan-out swift-xcuitest/artifacts/plan.json'
         agents:
           queue: swift-macos-15-xcode-26-2
         artifact_paths:
@@ -593,7 +588,7 @@ steps:
               test-cmd: swift-xcuitest/bin/test {{testExamples}}
               suite-slug: test-engine-client-examples
               upload-results: false
-              client-version: *bktec_version
+              install-client: false
 
   - group: ":android: Android"
     steps:
@@ -616,7 +611,7 @@ steps:
         commands:
           - buildkite-agent artifact download "android/*/test-selectors/*.txt" . --step android-discover
           - cd android
-          - bktec run
+          - '"$$BUILDKITE_BUILD_CHECKOUT_PATH/.buildkite/run-bktest" run'
         env:
           BUILDKITE_TEST_ENGINE_SELECTOR_FILE: build/test-selectors/all.txt
         soft_fail:
@@ -632,7 +627,7 @@ steps:
                 ./gradlew --no-configuration-cache --continue splitTests -PtestClasses="$$1"' sh '{{testExamples}}'
               suite-slug: test-engine-client-examples
               upload-results: false
-              client-version: *bktec_version
+              install-client: false
 
   - group: ":golang: Go"
     steps:
@@ -641,7 +636,7 @@ steps:
         commands:
           - cd go
           - go install gotest.tools/gotestsum@v1.12.0
-          - bktec run
+          - '"$$BUILDKITE_BUILD_CHECKOUT_PATH/.buildkite/run-bktest" run'
         soft_fail:
           - exit_status: 1
         plugins:
@@ -649,7 +644,7 @@ steps:
               test-runner: gotest
               result-path: tmp/gotest-result.jsonl
               suite-slug: test-engine-client-examples
-              client-version: *bktec_version
+              install-client: false
               tags:
                 - "language.name=go"
                 - "test.framework.name=go-test"

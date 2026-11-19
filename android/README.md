@@ -1,11 +1,11 @@
 # Split Android JVM unit tests across Buildkite jobs
 
-Gradle discovers test classes once. bktec splits them across two jobs using
+Gradle discovers test classes once. bktest splits them across two jobs using
 Test Engine timing history, and collector 0.4.1 uploads the results.
 
 ## Requirements
 
-JDK 17+, Android SDK 34, Gradle 8.3+ (wrapper: 8.9), bktec 3.5.0 and a Test Engine
+JDK 17+, Android SDK 34, Gradle 8.3+ (wrapper: 8.9), bktest 3.6.0-rc.3 and a Test Engine
 suite. The pipeline's Docker image supplies the JDK and SDK.
 
 ## Setup
@@ -35,7 +35,7 @@ projects, use `-PsplitTestTask=test` and a JDK image without the Android SDK.
 - Binary class names must be unique across modules, with no whitespace, apostrophes or `*`.
 - Disabled, skipped and empty tasks add no classes. Missing owners and skipped assigned tasks fail.
 - New classes use default durations; timing history can take about an hour to appear.
-- No bktec retries or muting. Gradle failures stay nonzero; remove this example's `soft_fail` for a CI gate.
+- No bktest retries or muting. Gradle failures stay nonzero; remove this example's `soft_fail` for a CI gate.
 - Each job configures and compiles. Keep `--no-configuration-cache`; test tasks always rerun.
 - Discovery and Docker add overhead. Measure before expecting a speedup; filtering can expose order-dependent tests.
 

@@ -12,26 +12,43 @@ when adapting an example because the pipeline configuration determines how test
 results are uploaded. See the [public Buildkite pipeline](https://buildkite.com/buildkite/test-engine-client-examples)
 for build results and job logs.
 
+## Try bktest v3.6.0-rc.3
+
+This branch runs the [public bktest prerelease](https://github.com/buildkite/bktest/releases/tag/v3.6.0-rc.3)
+in place of `bktec`. On Linux or macOS (amd64 or arm64), run this from the
+checkout root to download, checksum-verify and execute the pinned binary without
+Test Engine credentials or uploads:
+
+```sh
+.buildkite/run-bktest --version
+```
+
+The pipeline uses the same launcher, not a binary on `PATH`. It disables the
+Tests plugin's legacy client installation while retaining the plugin's runner,
+authentication and upload settings. A hosted run would still use the configured
+Test Engine suite. The `main` branch retains the released `bktec` route and its
+`BKTEC_VERSION` override.
+
 ## Result uploads
 
 Configure one method to upload results from each test run:
 
-- **Built-in bktec upload:** The Tests Buildkite plugin enables built-in uploads
+- **Built-in bktest upload:** The Tests Buildkite plugin enables built-in uploads
   by default. Do not configure a Buildkite Test Collector to upload the same
   results. The Go example uses this configuration.
-- **Collector upload with bktec:** Let the collector upload results and set
-  `upload-results: false`. bktec can still discover, split, run, and retry the
+- **Collector upload with bktest:** Let the collector upload results and set
+  `upload-results: false`. bktest can still discover, split, run, and retry the
   tests (depending on runner support). The Ruby, JavaScript, Python, and
   [Android](./android/README.md) examples use this configuration.
-- **Collector upload without bktec:** Let the collector upload results, set
-  `upload-results: false`, and set `install-client: false`. The Vitest and SwiftPM
-  examples use this configuration (Vitest OpenTelemetry uses bktec).
+- **Collector upload without bktest:** Let the collector upload results, set
+  `upload-results: false`, and run the test runner directly. The Vitest and SwiftPM
+  examples use this configuration (Vitest OpenTelemetry uses bktest).
 
 > [!IMPORTANT]
-> If bktec and a Buildkite Test Collector both upload results from the same test
+> If bktest and a Buildkite Test Collector both upload results from the same test
 > run, Test Engine records duplicate test executions.
 
-A Buildkite Test Collector is not a general prerequisite for using bktec. Some
+A Buildkite Test Collector is not a general prerequisite for using bktest. Some
 examples also demonstrate OpenTelemetry collection. Check the matching pipeline
 step for the complete configuration.
 
@@ -39,7 +56,7 @@ step for the complete configuration.
 
 - [`swift-xcuitest`](./swift-xcuitest): build an Xcode project once, discover
   native XCTest classes, and split UI tests across parallel hosted Macs with
-  bktec's custom runner. Test Engine derives class selectors from collector
+  bktest's custom runner. Test Engine derives class selectors from collector
   metadata. The OTLP relay handles uploads across XCTest runner restarts.
 - [`swift-xctest`](./swift-xctest): run a Swift package's XCTest suite on Linux.
 
@@ -48,13 +65,13 @@ defines supported versions, instrumentation, delivery and limitations.
 
 ## Jest examples
 
-- [`jest`](./jest): collector 1.16.0 with the default JSON uploads and bktec.
+- [`jest`](./jest): collector 1.16.0 with the default JSON uploads and bktest.
 - [`jest-otel`](./jest-otel): collector 1.16.0 with OpenTelemetry test results,
   manual, local HTTP and fetch spans.
 
 ## Playwright examples
 
-- [`playwright`](./playwright): JSON collection with bktec, including pool runs.
+- [`playwright`](./playwright): JSON collection with bktest, including pool runs.
 - [`playwright-otel`](./playwright-otel): collector 1.16.0 with OpenTelemetry test
   results, nested steps, browser actions and assertions.
 

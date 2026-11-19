@@ -1,0 +1,26 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+version=3.6.0-rc.3
+platform="$(uname -s)/$(uname -m)"
+case "$platform" in
+  Linux/x86_64)   target=linux_amd64;  sha=dbc181161da88994c051344abc48d96fc5732c13cef0594abfad829eaed1e6b4 ;;
+  Linux/aarch64)  target=linux_arm64;  sha=867c65cbb7ad0c1353ec14fa658f5b30230e0d9450ddfec04f7228898f6c0552 ;;
+  Darwin/x86_64)  target=darwin_amd64; sha=48182bb684fc243069699de0320a67f5ce874cb265e46360c51f3859fda9b374 ;;
+  Darwin/arm64)   target=darwin_arm64; sha=5ec1cce48db028b576730acb264901c347a227ee9da794fbb2f2d5205e78f390 ;;
+  *) printf 'No pinned bktest download for %s\n' "$platform" >&2; exit 1 ;;
+esac
+
+dir=$(mktemp -d)
+trap 'rm -rf -- "$dir"' EXIT
+bin="$dir/bktest"
+curl -q --fail --silent --show-error --location \
+  --output "$bin" "https://github.com/buildkite/bktest/releases/download/v${version}/bktest_${version}_${target}"
+
+if command -v sha256sum >/dev/null; then
+  printf '%s  %s\n' "$sha" "$bin" | sha256sum -c >&2
+else
+  printf '%s  %s\n' "$sha" "$bin" | shasum -a 256 -c >&2
+fi
+chmod +x "$bin"
+"$bin" "$@"

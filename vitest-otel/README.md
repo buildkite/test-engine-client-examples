@@ -47,12 +47,12 @@ fetch client → HTTP server chain. Both also have the `seed order` hook.
 
 ## CI
 
-The [pipeline](../.buildkite/pipeline.yml) runs `bktec run` with its OTLP relay.
+The [pipeline](../.buildkite/pipeline.yml) runs `bktest run` with its OTLP relay.
 Keep `upload-results: false` so only the collector uploads results. The JSON file
-is local input for bktec, not another upload.
+is local input for bktest, not another upload.
 
 Keep the explicit `test-cmd` and `retry-cmd`: default CLI `--reporter` flags
-would disable the collector. `--outputFile` lets bktec choose its JSON path.
+would disable the collector. `--outputFile` lets bktest choose its JSON path.
 
 ## Notes
 

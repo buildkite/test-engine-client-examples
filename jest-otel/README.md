@@ -43,9 +43,9 @@ The fetch test has a fetch client → HTTP server chain.
 
 ## CI
 
-The [pipeline](../.buildkite/pipeline.yml) runs `bktec run` with its OTLP relay.
+The [pipeline](../.buildkite/pipeline.yml) runs `bktest run` with its OTLP relay.
 Keep `upload-results: false` so only the collector uploads results. The JSON file
-bktec requests is local input for scheduling and retries, not another upload.
+bktest requests is local input for scheduling and retries, not another upload.
 
 ## Notes
 
