@@ -1,0 +1,14 @@
+#!/usr/bin/env python3
+import json
+import subprocess
+
+listing = subprocess.check_output(["cargo", "nextest", "list", "--profile", "ci", "--message-format", "json"])
+suites = json.loads(listing)["rust-suites"]
+selectors = sorted(
+    suite["binary-id"]
+    for suite in suites.values()
+    if any(not case["ignored"] for case in suite["testcases"].values())
+)
+if not selectors:
+    raise SystemExit("No nextest binaries with runnable tests")
+print("\n".join(selectors))
