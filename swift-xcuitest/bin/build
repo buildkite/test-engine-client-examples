@@ -1,0 +1,30 @@
+#!/bin/bash
+set -euo pipefail
+
+cd "$(dirname "$0")/.."
+destination="${XCUITEST_DESTINATION:-platform=iOS Simulator,name=iPhone 17}"
+
+rm -rf artifacts/Products artifacts/enumeration.json
+xcodebuild build-for-testing \
+  -project SwiftXCUITest.xcodeproj -scheme SwiftXCUITest \
+  -testPlan SwiftXCUITest -destination 'generic/platform=iOS Simulator' \
+  -derivedDataPath artifacts/DerivedData
+mv artifacts/DerivedData/Build/Products artifacts/Products
+mv artifacts/Products/*.xctestrun artifacts/Products/Tests.xctestrun
+
+# Enumeration can read disabled configurations too.
+if ! plutil -convert json -o - artifacts/Products/Tests.xctestrun |
+  jq -e '.TestConfigurations | length == 1 and .[0].IsEnabled != false' >/dev/null; then
+  echo 'Use a test plan with exactly one configuration, enabled. Remove disabled configurations too.' >&2
+  exit 1
+fi
+
+xcodebuild test-without-building \
+  -xctestrun artifacts/Products/Tests.xctestrun -destination "$destination" \
+  -enumerate-tests -test-enumeration-style flat -test-enumeration-format json \
+  -test-enumeration-output-path artifacts/enumeration.json
+jq -e '.errors == [] and ([.values[].enabledTests[].identifier] |
+  length > 0 and all(split("/") | length == 3))' artifacts/enumeration.json >/dev/null
+jq -r '[.values[].enabledTests[].identifier | split("/")[0:2] | join("/")] | unique[]' \
+  artifacts/enumeration.json > artifacts/selectors.txt
+tar -czf artifacts/tests.tar.gz -C artifacts Products selectors.txt enumeration.json
