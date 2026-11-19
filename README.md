@@ -59,6 +59,11 @@ defines supported versions, instrumentation, delivery and limitations.
 - [`jest-otel`](./jest-otel): collector 1.16.0 with OpenTelemetry test results,
   manual, local HTTP and fetch spans.
 
+The Jest **Retry Enabled** step sets `JEST_RETRY_DEMO_MARKER` and removes that
+marker before running bktec. The retry demo creates the marker and fails on its
+first attempt, then passes when bktec retries it. Ordinary Jest and pool runs
+skip this demo.
+
 ## Playwright examples
 
 - [`playwright`](./playwright): JSON collection with bktec, including pool runs.

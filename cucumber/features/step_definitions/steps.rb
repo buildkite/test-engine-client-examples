@@ -34,7 +34,3 @@ Then("their name is {string}") do |name|
   Buildkite::TestCollector.tag_execution("custom.tag.from", "execution")
   raise "expected name to be #{name}" unless @user[:name] == name
 end
-
-Then("it fails") do
-  raise "this scenario always fails"
-end

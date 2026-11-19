@@ -36,8 +36,3 @@ def test_http_request():
         finally:
             server.shutdown()
             thread.join()
-
-
-def test_failed_query(cursor):
-    # Deliberate failure to demonstrate test and child-span error reporting.
-    cursor.execute("SELECT * FROM missing_table")

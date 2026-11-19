@@ -35,7 +35,7 @@ projects, use `-PsplitTestTask=test` and a JDK image without the Android SDK.
 - Binary class names must be unique across modules, with no whitespace, apostrophes or `*`.
 - Disabled, skipped and empty tasks add no classes. Missing owners and skipped assigned tasks fail.
 - New classes use default durations; timing history can take about an hour to appear.
-- No bktec retries or muting. Gradle failures stay nonzero; remove this example's `soft_fail` for a CI gate.
+- No bktec retries or muting. Gradle failures stay nonzero and fail the pipeline step.
 - Each job configures and compiles. Keep `--no-configuration-cache`; test tasks always rerun.
 - Discovery and Docker add overhead. Measure before expecting a speedup; filtering can expose order-dependent tests.
 
