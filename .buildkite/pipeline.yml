@@ -1,7 +1,10 @@
+env:
+  MISE_DATA_DIR: /tmp/mise
+
 cache:
   paths:
-    # Match MISE_DATA_DIR on the hosted agents, not a checkout-relative path.
-    - "/mise"
+    # Match MISE_DATA_DIR and avoid macOS's read-only root filesystem.
+    - "/tmp/mise"
 
 steps:
   - group: ":ruby: Ruby"
