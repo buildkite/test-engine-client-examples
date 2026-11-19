@@ -17,7 +17,10 @@ bin="$dir/bktest"
 curl -q --fail --silent --show-error --location \
   --output "$bin" "https://github.com/buildkite/bktest/releases/download/v${version}/bktest_${version}_${target}"
 
-if command -v sha256sum >/dev/null; then
+# Hosted macOS can expose a sha256sum that does not support check mode.
+if [[ "$platform" == Darwin/* ]]; then
+  printf '%s  %s\n' "$sha" "$bin" | /usr/bin/shasum -a 256 -c >&2
+elif command -v sha256sum >/dev/null; then
   printf '%s  %s\n' "$sha" "$bin" | sha256sum -c >&2
 else
   printf '%s  %s\n' "$sha" "$bin" | shasum -a 256 -c >&2
