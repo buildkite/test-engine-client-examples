@@ -1,5 +1,7 @@
 # Buildkite Test Engine Client Examples
 
+[![Build status](https://badge.buildkite.com/a8ccba369ce3e20a00a424e4989224fc5f45f0a4fc00db39e6.svg?branch=main)](https://buildkite.com/buildkite/test-engine-client-examples)
+
 This repository contains examples for using the
 [Buildkite Test Engine Client](https://github.com/buildkite/test-engine-client).
 
@@ -7,7 +9,8 @@ Each example directory contains application and test runner configuration. Some
 directories contain multiple variants. The corresponding Buildkite pipeline
 steps are in [`.buildkite/pipeline.yml`](./.buildkite/pipeline.yml). Read both
 when adapting an example because the pipeline configuration determines how test
-results are uploaded.
+results are uploaded. See the [public Buildkite pipeline](https://buildkite.com/buildkite/test-engine-client-examples)
+for build results and job logs.
 
 ## Result uploads
 

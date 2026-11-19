@@ -1,7 +1,3 @@
-cache:
-  paths:
-    - "mise"
-
 steps:
   - group: ":ruby: Ruby"
     steps:
@@ -16,13 +12,13 @@ steps:
         soft_fail:
           - exit_status: 1
         plugins:
-          - tests#v1.0.1:
+          - tests#v1.1.0:
               test-runner: rspec
               result-path: tmp/rspec.json
               suite-slug: test-engine-client-examples
               upload-results: false
               client-version: "3.5.0"
-          - mise#v1.1.4:
+          - mise#v1.1.6:
               dir: rspec
 
       # bktec pool exec runs one persistent buildkite-rspec process that leases
@@ -42,13 +38,13 @@ steps:
         soft_fail:
           - exit_status: 1
         plugins:
-          - tests#v1.0.1:
+          - tests#v1.1.0:
               test-runner: rspec
               result-path: tmp/rspec.json
               suite-slug: test-engine-client-examples
               upload-results: false
-              client-version: "3.4.0"
-          - mise#v1.1.4:
+              client-version: "3.5.0"
+          - mise#v1.1.6:
               dir: rspec
 
       - label: ":rspec: RSpec (OpenTelemetry setup in suite)"
@@ -59,13 +55,13 @@ steps:
         env:
           BUILDKITE_TESTS_OTLP_RELAY: "true"
         plugins:
-          - tests#v1.0.1:
+          - tests#v1.1.0:
               test-runner: rspec
               result-path: tmp/rspec.json
               suite-slug: test-engine-client-examples
               upload-results: false
               client-version: "3.5.0"
-          - mise#v1.1.4:
+          - mise#v1.1.6:
               dir: rspec-otel/suite-setup
 
       - label: ":rspec: RSpec (OpenTelemetry setup by test collector)"
@@ -76,13 +72,13 @@ steps:
         env:
           BUILDKITE_TESTS_OTLP_RELAY: "true"
         plugins:
-          - tests#v1.0.1:
+          - tests#v1.1.0:
               test-runner: rspec
               result-path: tmp/rspec.json
               suite-slug: test-engine-client-examples
               upload-results: false
               client-version: "3.5.0"
-          - mise#v1.1.4:
+          - mise#v1.1.6:
               dir: rspec-otel/collector-setup
 
       - label: ":ruby: Minitest"
@@ -94,14 +90,14 @@ steps:
         soft_fail:
           - exit_status: 1
         plugins:
-          - tests#v1.0.0:
+          - tests#v1.1.0:
               test-runner: custom
               test-cmd: "bundle exec rake test TEST_FILES='{{testExamples}}'"
               test-file-pattern: "**/*_test.rb"
               suite-slug: test-engine-client-examples
               upload-results: false
               client-version: "3.5.0"
-          - mise#v1.1.4:
+          - mise#v1.1.6:
               dir: ruby-minitest
         env:
           BUILDKITE_ANALYTICS_LOCATION_PREFIX: ruby-minitest
@@ -116,13 +112,13 @@ steps:
         soft_fail:
           - exit_status: 1
         plugins:
-          - tests#v1.0.0:
+          - tests#v1.1.0:
               test-runner: cucumber
               result-path: tmp/cucumber.json
               suite-slug: test-engine-client-examples
               upload-results: false
               client-version: "3.5.0"
-          - mise#v1.1.4:
+          - mise#v1.1.6:
               dir: cucumber
         env:
           BUILDKITE_ANALYTICS_LOCATION_PREFIX: cucumber
@@ -138,12 +134,12 @@ steps:
           - npm ci
           - npm test
         plugins:
-          - tests#v1.0.0:
+          - tests#v1.1.0:
               test-runner: custom
               suite-slug: test-engine-client-examples
               upload-results: false
               install-client: false
-          - mise#v1.1.4:
+          - mise#v1.1.6:
               dir: vitest-4
         env:
           BUILDKITE_ANALYTICS_LOCATION_PREFIX: vitest-4
@@ -155,12 +151,12 @@ steps:
           - npm ci
           - npm test
         plugins:
-          - tests#v1.0.0:
+          - tests#v1.1.0:
               test-runner: custom
               suite-slug: test-engine-client-examples
               upload-results: false
               install-client: false
-          - mise#v1.1.4:
+          - mise#v1.1.6:
               dir: vitest
         env:
           BUILDKITE_ANALYTICS_LOCATION_PREFIX: vitest
@@ -178,7 +174,7 @@ steps:
           BUILDKITE_TESTS_OTLP_RELAY_BATCHING: "true"
           BUILDKITE_ANALYTICS_LOCATION_PREFIX: vitest-otel
         plugins:
-          - tests#v1.0.1:
+          - tests#v1.1.0:
               test-runner: vitest
               # CLI --reporter replaces configured reporters; keep the collector.
               test-cmd: "npx vitest run {{testExamples}} --outputFile {{resultPath}}"
@@ -187,7 +183,7 @@ steps:
               suite-slug: test-engine-client-examples
               upload-results: false
               client-version: "3.5.0"
-          - mise#v1.1.4:
+          - mise#v1.1.6:
               dir: vitest-otel
 
       - label: ":jest: Jest"
@@ -200,13 +196,13 @@ steps:
         soft_fail:
           - exit_status: 1
         plugins:
-          - tests#v1.0.0:
+          - tests#v1.1.0:
               test-runner: jest
               result-path: jest-result.json
               suite-slug: test-engine-client-examples
               upload-results: false
               client-version: "3.5.0"
-          - mise#v1.1.4:
+          - mise#v1.1.6:
               dir: jest
         env:
           BUILDKITE_ANALYTICS_LOCATION_PREFIX: jest
@@ -220,7 +216,7 @@ steps:
         soft_fail:
           - exit_status: 1
         plugins:
-          - tests#v1.0.0:
+          - tests#v1.1.0:
               test-runner: jest
               result-path: jest-result.json
               retry-count: 3
@@ -228,7 +224,7 @@ steps:
               suite-slug: test-engine-client-examples
               upload-results: false
               client-version: "3.5.0"
-          - mise#v1.1.4:
+          - mise#v1.1.6:
               dir: jest
         env:
           BUILDKITE_ANALYTICS_LOCATION_PREFIX: jest
@@ -246,13 +242,13 @@ steps:
           BUILDKITE_TESTS_OTLP_RELAY_BATCHING: "true"
           BUILDKITE_ANALYTICS_LOCATION_PREFIX: jest-otel
         plugins:
-          - tests#v1.0.1:
+          - tests#v1.1.0:
               test-runner: jest
               result-path: jest-result.json
               suite-slug: test-engine-client-examples
               upload-results: false
               client-version: "3.5.0"
-          - mise#v1.1.4:
+          - mise#v1.1.6:
               dir: jest-otel
 
       # bktec pool consume starts a fresh Jest process for each leased batch,
@@ -269,13 +265,13 @@ steps:
         soft_fail:
           - exit_status: 1
         plugins:
-          - tests#v1.0.1:
+          - tests#v1.1.0:
               test-runner: jest
               result-path: jest-result.json
               suite-slug: test-engine-client-examples
               upload-results: false
-              client-version: "3.4.0"
-          - mise#v1.1.4:
+              client-version: "3.5.0"
+          - mise#v1.1.6:
               dir: jest
         env:
           BUILDKITE_ANALYTICS_LOCATION_PREFIX: jest
@@ -290,12 +286,12 @@ steps:
         soft_fail:
           - exit_status: 1
         plugins:
-          - tests#v1.0.0:
+          - tests#v1.1.0:
               test-runner: cypress
               suite-slug: test-engine-client-examples
               upload-results: false
               client-version: "3.5.0"
-          - mise#v1.1.4:
+          - mise#v1.1.6:
               dir: cypress
 
       - label: ":playwright: Playwright"
@@ -309,13 +305,13 @@ steps:
         soft_fail:
           - exit_status: 1
         plugins:
-          - tests#v1.0.0:
+          - tests#v1.1.0:
               test-runner: playwright
               result-path: tmp/playwright-results.json
               suite-slug: test-engine-client-examples
               upload-results: false
               client-version: "3.5.0"
-          - mise#v1.1.4:
+          - mise#v1.1.6:
               dir: playwright
         env:
           BUILDKITE_ANALYTICS_LOCATION_PREFIX: playwright
@@ -334,14 +330,14 @@ steps:
           BUILDKITE_TESTS_OTLP_RELAY: "true"
           BUILDKITE_TESTS_OTLP_RELAY_BATCHING: "true"
         plugins:
-          - tests#v1.0.1:
+          - tests#v1.1.0:
               test-runner: custom
               test-cmd: "npm test -- {{testExamples}}"
               test-file-pattern: "tests/**/*.spec.js"
               suite-slug: test-engine-client-examples
               upload-results: false
               client-version: "3.5.0"
-          - mise#v1.1.4:
+          - mise#v1.1.6:
               dir: playwright-otel
 
       # bktec pool consume starts a fresh Playwright process for each leased
@@ -359,14 +355,14 @@ steps:
         soft_fail:
           - exit_status: 1
         plugins:
-          - tests#v1.0.1:
+          - tests#v1.1.0:
               test-runner: playwright
               test-file-pattern: "tests/**/*.spec.js"
               result-path: tmp/playwright-results.json
               suite-slug: test-engine-client-examples
               upload-results: false
-              client-version: "3.4.0"
-          - mise#v1.1.4:
+              client-version: "3.5.0"
+          - mise#v1.1.6:
               dir: playwright
         env:
           BUILDKITE_ANALYTICS_LOCATION_PREFIX: playwright
@@ -375,8 +371,6 @@ steps:
     steps:
       - label: ":pytest: pytest"
         parallelism: 2
-        artifact_paths:
-          - pytest/result.json
         commands:
           - cd pytest
           - pip install -e '.[dev]'
@@ -384,18 +378,16 @@ steps:
         soft_fail:
           - exit_status: 1
         plugins:
-          - tests#v1.0.0:
+          - tests#v1.1.0:
               test-runner: pytest
               suite-slug: test-engine-client-examples
               upload-results: false
               client-version: "3.5.0"
-          - mise#v1.1.4:
+          - mise#v1.1.6:
               dir: pytest
 
       - label: ":pytest: pytest (with xdist)"
         parallelism: 2
-        artifact_paths:
-          - pytest/result.json
         commands:
           - cd pytest
           - pip install -e '.[dev]'
@@ -406,18 +398,16 @@ steps:
           PYTEST_XDIST_ENABLED: "true"
           PYTEST_ADDOPTS: "-n 3 -o log_cli=true -o log_cli_level=DEBUG"
         plugins:
-          - tests#v1.0.0:
+          - tests#v1.1.0:
               test-runner: pytest
               suite-slug: test-engine-client-examples
               upload-results: false
               client-version: "3.5.0"
-          - mise#v1.1.4:
+          - mise#v1.1.6:
               dir: pytest
 
       - label: ":pytest: pytest (tag filters)"
         parallelism: 2
-        artifact_paths:
-          - pytest/result.json
         commands:
           - cd pytest-tag-filters
           - pip install -e '.[dev]'
@@ -425,13 +415,13 @@ steps:
         soft_fail:
           - exit_status: 1
         plugins:
-          - tests#v1.0.0:
+          - tests#v1.1.0:
               test-runner: pytest
               tag-filters: "component:frontend"
               suite-slug: test-engine-client-examples
               upload-results: false
               client-version: "3.5.0"
-          - mise#v1.1.4:
+          - mise#v1.1.6:
               dir: pytest-tag-filters
 
       # bktec pool consume starts a fresh pytest process for each leased batch,
@@ -448,12 +438,12 @@ steps:
         soft_fail:
           - exit_status: 1
         plugins:
-          - tests#v1.0.1:
+          - tests#v1.1.0:
               test-runner: pytest
               suite-slug: test-engine-client-examples
               upload-results: false
-              client-version: "3.4.0"
-          - mise#v1.1.4:
+              client-version: "3.5.0"
+          - mise#v1.1.6:
               dir: pytest
 
       # bktec pool exec runs one persistent buildkite-pytest process that
@@ -470,21 +460,21 @@ steps:
         commands:
           - cd pytest
           - pip install -e '.[dev]'
-          # 1.10.0b1 is the first release with the buildkite-pytest runner;
+          # 1.10.0 includes the buildkite-pytest runner;
           # --force-reinstall replaces the older buildkite-test-collector
           # already installed by `pip install -e '.[dev]'`.
-          - pip install --force-reinstall 'buildkite-test-collector==1.10.0b1'
+          - pip install --force-reinstall 'buildkite-test-collector==1.10.0'
           - unset BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
           - bktec pool exec --pool-lease-max-attempts 2 -- buildkite-pytest
         soft_fail:
           - exit_status: 1
         plugins:
-          - tests#v1.0.1:
+          - tests#v1.1.0:
               test-runner: pytest
               suite-slug: test-engine-client-examples
               upload-results: false
-              client-version: "3.4.0"
-          - mise#v1.1.4:
+              client-version: "3.5.0"
+          - mise#v1.1.6:
               dir: pytest
 
       - label: ":pytest: pytest (OTel setup by collector)"
@@ -504,12 +494,13 @@ steps:
           BUILDKITE_TESTS_OTLP_RELAY: "true"
           PYTEST_ADDOPTS: "-n 3"
         plugins:
-          - tests#v1.0.0:
+          - tests#v1.1.0:
               test-runner: pytest
               result-path: tmp/otel-relay.json
+              suite-slug: test-engine-client-examples
               upload-results: false
               client-version: "3.5.0"
-          - mise#v1.1.4:
+          - mise#v1.1.6:
               dir: pytest-otel/collector-setup
 
       - label: ":pytest: pytest (OTel setup in suite)"
@@ -529,12 +520,13 @@ steps:
           BUILDKITE_TESTS_OTLP_RELAY: "true"
           PYTEST_ADDOPTS: "-n 3"
         plugins:
-          - tests#v1.0.0:
+          - tests#v1.1.0:
               test-runner: pytest
               result-path: tmp/otel-relay.json
+              suite-slug: test-engine-client-examples
               upload-results: false
               client-version: "3.5.0"
-          - mise#v1.1.4:
+          - mise#v1.1.6:
               dir: pytest-otel/suite-setup
 
   - group: ":apple: iOS / macOS"
@@ -553,12 +545,12 @@ steps:
         env:
           BUILDKITE_ANALYTICS_TAGS: '{"test.framework.name":"xctest","language.name":"swift","custom.tag.from":"upload"}'
         plugins:
-          - tests#v1.0.0:
+          - tests#v1.1.0:
               test-runner: custom
               suite-slug: test-engine-client-examples
               upload-results: false
               install-client: false
-          - docker#v5.11.0:
+          - docker#v5.14.0:
               image: "swift:6.0-noble"
               propagate-environment: true
               environment:
@@ -608,7 +600,7 @@ steps:
         artifact_paths:
           - android/**/build/test-selectors/*.txt
         plugins:
-          - docker#v5.11.0:
+          - docker#v5.14.0:
               image: ghcr.io/cirruslabs/android-sdk:34
               user: "0:0"
 
@@ -648,7 +640,7 @@ steps:
         soft_fail:
           - exit_status: 1
         plugins:
-          - tests#v1.0.0:
+          - tests#v1.1.0:
               test-runner: gotest
               result-path: tmp/gotest-result.jsonl
               suite-slug: test-engine-client-examples
@@ -656,5 +648,5 @@ steps:
               tags:
                 - "language.name=go"
                 - "test.framework.name=go-test"
-          - mise#v1.1.4:
+          - mise#v1.1.6:
               dir: go
