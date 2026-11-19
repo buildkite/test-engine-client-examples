@@ -40,11 +40,12 @@ export BUILDKITE_ANALYTICS_TOKEN
 # The existing Jest collector owns reporting, not the CLI.
 # Keep one Scheduler entry per lease; the two executions of a failing case
 # should settle the same attempt, not create another Scheduler attempt.
+# Matrix jobs share a step ID; each binary needs its own pool in this build.
 status=0
 "$client" pool consume --test-runner=jest --result-path=jest-result.json --test-file-pattern='scheduler-*.test.js' \
   --test-command 'npx jest --runInBand --runTestsByPath {{testExamples}} --json --testLocationInResults --outputFile {{resultPath}}' \
   --retry-command "npx jest --runInBand --runTestsByPath {{testExamples}} --testNamePattern '{{testNamePattern}}' --json --testLocationInResults --outputFile {{resultPath}}" \
-  --pool-lease-max-attempts 1 --local-retry-count 1 --upload-results=false \
+  --pool-key "te-8021-$1" --pool-lease-max-attempts 1 --local-retry-count 1 --upload-results=false \
   2>&1 | tee scheduler-receipts/pool.log || status=${PIPESTATUS[0]}
 test "$status" -eq 1
 diff -u <(printf '1 passed\n') scheduler-receipts/steady
