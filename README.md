@@ -7,8 +7,8 @@ This repository contains examples for using the
 
 Each example directory contains application and test runner configuration. Some
 directories contain multiple variants. The corresponding Buildkite pipeline
-steps are in [`.buildkite/pipeline.yml`](./.buildkite/pipeline.yml), except for the
-opt-in Rust example below. Read both when adapting an example because the pipeline
+steps are in [`.buildkite/pipeline.yml`](./.buildkite/pipeline.yml). Read both
+when adapting an example because the pipeline
 configuration determines how test results are uploaded.
 See the [public Buildkite pipeline](https://buildkite.com/buildkite/test-engine-client-examples)
 for build results and job logs.
@@ -19,7 +19,7 @@ Configure one method to upload results from each test run:
 
 - **Built-in bktec upload:** The Tests Buildkite plugin enables built-in uploads
   by default. Do not configure a Buildkite Test Collector to upload the same
-  results. The Go example and the opt-in Rust step use this configuration.
+  results. The Go and Rust examples use this configuration.
 - **Collector upload with bktec:** Let the collector upload results and set
   `upload-results: false`. bktec can still discover, split, run, and retry the
   tests (depending on runner support). The Ruby, JavaScript, Python, and
@@ -40,7 +40,7 @@ step for the complete configuration.
 
 - [`rust`](./rust): use bktec's custom runner to split whole nextest test binaries
   and attach timing selectors to JUnit results. Run locally without credentials,
-  or copy the opt-in Buildkite step to your own pipeline.
+  or adapt the Rust group from the examples pipeline.
 
 ## Swift examples
 

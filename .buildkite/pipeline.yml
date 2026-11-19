@@ -655,3 +655,33 @@ steps:
                 - "test.framework.name=go-test"
           - mise#v1.1.6:
               dir: go
+
+  - group: ":rust: Rust"
+    steps:
+      - label: ":rust: Rust / nextest"
+        key: rust-nextest
+        parallelism: 2
+        commands:
+          - cd rust
+          - mkdir -p target
+          - bin/discover > target/selectors.txt
+          # Discovery can compile the workspace and outlast the plugin's tokens.
+          - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
+          - '"$$BUILDKITE_TEST_ENGINE_CLIENT_PATH" run --plan-out target/plan.json'
+        artifact_paths:
+          - rust/target/plan.json
+          - rust/target/nextest/ci/buildkite.xml
+        env:
+          BUILDKITE_TEST_ENGINE_SELECTOR_FILE: target/selectors.txt
+        plugins:
+          - tests#v1.1.0:
+              test-runner: custom
+              test-cmd: "bin/test {{testExamples}}"
+              result-path: target/nextest/ci/buildkite.xml
+              suite-slug: test-engine-client-examples
+              client-version: *bktec_version
+              tags:
+                - "language.name=rust"
+                - "test.framework.name=nextest"
+          - mise#v1.1.6:
+              dir: rust

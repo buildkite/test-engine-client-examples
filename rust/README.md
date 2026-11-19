@@ -25,41 +25,20 @@ the JUnit `classname` (binary ID) and `name` (full test name). Each invocation
 writes `target/nextest/ci/buildkite.xml` and replaces the previous report. Use
 separate checkouts for concurrent shards. These commands don't contact Test Engine.
 
-## Use in your Buildkite pipeline
+## Run in Buildkite
 
-Provision the same tools on the agents. Add this step to a YAML file uploaded
-with `buildkite-agent pipeline upload` and replace `your-rust-suite` with your
-Test Engine suite slug. This repository's default pipeline does not run the
-step. Keep `$$` with normal upload interpolation so the client path is resolved
-at job time; use a single `$` if you disable or bypass upload interpolation.
+The Rust group in [the examples pipeline](../.buildkite/pipeline.yml) uses two
+parallel jobs and the existing `test-engine-client-examples` suite. The mise
+plugin installs Rust and nextest using `rust/mise.toml`; the agents also need
+Python 3.8+. Each job saves its plan and tagged JUnit report as build artifacts.
 
-For another repository, copy `bin/discover`, `bin/test`, and
+To adapt the group for another repository, copy `bin/discover`, `bin/test`, and
 `.config/nextest.toml` into your Cargo workspace (merge the config if you already
-have one). Change `cd rust` to your workspace path, or omit it if the workspace
-is at the repository root.
-
-```yaml
-steps:
-  - label: "Rust / nextest"
-    parallelism: 2
-    commands:
-      - cd rust
-      - mkdir -p target
-      - bin/discover > target/selectors.txt
-      # Discovery can compile the workspace and outlast the plugin's tokens.
-      - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
-      - '"$$BUILDKITE_TEST_ENGINE_CLIENT_PATH" run'
-    env:
-      BUILDKITE_TEST_ENGINE_SELECTOR_FILE: target/selectors.txt
-    plugins:
-      - tests#v1.1.0:
-          suite-slug: your-rust-suite
-          client-version: "3.5.0"
-          test-runner: custom
-          test-cmd: "bin/test {{testExamples}}"
-          result-path: target/nextest/ci/buildkite.xml
-          upload-results: true
-```
+have one). Change the workspace paths and `suite-slug`, and either copy the tool
+configuration or provision the tools on your agents. Replace `*bktec_version`
+with a client version such as `"3.5.0"` if you don't copy the pipeline's version
+anchor. Keep `$$` with normal `buildkite-agent pipeline upload` interpolation
+so the client path resolves at job time; otherwise use a single `$`.
 
 Each job discovers the same binaries: those with a non-ignored test that
 matches the nextest `ci` profile's filter. After discovery, bktec requests fresh
