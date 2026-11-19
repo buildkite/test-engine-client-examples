@@ -7,7 +7,10 @@ suites = json.loads(listing)["rust-suites"]
 selectors = sorted(
     suite["binary-id"]
     for suite in suites.values()
-    if any(not case["ignored"] for case in suite["testcases"].values())
+    if any(
+        not case["ignored"] and case["filter-match"]["status"] == "matches"
+        for case in suite["testcases"].values()
+    )
 )
 if not selectors:
     raise SystemExit("No nextest binaries with runnable tests")

@@ -39,7 +39,7 @@ steps:
       - cd rust
       - mkdir -p target
       - bin/discover > target/selectors.txt
-      - bktec run
+      - '"$$BUILDKITE_TEST_ENGINE_CLIENT_PATH" run'
     env:
       BUILDKITE_TEST_ENGINE_SELECTOR_FILE: target/selectors.txt
     plugins:
@@ -52,9 +52,11 @@ steps:
           upload-results: true
 ```
 
-Each job discovers the same binaries. bktec passes only that job's assigned
-selectors to `bin/test`, which uses exact nextest binary filters. The script
-adds a `buildkite.tag.test.selector.primary` property to each JUnit testcase,
+Each job discovers the same binaries: those with a non-ignored test that
+matches the nextest `ci` profile's filter. The command uses the client installed
+by the Tests plugin, even if another `bktec` is on `PATH`. bktec passes only that
+job's assigned selectors to `bin/test`, which uses exact nextest binary filters.
+The script adds a `buildkite.tag.test.selector.primary` property to each JUnit testcase,
 with its binary ID as the value. bktec uploads the tagged JUnit file; do not also
 upload the raw report or configure a collector for the same run. Once timing
 history is available, Test Engine can use it to balance binaries instead of
