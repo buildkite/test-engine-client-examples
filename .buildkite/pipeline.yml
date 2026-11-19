@@ -1,5 +1,19 @@
 steps:
+  - label: ":jest: Scheduler acceptance (%{matrix})"
+    if: build.branch == "te-8021-scheduler-canary"
+    matrix: ["released", "rc3"]
+    timeout_in_minutes: 10
+    commands:
+      - cd jest-otel
+      - npm ci
+      - bash ../.buildkite/scheduler-canary/run.sh %{matrix}
+    artifact_paths: jest-otel/scheduler-receipts/*
+    plugins:
+      - mise#v1.1.6:
+          dir: jest-otel
+
   - group: ":ruby: Ruby"
+    if: build.branch != "te-8021-scheduler-canary"
     steps:
       - label: ":rspec: RSpec"
         parallelism: 2
@@ -126,6 +140,7 @@ steps:
   # The tests plugin exports a short-lived token before setup. Unset it before
   # bktest so long dependency installs cannot leave it with stale credentials.
   - group: ":javascript: JavaScript"
+    if: build.branch != "te-8021-scheduler-canary"
     steps:
       - label: ":vitest: Vitest 4"
         key: vitest-4
@@ -368,6 +383,7 @@ steps:
           BUILDKITE_ANALYTICS_LOCATION_PREFIX: playwright
 
   - group: ":python: Python"
+    if: build.branch != "te-8021-scheduler-canary"
     steps:
       - label: ":pytest: pytest"
         parallelism: 2
@@ -530,6 +546,7 @@ steps:
               dir: pytest-otel/suite-setup
 
   - group: ":apple: iOS / macOS"
+    if: build.branch != "te-8021-scheduler-canary"
     steps:
       - label: ":swift: Swift: XCTest (test-collector-swift)"
         commands:
@@ -591,6 +608,7 @@ steps:
               install-client: false
 
   - group: ":android: Android"
+    if: build.branch != "te-8021-scheduler-canary"
     steps:
       - label: ":android: Discover JVM tests"
         key: android-discover
@@ -630,6 +648,7 @@ steps:
               install-client: false
 
   - group: ":golang: Go"
+    if: build.branch != "te-8021-scheduler-canary"
     steps:
       - label: ":golang: Go test"
         parallelism: 2
