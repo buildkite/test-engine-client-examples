@@ -27,9 +27,16 @@ separate checkouts for concurrent shards. These commands don't contact Test Engi
 
 ## Use in your Buildkite pipeline
 
-Provision the same tools on the agents. Copy this step into your pipeline and
-replace `your-rust-suite` with the slug of a Test Engine suite in your organization.
-This repository's default pipeline does not run the step.
+Provision the same tools on the agents. Add this step to a YAML file uploaded
+with `buildkite-agent pipeline upload` and replace `your-rust-suite` with your
+Test Engine suite slug. This repository's default pipeline does not run the
+step. Keep `$$` with normal upload interpolation so the client path is resolved
+at job time; use a single `$` if you disable or bypass upload interpolation.
+
+For another repository, copy `bin/discover`, `bin/test`, and
+`.config/nextest.toml` into your Cargo workspace (merge the config if you already
+have one). Change `cd rust` to your workspace path, or omit it if the workspace
+is at the repository root.
 
 ```yaml
 steps:
@@ -39,6 +46,8 @@ steps:
       - cd rust
       - mkdir -p target
       - bin/discover > target/selectors.txt
+      # Discovery can compile the workspace and outlast the plugin's tokens.
+      - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
       - '"$$BUILDKITE_TEST_ENGINE_CLIENT_PATH" run'
     env:
       BUILDKITE_TEST_ENGINE_SELECTOR_FILE: target/selectors.txt
@@ -53,8 +62,9 @@ steps:
 ```
 
 Each job discovers the same binaries: those with a non-ignored test that
-matches the nextest `ci` profile's filter. The command uses the client installed
-by the Tests plugin, even if another `bktec` is on `PATH`. bktec passes only that
+matches the nextest `ci` profile's filter. After discovery, bktec requests fresh
+OIDC credentials for planning and result uploads. The command uses the client
+installed by the Tests plugin, even if another `bktec` is on `PATH`. bktec passes only that
 job's assigned selectors to `bin/test`, which uses exact nextest binary filters.
 The script adds a `buildkite.tag.test.selector.primary` property to each JUnit testcase,
 with its binary ID as the value. bktec uploads the tagged JUnit file; do not also
