@@ -11,7 +11,7 @@ raw_report.unlink(missing_ok=True)
 result_path.unlink(missing_ok=True)
 
 selectors = sys.argv[1:]
-if not selectors or any(not re.fullmatch(r"[A-Za-z0-9_:-]+", selector) for selector in selectors):
+if not selectors or any(not re.fullmatch(r"[A-Za-z0-9_:/-]+", selector) for selector in selectors):
     raise SystemExit("Pass one or more nextest binary IDs from bin/discover")
 
 filterset = " | ".join(f"binary_id(={selector})" for selector in selectors)
