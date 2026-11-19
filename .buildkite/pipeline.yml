@@ -1,3 +1,8 @@
+# To run every example on another bktec release, such as a release candidate,
+# set BKTEC_VERSION on a new build, for example BKTEC_VERSION=3.6.0-rc.2.
+common:
+  - &bktec_version "${BKTEC_VERSION:-3.5.0}"
+
 steps:
   - group: ":ruby: Ruby"
     steps:
@@ -17,7 +22,7 @@ steps:
               result-path: tmp/rspec.json
               suite-slug: test-engine-client-examples
               upload-results: false
-              client-version: "3.5.0"
+              client-version: *bktec_version
           - mise#v1.1.6:
               dir: rspec
 
@@ -43,7 +48,7 @@ steps:
               result-path: tmp/rspec.json
               suite-slug: test-engine-client-examples
               upload-results: false
-              client-version: "3.5.0"
+              client-version: *bktec_version
           - mise#v1.1.6:
               dir: rspec
 
@@ -60,7 +65,7 @@ steps:
               result-path: tmp/rspec.json
               suite-slug: test-engine-client-examples
               upload-results: false
-              client-version: "3.5.0"
+              client-version: *bktec_version
           - mise#v1.1.6:
               dir: rspec-otel/suite-setup
 
@@ -77,7 +82,7 @@ steps:
               result-path: tmp/rspec.json
               suite-slug: test-engine-client-examples
               upload-results: false
-              client-version: "3.5.0"
+              client-version: *bktec_version
           - mise#v1.1.6:
               dir: rspec-otel/collector-setup
 
@@ -96,7 +101,7 @@ steps:
               test-file-pattern: "**/*_test.rb"
               suite-slug: test-engine-client-examples
               upload-results: false
-              client-version: "3.5.0"
+              client-version: *bktec_version
           - mise#v1.1.6:
               dir: ruby-minitest
         env:
@@ -117,7 +122,7 @@ steps:
               result-path: tmp/cucumber.json
               suite-slug: test-engine-client-examples
               upload-results: false
-              client-version: "3.5.0"
+              client-version: *bktec_version
           - mise#v1.1.6:
               dir: cucumber
         env:
@@ -182,7 +187,7 @@ steps:
               result-path: tmp/vitest-results.json
               suite-slug: test-engine-client-examples
               upload-results: false
-              client-version: "3.5.0"
+              client-version: *bktec_version
           - mise#v1.1.6:
               dir: vitest-otel
 
@@ -201,7 +206,7 @@ steps:
               result-path: jest-result.json
               suite-slug: test-engine-client-examples
               upload-results: false
-              client-version: "3.5.0"
+              client-version: *bktec_version
           - mise#v1.1.6:
               dir: jest
         env:
@@ -223,7 +228,7 @@ steps:
               retry-cmd: "npx jest {{testExamples}} --testNamePattern '{{testNamePattern}}' --json --testLocationInResults --outputFile {{resultPath}}"
               suite-slug: test-engine-client-examples
               upload-results: false
-              client-version: "3.5.0"
+              client-version: *bktec_version
           - mise#v1.1.6:
               dir: jest
         env:
@@ -247,7 +252,7 @@ steps:
               result-path: jest-result.json
               suite-slug: test-engine-client-examples
               upload-results: false
-              client-version: "3.5.0"
+              client-version: *bktec_version
           - mise#v1.1.6:
               dir: jest-otel
 
@@ -270,7 +275,7 @@ steps:
               result-path: jest-result.json
               suite-slug: test-engine-client-examples
               upload-results: false
-              client-version: "3.5.0"
+              client-version: *bktec_version
           - mise#v1.1.6:
               dir: jest
         env:
@@ -290,7 +295,7 @@ steps:
               test-runner: cypress
               suite-slug: test-engine-client-examples
               upload-results: false
-              client-version: "3.5.0"
+              client-version: *bktec_version
           - mise#v1.1.6:
               dir: cypress
 
@@ -310,7 +315,7 @@ steps:
               result-path: tmp/playwright-results.json
               suite-slug: test-engine-client-examples
               upload-results: false
-              client-version: "3.5.0"
+              client-version: *bktec_version
           - mise#v1.1.6:
               dir: playwright
         env:
@@ -336,7 +341,7 @@ steps:
               test-file-pattern: "tests/**/*.spec.js"
               suite-slug: test-engine-client-examples
               upload-results: false
-              client-version: "3.5.0"
+              client-version: *bktec_version
           - mise#v1.1.6:
               dir: playwright-otel
 
@@ -361,7 +366,7 @@ steps:
               result-path: tmp/playwright-results.json
               suite-slug: test-engine-client-examples
               upload-results: false
-              client-version: "3.5.0"
+              client-version: *bktec_version
           - mise#v1.1.6:
               dir: playwright
         env:
@@ -382,7 +387,7 @@ steps:
               test-runner: pytest
               suite-slug: test-engine-client-examples
               upload-results: false
-              client-version: "3.5.0"
+              client-version: *bktec_version
           - mise#v1.1.6:
               dir: pytest
 
@@ -402,7 +407,7 @@ steps:
               test-runner: pytest
               suite-slug: test-engine-client-examples
               upload-results: false
-              client-version: "3.5.0"
+              client-version: *bktec_version
           - mise#v1.1.6:
               dir: pytest
 
@@ -420,7 +425,7 @@ steps:
               tag-filters: "component:frontend"
               suite-slug: test-engine-client-examples
               upload-results: false
-              client-version: "3.5.0"
+              client-version: *bktec_version
           - mise#v1.1.6:
               dir: pytest-tag-filters
 
@@ -442,7 +447,7 @@ steps:
               test-runner: pytest
               suite-slug: test-engine-client-examples
               upload-results: false
-              client-version: "3.5.0"
+              client-version: *bktec_version
           - mise#v1.1.6:
               dir: pytest
 
@@ -473,7 +478,7 @@ steps:
               test-runner: pytest
               suite-slug: test-engine-client-examples
               upload-results: false
-              client-version: "3.5.0"
+              client-version: *bktec_version
           - mise#v1.1.6:
               dir: pytest
 
@@ -499,7 +504,7 @@ steps:
               result-path: tmp/otel-relay.json
               suite-slug: test-engine-client-examples
               upload-results: false
-              client-version: "3.5.0"
+              client-version: *bktec_version
           - mise#v1.1.6:
               dir: pytest-otel/collector-setup
 
@@ -525,7 +530,7 @@ steps:
               result-path: tmp/otel-relay.json
               suite-slug: test-engine-client-examples
               upload-results: false
-              client-version: "3.5.0"
+              client-version: *bktec_version
           - mise#v1.1.6:
               dir: pytest-otel/suite-setup
 
@@ -588,7 +593,7 @@ steps:
               test-cmd: swift-xcuitest/bin/test {{testExamples}}
               suite-slug: test-engine-client-examples
               upload-results: false
-              client-version: "3.5.0"
+              client-version: *bktec_version
 
   - group: ":android: Android"
     steps:
@@ -627,7 +632,7 @@ steps:
                 ./gradlew --no-configuration-cache --continue splitTests -PtestClasses="$$1"' sh '{{testExamples}}'
               suite-slug: test-engine-client-examples
               upload-results: false
-              client-version: "3.5.0"
+              client-version: *bktec_version
 
   - group: ":golang: Go"
     steps:
@@ -644,7 +649,7 @@ steps:
               test-runner: gotest
               result-path: tmp/gotest-result.jsonl
               suite-slug: test-engine-client-examples
-              client-version: "3.5.0"
+              client-version: *bktec_version
               tags:
                 - "language.name=go"
                 - "test.framework.name=go-test"
