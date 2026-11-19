@@ -1,12 +1,12 @@
 steps:
-  - label: ":jest: Scheduler acceptance (%{matrix})"
+  - label: ":jest: Scheduler acceptance ({{matrix}})"
     if: build.branch == "te-8021-scheduler-canary"
     matrix: ["released", "rc3"]
     timeout_in_minutes: 10
     commands:
       - cd jest-otel
       - npm ci
-      - bash ../.buildkite/scheduler-canary/run.sh %{matrix}
+      - bash ../.buildkite/scheduler-canary/run.sh {{matrix}}
     artifact_paths: jest-otel/scheduler-receipts/*
     plugins:
       - mise#v1.1.6:
