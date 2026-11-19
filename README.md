@@ -31,6 +31,14 @@ A Buildkite Test Collector is not a general prerequisite for using bktec. Some
 examples also demonstrate OpenTelemetry collection. Check the matching pipeline
 step for the complete configuration.
 
+## Swift examples
+
+- [`swift-xcuitest`](./swift-xcuitest): build an Xcode project once, discover
+  native XCTest classes, and split UI tests across parallel hosted Macs with
+  bktec's custom runner. Test Engine derives class selectors from collector
+  metadata. The OTLP relay handles uploads across XCTest runner restarts.
+- [`swift-xctest`](./swift-xctest): run a Swift package's XCTest suite on Linux.
+
 The [versioned JavaScript OpenTelemetry guide](https://github.com/buildkite/bktest/blob/test-collector-javascript/v1.16.0/test-collector-javascript/docs/opentelemetry.md)
 defines supported versions, instrumentation, delivery and limitations.
 

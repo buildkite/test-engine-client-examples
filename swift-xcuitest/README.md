@@ -1,38 +1,44 @@
-# Swift XCUITest example
+# Split XCTest and XCUITest across Macs
 
-This example runs passing UI tests against a minimal iOS app and uploads the
-results with [`test-collector-swift`](https://github.com/buildkite/test-collector-swift).
-It uses a shared scheme, a lexical test plan, and an explicit `.xcresult`
-bundle so the same command works locally and on a macOS Buildkite agent.
+Build an Xcode project once and archive its test products and discovery output.
+bktec uses class timing history from the collector to assign `Target/Class`
+selectors to jobs. Each job runs those classes' enabled methods without rebuilding.
+This XCUITest example also works for XCTest unit tests.
 
-This example is tested on Xcode 26.2; Xcode 15.4 (Swift 5.10) cannot build beta.3's OpenTelemetry dependencies.
+## Requirements
 
-Run it with:
+Use macOS agents with matching Xcode versions and simulator architectures,
+bktec 3.5.0 and jq. This example uses Xcode 26.2 and Swift collector 2.0.0-beta.5.
+
+## Setup
+
+Copy `bin/build`, `bin/test` and the two XCUITest [pipeline steps](../.buildkite/pipeline.yml).
+Set your project or workspace, shared scheme, test plan, simulator, agent queue,
+parallelism and suite slug. Link the Swift collector into each test target.
+Keep the relay settings, `upload-results: false` and `TEST_RUNNER_` forwarding;
+the collector sends results through bktec, not a second uploader.
 
 ```sh
-bin/test
+bin/build
+bin/test ExampleAppUITests/LaunchTests ExampleAppUITests/StatusTests
 ```
 
-The script selects the first available iPhone Simulator. Set
-`XCUITEST_DESTINATION` to pass a different `xcodebuild` destination.
+Set `XCUITEST_DESTINATION` for both commands to use a simulator other than iPhone 17.
 
-## Keeping results across runner restarts
+## Fastlane
 
-XCTest can restart its runner mid-suite. With Swift collector `2.0.0-beta.3`,
-each finished test is handed to the `bktec` OTLP relay, which runs outside the
-XCTest runner and can keep uploading results after that runner exits.
+Keep discovery and method filtering in the scripts. To replace the final
+`xcodebuild`, run `scan` from the project directory with `xctestrun`,
+`test_without_building: true`, `destination`, `only_testing` (method identifiers,
+without `-only-testing:`) and `parallel_testing: false`. Do not add build flags
+through `xcargs`.
 
-The [Buildkite pipeline](../.buildkite/pipeline.yml) runs `bktec run` with
-`BUILDKITE_TESTS_OTLP_RELAY=true` to enable the relay and
-`BUILDKITE_TESTS_OTLP_RELAY_BATCHING=true` to batch its uploads to Test Engine.
-The Tests plugin uses the `custom` runner with `test-cmd: swift-xcuitest/bin/test`
-so `bktec` manages the relay while the script runs `xcodebuild`.
+## Limits
 
-`xcodebuild` only passes `TEST_RUNNER_`-prefixed environment variables to the
-test runner. `bin/test` re-exports the relay endpoint, authentication, protocol,
-and resource variables with that prefix so the collector can reach the relay.
-
-Without `bktec`, the collector uploads directly from the XCTest runner. If
-that runner is killed, about one second of completed tests can be lost before
-the collector's next flush. A test that never finishes has no completed result
-for the collector to send in either mode.
+- Use one enabled test-plan configuration; remove disabled configurations too.
+- Keep `PRODUCT_NAME` equal to the target name, so timing selectors match `Target/Class`.
+- Test identifiers cannot contain whitespace, quotes or backslashes.
+- XCTest only. Tests must not change between discovery and execution.
+- First runs, new tests and history older than seven days may use default timings. Check `plan.json`.
+- Relay delivery is best-effort: missing results can leave a job green; unfinished tests have no result.
+- No bktec muting or retries. Xcode or scan retries are optional; each attempt is collected separately.
