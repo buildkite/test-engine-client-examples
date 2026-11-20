@@ -8,7 +8,7 @@ Copy the `Swift: XCTest (test-collector-swift)` step from [pipeline.yml](../.bui
 
 ## Test collector
 
-Add the `test-collector-swift` package and link `BuildkiteTestCollector` into your test target, as in [Package.swift](./Package.swift). XCTest loads it automatically. The collector supports XCTest, so keep `--disable-swift-testing`. See [XCTest](https://buildkite.com/docs/pipelines/configure/tests/test-collection/swift-collectors#xctest).
+Add the `test-collector-swift` package and link `BuildkiteTestCollector` into your test target, as in [Package.swift](./Package.swift). XCTest loads it automatically. The step's `--disable-swift-testing` runs only XCTest tests, which the collector records. Remove it if your package also has Swift Testing tests, which then run without being recorded. See [XCTest](https://buildkite.com/docs/pipelines/configure/tests/test-collection/swift-collectors#xctest).
 
 ## Run locally
 

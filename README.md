@@ -31,7 +31,7 @@ Copy the example's step from [pipeline.yml](./.buildkite/pipeline.yml), then:
 1. Remove the `mise` plugin if your agents already have the language runtime.
 1. Remove `BUILDKITE_ANALYTICS_LOCATION_PREFIX` if your tests run from the repository root. Otherwise, set it to their directory.
 1. Remove any `export BUILDKITE_ANALYTICS_KEY=...` line. These examples share one test suite, so some steps give each job its own run. Your build ID is the right run key.
-1. Set `oidc-lifetime: 7200` on the Tests Buildkite plugin if a job can take longer than five minutes from start to result upload. The plugin's token lasts five minutes by default, and uploads after it expires fail without failing the job. Steps that `unset BUILDKITE_ANALYTICS_TOKEN` already get a two-hour token from bktec.
+1. Set `oidc-lifetime: 7200` on the Tests Buildkite plugin if a job can take longer than five minutes from start to result upload. The plugin's token lasts five minutes by default, and uploads after it expires fail without failing the job. Two hours is Buildkite's default maximum; a value above your organization's limit fails the job before tests run. Steps that `unset BUILDKITE_ANALYTICS_TOKEN` already get a two-hour token from bktec.
 
 Keep `unset BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN` in Test Scheduler pool steps. Pools need a token with job identity claims, which bktec requests but the plugin doesn't.
 

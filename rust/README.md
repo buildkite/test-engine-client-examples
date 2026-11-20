@@ -18,7 +18,7 @@ Copy [bin/discover](./bin/discover), [bin/test](./bin/test), and [.config/nextes
 - Splits by binary, not by test, so a large binary stays on one job. Don't add nextest's `--partition`.
 - Every job discovers and compiles. Run doctests separately.
 - bktec can't retry tests. Muting has no effect: `bin/test` keeps nextest's failure exit code, `100`, and bktec only treats exit code `1` as muted failures.
-- Manual test selection doesn't match exact binaries, especially IDs with `::`.
+- Manual test selection can match more binaries than intended, especially IDs with `::`.
 
 ## Run locally
 
