@@ -16,7 +16,10 @@ from urllib.request import Request, urlopen
 API = "https://api.buildkite.com/v2"
 PIPELINE = f"{API}/organizations/buildkite/pipelines/test-engine-client-examples"
 SUITE = f"{API}/analytics/organizations/buildkite/suites/test-engine-client-examples"
-NO_RESULTS = {":pipeline:", ":swift: XCUITest build and discover", ":android: Discover JVM tests"}
+NO_RESULTS = {
+    ":pipeline:", ":swift: XCUITest build and discover", ":android: Discover JVM tests",
+    ":gradle: Discover Kotlin / Java tests",
+}
 # Network, HTTP, JSON, and unexpected response shapes.
 API_ERRORS = (OSError, ValueError, KeyError, TypeError)
 

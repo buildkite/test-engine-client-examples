@@ -27,6 +27,7 @@
   ":swift: Swift: XCTest (test-collector-swift)": {"passed": 2, "skipped": 1},
   ":swift: XCUITest shard %n": {"passed": 2},
   ":android: Android": {"passed": 3, "skipped": 2},
+  ":gradle: Kotlin / Java": {"passed": 9},
   ":golang: Go test": {"passed": 6},
   ":rust: Rust / nextest": {"passed": 3}
 }
