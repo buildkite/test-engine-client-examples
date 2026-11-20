@@ -64,6 +64,8 @@ for arm in control stable; do
     --upload-results=false --otlp-relay=true --otlp-relay-batching=true 2>&1 | tee "stable-receipts/$arm.log"
   jq -e '[.testResults[].assertionResults[] | [.title,.status]] | sort ==
     [["captures a fetch request","passed"],["captures a manual child span","passed"],["captures an HTTP request","passed"]]' "stable-receipts/$arm.json" >/dev/null
-  jq -e '.fallback != true and [.tasks[].tests[].path] == ["jest-otel/otel.test.js"]' "stable-receipts/$arm-plan.json" >/dev/null
+  jq -e '.fallback != true and .parallelism == 1 and
+    ([.tasks["0"].tests[] | if .format == "selector" then .value elif .format == "file" then .path else null end] |
+      . == ["otel.test.js"] or . == ["jest-otel/otel.test.js"])' "stable-receipts/$arm-plan.json" >/dev/null
   grep -F '0 dropped permanently, 0 dropped at drain deadline' "stable-receipts/$arm.log"
 done
