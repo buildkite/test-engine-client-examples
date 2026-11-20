@@ -1,106 +1,58 @@
 # Split Kotlin and Java Gradle tests across Buildkite jobs
 
-Gradle discovers test classes once, bktec splits them across parallel jobs using
-Test Engine timing history, and the Buildkite collector uploads the results.
+Discover Kotlin and Java test classes with Gradle once, then split them across parallel jobs with bktec's custom runner. The Android test collector's Gradle plugin, which works with any JVM project, sends results to Test Engine.
 
-The Kotlin module uses the Kotlin DSL and the Java module uses the Groovy DSL, so
-copy whichever matches your build. The collector is published as
-`test-collector-android`, but its Gradle plugin works with any JVM project.
+## Pipeline
 
-## Requirements
+Copy the `Discover Kotlin / Java tests` and `Kotlin / Java` steps from [pipeline.yml](../.buildkite/pipeline.yml) and [adapt them](../README.md#adapt-a-step). Discovery dry-runs every module's `test` task and saves the class lists as artifacts. Each job downloads them and runs only its classes.
 
-Gradle 8.3+ running on JDK 17+, bktec 3.5.0, collector 0.4.1 and a Test Engine
-suite. Tests must be JUnit 4, JUnit Jupiter or Kotest classes.
+- Keep the `unset BUILDKITE_ANALYTICS_TOKEN` line in discovery. With a token, the collector uploads every discovered test as skipped.
+- Keep `--no-configuration-cache`. The split script doesn't support Gradle's configuration cache.
+- Keep `--no-daemon` if Gradle runs directly on your agents, so jobs don't leave Gradle running.
 
-## Set up your build
+## Test collector
 
-1. Declare the collector's version once in the root build file, then apply it in
-   each module with tests.
+Use JDK 17 or later and Gradle 8.3 or later, with JUnit 4, JUnit Jupiter, or Kotest tests. The Kotlin module uses the Kotlin DSL and the Java module uses the Groovy DSL, so copy whichever matches your build.
 
-   Kotlin DSL:
+1. Declare collector plugin 0.4.1 once in the root build file:
 
    ```kotlin
-   // Root build.gradle.kts
+   // build.gradle.kts
    plugins {
        id("com.buildkite.test-collector-android.unit-test-collector-plugin") version "0.4.1" apply false
    }
-
-   // Each module's build.gradle.kts
-   plugins {
-       id("com.buildkite.test-collector-android.unit-test-collector-plugin")
-   }
    ```
 
-   Groovy DSL:
-
    ```groovy
-   // Root build.gradle
+   // build.gradle
    plugins {
        id 'com.buildkite.test-collector-android.unit-test-collector-plugin' version '0.4.1' apply false
    }
-
-   // Each module's build.gradle
-   plugins {
-       id 'com.buildkite.test-collector-android.unit-test-collector-plugin'
-   }
    ```
 
-   If your modules get their plugins from convention plugins in `buildSrc` or
-   `build-logic`, add
-   `implementation("com.buildkite.test-collector-android:unit-test-collector-plugin:0.4.1")`
-   to that build's dependencies and apply the plugin ID in your convention plugin instead.
+   Then apply it without a version in each module with tests, as in [kotlin/build.gradle.kts](./kotlin/build.gradle.kts) and [java/build.gradle](./java/build.gradle). If your modules get their plugins from convention plugins in `buildSrc` or `build-logic`, add `implementation("com.buildkite.test-collector-android:unit-test-collector-plugin:0.4.1")` to that build instead, and apply the plugin ID in your convention plugin.
+1. Copy [test-splitting.gradle.kts](./test-splitting.gradle.kts) to your project root and apply it from the root build file, with `apply(from = "test-splitting.gradle.kts")` or `apply from: 'test-splitting.gradle.kts'`.
+1. Add `splitTestTask=test` to the root `gradle.properties`, as in [gradle.properties](./gradle.properties).
 
-2. Copy [`test-splitting.gradle.kts`](./test-splitting.gradle.kts) to your root
-   project and apply it from the root build file. Groovy builds can apply it too:
-
-   ```kotlin
-   apply(from = "test-splitting.gradle.kts") // build.gradle.kts
-   ```
-
-   ```groovy
-   apply from: 'test-splitting.gradle.kts' // build.gradle
-   ```
-
-3. Add `splitTestTask=test` to the root `gradle.properties`. To split another test
-   task, such as `integrationTest`, add a separate pipeline group that passes
-   `-PsplitTestTask=integrationTest` to both Gradle commands.
-
-## Set up your pipeline
-
-Copy the Kotlin / Java group from [the pipeline](../.buildkite/pipeline.yml). One
-step discovers the classes; a parallel step runs `bktec run`, which gives each job
-its classes. Replace the `gradle-jvm` paths with your project's, replace
-`*bktec_version` with a version such as `"3.5.0"`, set `suite-slug` and
-`parallelism`, and keep:
-
-- `unset BUILDKITE_ANALYTICS_TOKEN` before discovery. Otherwise the collector
-  uploads every discovered test as skipped. Discovery then logs
-  `Missing or invalid 'BUILDKITE_ANALYTICS_TOKEN'`, which is expected.
-- `upload-results: false`, because the collector uploads results.
-- `oidc-lifetime: 7200`. The collector uploads as each test task finishes, which
-  can be more than five minutes after the Tests plugin issues its token.
-- `--no-configuration-cache`, because the split script doesn't support Gradle's
-  configuration cache.
-
-Agents need JDK 17+; this pipeline installs it with mise.
-
-## Try it locally
-
-```sh
-./gradlew --no-configuration-cache splitTests -PdiscoverTests
-./gradlew --no-configuration-cache splitTests -PtestClasses='com.buildkite.examples.jvm.CartTest com.buildkite.examples.jvm.ShippingTest'
-```
-
-Discovery writes four classes to `build/test-selectors/all.txt`. The second command
-runs only the two assigned classes. Without `BUILDKITE_ANALYTICS_TOKEN`, nothing uploads.
+See [Android](https://buildkite.com/docs/pipelines/configure/tests/test-collection/android-collectors#android).
 
 ## Limits
 
-- Splits whole classes. Nested and parameterized tests stay with their outer class.
-- Tests that aren't in `all.txt` never run in split jobs. Check it lists every test class.
+- Only Gradle `Test` tasks. To split another task, such as `integrationTest`, add a separate step that passes `-PsplitTestTask=integrationTest` to both Gradle commands.
+- Splits whole outer classes, including nested and parameterized tests.
+- Tests missing from `build/test-selectors/all.txt` never run in split jobs. Check it lists every test class.
 - Class names must be unique across modules.
-- New classes use default durations until their timing history appears, which can
-  take about an hour.
-- No bktec retries or muting.
-- Every job compiles the build, and split test tasks are never up to date or
-  loaded from the build cache.
+- New classes use default timings until history appears, which can take about an hour.
+- bktec doesn't read results from this step, so it can't retry or mute tests. Gradle failures fail the job.
+- Every job configures and compiles, and split test tasks never come from the build cache.
+
+## Run locally
+
+Use JDK 17 from `mise.toml` in this directory. Replace the class names with ones from discovery:
+
+```bash
+./gradlew --no-configuration-cache splitTests -PdiscoverTests
+./gradlew --no-configuration-cache --continue splitTests -PtestClasses="com.buildkite.examples.jvm.CartTest com.buildkite.examples.jvm.ShippingTest"
+```
+
+Without `BUILDKITE_ANALYTICS_TOKEN`, nothing uploads.

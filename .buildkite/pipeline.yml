@@ -609,7 +609,7 @@ steps:
   # Gradle runs on the agent, so --no-daemon keeps it from leaving daemons behind.
   - group: ":kotlin: Kotlin / Java"
     steps:
-      - label: ":gradle: Discover JVM tests"
+      - label: ":gradle: Discover Kotlin / Java tests"
         key: gradle-jvm-discover
         commands:
           - cd gradle-jvm
