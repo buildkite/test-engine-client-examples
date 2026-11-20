@@ -12,7 +12,7 @@ Add `buildkite-test-collector` to your test dependencies, as in [setup.py](./set
 
 ```python
 @pytest.mark.execution_tag("component", "frontend")
-def test_user_login(self):
+def test_user_login():
     assert True
 ```
 
