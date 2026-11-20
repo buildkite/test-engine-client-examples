@@ -1,5 +1,8 @@
 # To run every example on another bktec release, such as a release candidate,
 # set BKTEC_VERSION on a new build, for example BKTEC_VERSION=3.6.0-rc.2.
+# Each test step configures suite-slug on the Tests plugin, which exports
+# BUILDKITE_TEST_ENGINE_SUITE_SLUG. No pipeline-settings env is required.
+# bktec debug logging is optional and is left disabled by default.
 common:
   - &bktec_version "${BKTEC_VERSION:-3.5.0}"
 
@@ -529,6 +532,7 @@ steps:
                 - BUILDKITE_ANALYTICS_TAGS
                 - BUILDKITE_ANALYTICS_DEBUG_ENABLED
 
+      # Discovery only: no Test Engine suite or credentials are needed.
       - label: ":swift: XCUITest build and discover"
         key: swift-xcuitest-build
         command: swift-xcuitest/bin/build
@@ -563,6 +567,7 @@ steps:
 
   - group: ":android: Android"
     steps:
+      # Discovery only: no Test Engine suite or credentials are needed.
       - label: ":android: Discover JVM tests"
         key: android-discover
         commands:
