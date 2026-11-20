@@ -129,7 +129,6 @@ steps:
         commands:
           - cd vitest-4
           - npm ci
-          - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
           - bktec run
         plugins:
           - tests#v1.1.0:
@@ -151,7 +150,6 @@ steps:
         commands:
           - cd vitest
           - npm ci
-          - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
           - bktec run
         plugins:
           - tests#v1.1.0:
