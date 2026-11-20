@@ -1,88 +1,45 @@
-# Buildkite Test Engine Client Examples
+# Buildkite Test Engine Client examples
 
 [![Build status](https://badge.buildkite.com/a8ccba369ce3e20a00a424e4989224fc5f45f0a4fc00db39e6.svg?branch=main)](https://buildkite.com/buildkite/test-engine-client-examples)
 
-This repository contains examples for using the
-[Buildkite Test Engine Client](https://github.com/buildkite/test-engine-client).
+Examples of collecting test results and splitting tests with [Test Engine](https://buildkite.com/docs/test-engine) and the [Test Engine Client (bktec)](https://buildkite.com/docs/pipelines/configure/tests/bktec/installing-and-using-the-client). Every example runs in the [public pipeline](https://buildkite.com/buildkite/test-engine-client-examples), and its steps are in [pipeline.yml](./.buildkite/pipeline.yml).
 
-Each example directory contains application and test runner configuration. Some
-directories contain multiple variants. The corresponding Buildkite pipeline
-steps are in [`.buildkite/pipeline.yml`](./.buildkite/pipeline.yml). Read both
-when adapting an example because the pipeline
-configuration determines how test results are uploaded.
-See the [public Buildkite pipeline](https://buildkite.com/buildkite/test-engine-client-examples)
-for build results and job logs.
+## Choose an example
 
-The separate [failure demo pipeline](https://buildkite.com/buildkite/test-engine-client-examples-failures)
-runs [`.buildkite/failures.yml`](./.buildkite/failures.yml) daily at 00:00 UTC.
-Its builds are red on purpose: the RSpec fixtures demonstrate bktec retries and
-Test Engine flaky detection. The examples pipeline should stay green.
+| Runner | Example | What it shows |
+| --- | --- | --- |
+| RSpec | [Test collector](./rspec/README.md) · [OpenTelemetry](./rspec-otel/README.md) | Parallel jobs and Test Scheduler pool exec, with results sent as OpenTelemetry spans; HTTP, Active Record, and Redis spans |
+| Minitest | [Test collector](./ruby-minitest/README.md) | Custom runner that splits test files |
+| Cucumber | [Test collector](./cucumber/README.md) | Parallel jobs |
+| Jest | [Test collector](./jest/README.md) · [OpenTelemetry](./jest-otel/README.md) | Parallel jobs, retries, and Test Scheduler pool consume; manual, HTTP, and fetch spans |
+| Playwright | [Test collector](./playwright/README.md) · [OpenTelemetry](./playwright-otel/README.md) | Parallel jobs and Test Scheduler pool consume; step, action, and assertion spans |
+| Cypress | [Test collector](./cypress/README.md) | Parallel jobs and Linux browser setup |
+| Mocha | [Test collector](./mocha/README.md) | Custom runner that splits test files |
+| Vitest | [Test collector (5)](./vitest/README.md) · [Test collector (4)](./vitest-4/README.md) · [OpenTelemetry](./vitest-otel/README.md) | bktec with the collector's reporters; hook, manual, HTTP, and fetch spans |
+| pytest | [Test collector](./pytest/README.md) · [OpenTelemetry](./pytest-otel/README.md) · [Tag filters](./pytest-tag-filters/README.md) | xdist, Test Scheduler pool consume and exec, and tag filters; SQLite and HTTP spans |
+| XCTest / XCUITest | [SwiftPM test collector](./swift-xctest/README.md) · [Xcode OpenTelemetry](./swift-xcuitest/README.md) | SwiftPM on Linux without bktec; build once and split classes across Macs |
+| Android JVM / JUnit | [Test collector](./android/README.md) | Gradle class discovery and a custom runner |
+| Kotlin and Java / JUnit, Kotest | [Test collector](./gradle-jvm/README.md) | Kotlin DSL and Groovy DSL builds, Gradle class discovery, and a custom runner |
+| Go test | [bktec upload](./go/README.md) | Parallel jobs with gotestsum |
+| Rust / nextest | [bktec upload](./rust/README.md) | Custom runner that splits test binaries and tags JUnit selectors |
 
-## Result uploads
+## Adapt a step
 
-Configure one method to upload results from each test run:
+Copy the example's step from [pipeline.yml](./.buildkite/pipeline.yml), then:
 
-- **Built-in bktec upload:** The Tests Buildkite plugin enables built-in uploads
-  by default. Do not configure a Buildkite Test Collector to upload the same
-  results. The Go and Rust examples use this configuration.
-- **Collector upload with bktec:** Let the collector upload results and set
-  `upload-results: false`. bktec can still discover, split, run, and retry the
-  tests (depending on runner support). The Ruby, JavaScript, Python, and
-  [Android](./android/README.md) examples use this configuration.
-- **Collector upload without bktec:** Let the collector upload results, set
-  `upload-results: false`, and set `install-client: false`. The Vitest and SwiftPM
-  examples use this configuration (Vitest OpenTelemetry uses bktec).
+1. Set `suite-slug` to your test suite, and add an [OIDC policy](https://buildkite.com/docs/pipelines/configure/tests/test-collection/oidc) that allows your pipeline.
+1. Replace `client-version: *bktec_version` with a bktec version, such as `"3.5.0"`.
+1. Remove `cd <example>`, and remove the example directory from repository-relative paths such as `artifact_paths`.
+1. Remove the `mise` plugin if your agents already have the language runtime.
+1. Remove `BUILDKITE_ANALYTICS_LOCATION_PREFIX` if your tests run from the repository root. Otherwise, set it to their directory.
+1. Remove any `export BUILDKITE_ANALYTICS_KEY=...` line. These examples share one test suite, so some steps give each job its own run. Your build ID is the right run key.
+1. Set `oidc-lifetime: 7200` on the Tests Buildkite plugin if a job can take longer than five minutes from start to result upload. The plugin's token lasts five minutes by default, and uploads after it expires fail without failing the job. Two hours is Buildkite's default maximum; a value above your organization's limit fails the job before tests run. Steps that `unset BUILDKITE_ANALYTICS_TOKEN` already get a two-hour token from bktec.
+
+Keep `unset BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN` in Test Scheduler pool steps. Pools need a token with job identity claims, which bktec requests but the plugin doesn't.
 
 > [!IMPORTANT]
-> If bktec and a Buildkite Test Collector both upload results from the same test
-> run, Test Engine records duplicate test executions.
+> Use one result upload method per test run. When a test collector uploads results, keep `upload-results: false` to avoid duplicate test executions. The Go and Rust examples use bktec's built-in upload instead.
 
-A Buildkite Test Collector is not a general prerequisite for using bktec. Some
-examples also demonstrate OpenTelemetry collection. Check the matching pipeline
-step for the complete configuration.
+## Failure demo
 
-## Rust example
-
-- [`rust`](./rust): use bktec's custom runner to split whole nextest test binaries
-  and attach timing selectors to JUnit results. Run locally without credentials,
-  or adapt the Rust group from the examples pipeline.
-
-## Swift examples
-
-- [`swift-xcuitest`](./swift-xcuitest): build an Xcode project once, discover
-  native XCTest classes, and split UI tests across parallel hosted Macs with
-  bktec's custom runner. Test Engine derives class selectors from collector
-  metadata. The OTLP relay handles uploads across XCTest runner restarts.
-- [`swift-xctest`](./swift-xctest): run a Swift package's XCTest suite on Linux.
-
-The [versioned JavaScript OpenTelemetry guide](https://github.com/buildkite/bktest/blob/test-collector-javascript/v1.16.0/test-collector-javascript/docs/opentelemetry.md)
-defines supported versions, instrumentation, delivery and limitations.
-
-## Jest examples
-
-- [`jest`](./jest): collector 1.16.0 with the default JSON uploads and bktec.
-- [`jest-otel`](./jest-otel): collector 1.16.0 with OpenTelemetry test results,
-  manual, local HTTP and fetch spans.
-
-The Jest **Retry Enabled** step sets `JEST_RETRY_DEMO_MARKER` and removes that
-marker before running bktec. The retry demo creates the marker and fails on its
-first attempt, then passes when bktec retries it. Ordinary Jest and pool runs
-skip this demo.
-
-## Playwright examples
-
-- [`playwright`](./playwright): JSON collection with bktec, including pool runs.
-- [`playwright-otel`](./playwright-otel): collector 1.16.0 with OpenTelemetry test
-  results, nested steps, browser actions and assertions.
-
-## Vitest examples
-
-- [`vitest-4`](./vitest-4): Vitest 4.
-- [`vitest`](./vitest): the current Vitest major version (5).
-- [`vitest-otel`](./vitest-otel): collector 1.16.0 with OpenTelemetry test results,
-  hook, manual, local HTTP and fetch spans (Vitest 4/5).
-
-The JSON examples run Vitest directly and upload results using the Buildkite Test
-Collector. They have independent npm installs to keep their Vitest versions
-isolated. Use the Node version in each example's `mise.toml`, run `npm ci` and
-`npm test` in that directory, and set `BUILDKITE_ANALYTICS_TOKEN` to upload.
+The [failure demo pipeline](https://buildkite.com/buildkite/test-engine-client-examples-failures) runs [failures.yml](./.buildkite/failures.yml). Its builds fail on purpose: the RSpec fixtures demonstrate bktec retries and Test Engine flaky detection. The examples pipeline should stay green.
