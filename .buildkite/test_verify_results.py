@@ -28,23 +28,37 @@ class VerifyResultsTest(unittest.TestCase):
 
         def open_url(request, **kwargs):
             url = request.full_url
-            query = parse_qs(urlsplit(url).query)
+            endpoint = urlsplit(url)
+            self.assertEqual((endpoint.scheme, endpoint.netloc), ("https", "api.buildkite.com"))
+            query = parse_qs(endpoint.query)
+            build_path = "/v2/organizations/buildkite/pipelines/test-engine-client-examples/builds/1303"
             if request.get_header("Buildkite-version") != "2026-08-01":
                 raise HTTPError(url, 400, "metrics API version required", {}, None)
-            if "/tests?" not in url:
-                if "/jobs?" not in url:
-                    return response({"id": "build-id", "created_at": "2026-11-20T00:45:03Z",
-                                     "finished_at": "2026-11-20T00:49:04Z"})
+            if endpoint.path == build_path:
+                self.assertEqual(query, {"exclude_jobs": ["true"], "exclude_pipeline": ["true"]})
+                return response({"id": "build-id", "created_at": "2026-11-20T00:45:03Z",
+                                 "finished_at": "2026-11-20T00:49:04Z"})
+            if endpoint.path == f"{build_path}/jobs":
+                job_query = {"per_page": ["100"], "include_retried_jobs": ["false"]}
                 jobs = [{"type": "script", "id": "retry", "name": JEST},
                         {"type": "script", "id": "shard0", "name": SWIFT.replace("%n", "0")},
                         {"type": "script", "id": "shard1", "name": SWIFT.replace("%n", "1")},
                         {"type": "script", "id": "old", "name": JEST, "retried": True}]
                 if scenario == "unknown":
                     jobs.append({"type": "script", "id": "new", "name": "New example"})
-                # Both jobs and test metrics must follow pagination.
-                if "page" not in query:
-                    return response(jobs[:1], f'<{url}&page=2>; rel="next"')
-                return response(jobs[1:])
+                # Jobs use a JSON envelope and cursor; tests use a list and Link header.
+                if "after" not in query:
+                    self.assertEqual(query, job_query)
+                    return response({"items": jobs[:1], "links": {"next": f"{url}&after=next-cursor"}})
+                self.assertEqual(query, {**job_query, "after": ["next-cursor"]})
+                return response({"items": jobs[1:], "links": {}})
+            self.assertEqual(endpoint.path, "/v2/analytics/organizations/buildkite/suites/test-engine-client-examples/tests")
+            self.assertEqual(set(query), {"tags", "min_timestamp", "per_page"}
+                             | ({"page"} if "page" in query else set()))
+            self.assertEqual(query["min_timestamp"], ["2026-11-20T00:45:03Z"])
+            self.assertEqual(query["per_page"], ["100"])
+            if "page" in query:
+                self.assertEqual(query["page"], ["2"])
             tags = query["tags"][0]
             if tags == "build.id:build-id,build.job_id:retry":
                 if scenario in ("api", "auth") or (scenario == "transient" and clock[0] == 0):

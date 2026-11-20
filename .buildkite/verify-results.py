@@ -71,16 +71,20 @@ def main(argv=None):
             print("BUILD NOT FINISHED: run this check after all jobs have completed", file=sys.stderr)
             return 2
         jobs = {label: [] for label in expected}
-        for job in pages(f"{PIPELINE}/builds/{args.build}/jobs?per_page=100&include_retried_jobs=false"):
-            if job["type"] != "script" or job.get("retried"):
-                continue
-            label = re.sub(r"XCUITest shard \d+", "XCUITest shard %n", job["name"])
-            if label in IGNORED:
-                continue
-            if label not in expected:
-                print(f"CONFIG ERROR: no expected counts for {label}", file=sys.stderr)
-                return 2
-            jobs[label].append(job["id"])
+        jobs_url = f"{PIPELINE}/builds/{args.build}/jobs?per_page=100&include_retried_jobs=false"
+        while jobs_url:
+            job_page, _ = get(jobs_url)
+            for job in job_page["items"]:
+                if job["type"] != "script" or job.get("retried"):
+                    continue
+                label = re.sub(r"XCUITest shard \d+", "XCUITest shard %n", job["name"])
+                if label in IGNORED:
+                    continue
+                if label not in expected:
+                    print(f"CONFIG ERROR: no expected counts for {label}", file=sys.stderr)
+                    return 2
+                jobs[label].append(job["id"])
+            jobs_url = job_page["links"].get("next")
     except (OSError, RuntimeError, ValueError, KeyError, TypeError) as error:
         print(f"API/AUTH ERROR: cannot read build {args.build}: {error}", file=sys.stderr)
         return 2
