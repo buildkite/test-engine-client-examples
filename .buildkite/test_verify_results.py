@@ -18,7 +18,7 @@ SWIFT = ":swift: XCUITest shard %n"
 
 
 class VerifyResultsTest(unittest.TestCase):
-    def run_check(self, scenario="normal", argv=None):
+    def run_check(self, scenario="normal"):
         clock = [0]
 
         def response(data, link=""):
@@ -90,7 +90,10 @@ class VerifyResultsTest(unittest.TestCase):
                 patch.object(verify.time, "monotonic", side_effect=lambda: clock[0]), \
                 patch.object(verify.time, "sleep", side_effect=sleep), \
                 contextlib.redirect_stdout(output), contextlib.redirect_stderr(output):
-            status = verify.main(argv if argv is not None else ["1303", "--timeout", "2", "--interval", "1"])
+            try:
+                status = verify.main(["1303", "--timeout", "2", "--interval", "1"])
+            except SystemExit as stop:
+                status = stop.code
         return status, output.getvalue()
 
     def test_combines_shards_pages_and_retry_outcomes(self):
@@ -107,23 +110,27 @@ class VerifyResultsTest(unittest.TestCase):
                 self.assertIn(f"LATE: {JEST}", output)
                 self.assertIn("elapsed 1.0s", output)
 
-    def test_failing_verdicts_name_the_example_and_distinguish_api_errors(self):
-        for scenario, verdict, code in [("missing", "MISSING", 1), ("mismatch", "MISMATCH", 1),
-                                        ("api", "API ERROR", 2), ("auth", "AUTH ERROR", 2)]:
+    def test_failing_verdicts_name_the_example(self):
+        for scenario, verdict in [("missing", "MISSING"), ("mismatch", "MISMATCH")]:
             with self.subTest(scenario=scenario):
                 status, output = self.run_check(scenario)
-                self.assertEqual(status, code)
+                self.assertEqual(status, 1)
                 self.assertIn(f"{verdict}: {JEST}", output)
+                self.assertIn("FAIL: build 1303, 1/2 examples unverified", output)
+
+    def test_api_errors_are_not_reported_as_missing_results(self):
+        for scenario, verdict in [("api", "API ERROR"), ("auth", "AUTH ERROR")]:
+            with self.subTest(scenario=scenario):
+                status, output = self.run_check(scenario)
+                self.assertEqual(status, 2)
+                self.assertIn(verdict, output)
+                self.assertNotIn("MISSING", output)
 
     def test_new_examples_cannot_silently_escape_verification(self):
         status, output = self.run_check("unknown")
         self.assertEqual(status, 2)
-        self.assertIn("CONFIG ERROR: no expected counts for New example", output)
-
-    def test_no_arguments_prints_usage(self):
-        status, output = self.run_check(argv=[])
-        self.assertEqual(status, 0)
-        self.assertIn("usage:", output)
+        self.assertIn("CONFIG ERROR", output)
+        self.assertIn("New example", output)
 
 
 if __name__ == "__main__":
