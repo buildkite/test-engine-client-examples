@@ -607,12 +607,14 @@ steps:
               client-version: *bktec_version
 
   # Gradle runs on the agent, so --no-daemon keeps it from leaving daemons behind.
-  - group: ":java: Java / Kotlin"
+  - group: ":kotlin: Kotlin / Java"
     steps:
       - label: ":gradle: Discover JVM tests"
         key: gradle-jvm-discover
         commands:
           - cd gradle-jvm
+          # With a token, the collector would upload every discovered test as skipped.
+          - unset BUILDKITE_ANALYTICS_TOKEN
           - ./gradlew --no-daemon --no-configuration-cache splitTests -PdiscoverTests
         artifact_paths:
           - gradle-jvm/**/build/test-selectors/*.txt
@@ -620,7 +622,7 @@ steps:
           - mise#v1.1.6:
               dir: gradle-jvm
 
-      - label: ":gradle: Java / Kotlin"
+      - label: ":gradle: Kotlin / Java"
         key: gradle-jvm
         depends_on: gradle-jvm-discover
         parallelism: 2
@@ -637,7 +639,7 @@ steps:
               suite-slug: test-engine-client-examples
               upload-results: false
               client-version: *bktec_version
-              # The collector uploads after Gradle finishes; the default token lasts five minutes.
+              # The collector uploads as each test task finishes; tokens last five minutes by default.
               oidc-lifetime: 7200
           - mise#v1.1.6:
               dir: gradle-jvm

@@ -78,10 +78,9 @@ allprojects {
                 override fun beforeTest(testDescriptor: TestDescriptor) = discover(testDescriptor)
 
                 override fun beforeSuite(suite: TestDescriptor) {
-                    // Platform templates/factories have no atomic dry-run callbacks.
-                    if (options is JUnitPlatformOptions && suite.className != null &&
-                        suite.parent?.className == suite.className && suite.name != suite.className
-                    ) {
+                    // Some JUnit Platform classes report no tests in a dry run, such as
+                    // parameterized templates, factories and Kotest specs.
+                    if (options is JUnitPlatformOptions && suite.className != null && suite.parent?.className == null) {
                         discover(suite)
                     }
                 }

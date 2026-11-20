@@ -4,6 +4,7 @@ plugins {
 }
 
 dependencies {
+    testImplementation(platform("org.junit:junit-bom:6.1.3"))
     testImplementation(kotlin("test"))
 }
 

@@ -3,6 +3,7 @@ package com.buildkite.examples.jvm;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.ArrayList;
 import java.util.List;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -10,22 +11,27 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 
 class CartTest {
+    private final List<String> cart = new ArrayList<>();
+
     @Test
-    void addsItems() {
-        assertEquals(3, List.of("kite", "string", "tail").size());
+    void keepsItemsInOrder() {
+        cart.add("kite");
+        cart.add("string");
+        assertEquals(List.of("kite", "string"), cart);
     }
 
     @ParameterizedTest
-    @ValueSource(ints = {1, 2, 5})
-    void acceptsPositiveQuantities(int quantity) {
-        assertTrue(quantity > 0);
+    @ValueSource(strings = {"kite", "string", "tail"})
+    void containsAddedItem(String item) {
+        cart.add(item);
+        assertTrue(cart.contains(item));
     }
 
     @Nested
-    class Discounts {
+    class WhenNew {
         @Test
-        void appliesPercentageCoupon() {
-            assertEquals(90, 100 - 100 * 10 / 100);
+        void isEmpty() {
+            assertTrue(cart.isEmpty());
         }
     }
 }

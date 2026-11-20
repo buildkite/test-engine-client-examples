@@ -1,11 +1,11 @@
 package com.buildkite.examples.jvm
 
 import kotlin.test.Test
-import kotlin.test.assertTrue
+import kotlin.test.assertEquals
 
 class ShippingTest {
     @Test
-    fun choosesCarrier() {
-        assertTrue(listOf("post", "courier").contains("courier"))
+    fun `sorts carriers by name`() {
+        assertEquals(listOf("courier", "post"), listOf("post", "courier").sorted())
     }
 }
