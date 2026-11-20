@@ -606,6 +606,40 @@ steps:
               upload-results: false
               client-version: *bktec_version
 
+  # Gradle runs on the agent, so --no-daemon keeps it from leaving daemons behind.
+  - group: ":java: Java / Kotlin"
+    steps:
+      - label: ":gradle: Discover JVM tests"
+        key: gradle-jvm-discover
+        commands:
+          - cd gradle-jvm
+          - ./gradlew --no-daemon --no-configuration-cache splitTests -PdiscoverTests
+        artifact_paths:
+          - gradle-jvm/**/build/test-selectors/*.txt
+        plugins:
+          - mise#v1.1.6:
+              dir: gradle-jvm
+
+      - label: ":gradle: Java / Kotlin"
+        key: gradle-jvm
+        depends_on: gradle-jvm-discover
+        parallelism: 2
+        commands:
+          - buildkite-agent artifact download "gradle-jvm/*/test-selectors/*.txt" . --step gradle-jvm-discover
+          - cd gradle-jvm
+          - bktec run
+        env:
+          BUILDKITE_TEST_ENGINE_SELECTOR_FILE: build/test-selectors/all.txt
+        plugins:
+          - tests#v1.1.0:
+              test-runner: custom
+              test-cmd: "./gradlew --no-daemon --no-configuration-cache --continue splitTests -PtestClasses='{{testExamples}}'"
+              suite-slug: test-engine-client-examples
+              upload-results: false
+              client-version: *bktec_version
+          - mise#v1.1.6:
+              dir: gradle-jvm
+
   - group: ":golang: Go"
     steps:
       - label: ":golang: Go test"

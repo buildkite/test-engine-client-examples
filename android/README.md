@@ -26,7 +26,7 @@ Copy the Android group from [the pipeline](../.buildkite/pipeline.yml), set
 Discovery dry-runs `testDebugUnitTest` in every module; shards download its class
 lists and run only their assignments. For another variant, pass
 `-PsplitTestTask=testDemoDebugUnitTest` to both Gradle commands. For Java/Kotlin JVM
-projects, use `-PsplitTestTask=test` and a JDK image without the Android SDK.
+projects, see the [Java and Kotlin example](../gradle-jvm/README.md).
 
 ## Limits
 

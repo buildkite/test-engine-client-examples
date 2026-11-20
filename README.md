@@ -27,8 +27,9 @@ Configure one method to upload results from each test run:
   results. The Go and Rust examples use this configuration.
 - **Collector upload with bktec:** Let the collector upload results and set
   `upload-results: false`. bktec can still discover, split, run, and retry the
-  tests (depending on runner support). The Ruby, JavaScript, Python, and
-  [Android](./android/README.md) examples use this configuration.
+  tests (depending on runner support). The Ruby, JavaScript, Python,
+  [Android](./android/README.md), and [Java and Kotlin](./gradle-jvm/README.md)
+  examples use this configuration.
 - **Collector upload without bktec:** Let the collector upload results, set
   `upload-results: false`, and set `install-client: false`. The Vitest and SwiftPM
   examples use this configuration (Vitest OpenTelemetry uses bktec).
@@ -46,6 +47,13 @@ step for the complete configuration.
 - [`rust`](./rust): use bktec's custom runner to split whole nextest test binaries
   and attach timing selectors to JUnit results. Run locally without credentials,
   or adapt the Rust group from the examples pipeline.
+
+## Gradle examples
+
+- [`gradle-jvm`](./gradle-jvm): split Java and Kotlin test classes across jobs
+  with bktec's custom runner. Despite its name, the Android collector's Gradle
+  plugin works with plain JVM projects.
+- [`android`](./android): split an Android app's JVM unit tests the same way.
 
 ## Swift examples
 
