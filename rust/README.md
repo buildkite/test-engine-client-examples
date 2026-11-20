@@ -1,16 +1,42 @@
 # Split Rust tests by nextest binary
 
-Split whole nextest test binaries with bktec's custom runner. Copy [bin/discover](./bin/discover), [bin/test](./bin/test), and [.config/nextest.toml](./.config/nextest.toml) into your Cargo workspace.
+Split nextest test binaries across parallel jobs with bktec's custom runner and upload their JUnit results to Test Engine.
 
-Use `Rust / nextest` in [pipeline.yml](../.buildkite/pipeline.yml). The Tests Buildkite plugin leaves built-in uploads enabled; bktec uploads the tagged JUnit report. Do not add a test collector for the same run.
+## Pipeline
 
-Set `suite-slug` and the test suite's [OIDC policy](https://buildkite.com/docs/pipelines/configure/tests/test-collection/oidc). Adjust selector, result, artifact, and mise paths; remove `cd rust` for a workspace at the repository root. Replace `*bktec_version` with a version if you don't copy the pipeline's anchor.
+```yaml
+steps:
+  - label: ":rust: Rust / nextest"
+    parallelism: 2
+    commands:
+      - mkdir -p target
+      - bin/discover > target/selectors.txt
+      - '"$$BUILDKITE_TEST_ENGINE_CLIENT_PATH" run --plan-out target/plan.json'
+    env:
+      BUILDKITE_TEST_ENGINE_SELECTOR_FILE: target/selectors.txt
+    plugins:
+      - tests#v1.1.0:
+          test-runner: custom
+          test-cmd: "bin/test {{testExamples}}"
+          result-path: target/nextest/ci/buildkite.xml
+          suite-slug: your-suite-slug
+          client-version: "3.5.0"
+          tags:
+            - "language.name=rust"
+            - "test.framework.name=nextest"
+```
 
-Keep the JUnit selector tags added by `bin/test`. Splitting is by binary, not individual test; do not combine it with nextest's `--partition`. This custom runner does not configure bktec retries or muting. Run doctests separately.
+bktec uploads the tagged JUnit report; you don't need a test collector. Add an [OIDC policy](https://buildkite.com/docs/pipelines/configure/tests/test-collection/oidc) to your test suite. Our `Rust / nextest` step, including report artifacts, is in [pipeline.yml](../.buildkite/pipeline.yml).
 
-Run locally in this directory with Python 3.8+ and Rust and nextest from `mise.toml`, without Test Engine credentials:
+## Configure your workspace
 
-```sh
+Copy [bin/discover](./bin/discover), [bin/test](./bin/test), and [.config/nextest.toml](./.config/nextest.toml) into your Cargo workspace. The snippet assumes that workspace is at the repository root. Keep the JUnit selector tags added by `bin/test` so results match the assigned binaries. Don't combine this with nextest's `--partition`; this custom runner does not configure bktec retries or muting. Run doctests separately.
+
+## Run locally
+
+Use Python 3.8+ and Rust and nextest from `mise.toml` in this directory. These selectors belong to the example; use `bin/discover` to find yours:
+
+```bash
 bin/discover
 bin/test rust-example
 bin/test rust-example::arithmetic

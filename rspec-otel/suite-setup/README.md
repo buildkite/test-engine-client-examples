@@ -1,9 +1,37 @@
 # RSpec with test suite SDK setup
 
-[spec/spec_helper.rb](./spec/spec_helper.rb) configures the OpenTelemetry SDK in `before(:suite)` and selects HTTP and Active Record instrumentation. The Ruby test collector uses that provider; Redis calls remain uninstrumented.
+Collect RSpec results and HTTP and SQL spans using the OpenTelemetry provider your test suite configures.
 
-Use `RSpec (OpenTelemetry setup in suite)` in [pipeline.yml](../../.buildkite/pipeline.yml). The Tests Buildkite plugin sets `upload-results: false`; the test collector sends results through bktec's OTLP relay.
+## Pipeline
 
-Copy [Gemfile](./Gemfile) and the helper. Set `suite-slug` and the test suite's [OIDC policy](https://buildkite.com/docs/pipelines/configure/tests/test-collection/oidc). Adjust result and mise paths; remove `cd rspec-otel/suite-setup` for tests at the repository root. Keep the relay configuration.
+```yaml
+steps:
+  - label: ":rspec: RSpec (OpenTelemetry setup in suite)"
+    commands:
+      - bundle install
+      - bktec run
+    env:
+      BUILDKITE_TESTS_OTLP_RELAY: "true"
+    plugins:
+      - tests#v1.1.0:
+          test-runner: rspec
+          result-path: tmp/rspec.json
+          suite-slug: your-suite-slug
+          upload-results: false
+          client-version: "3.5.0"
+```
 
-Run locally in this directory with Ruby from `mise.toml`: `bundle install`, then `bundle exec rspec`.
+The Ruby test collector sends results through bktec's OTLP relay, so set `upload-results: false`. Add an [OIDC policy](https://buildkite.com/docs/pipelines/configure/tests/test-collection/oidc) to your test suite so your pipeline can authenticate. Our `RSpec (OpenTelemetry setup in suite)` step is in [pipeline.yml](../../.buildkite/pipeline.yml).
+
+## Test collector
+
+Add the dependencies from [Gemfile](./Gemfile) and configure the SDK in `before(:suite)`, as in [spec/spec_helper.rb](./spec/spec_helper.rb). This lets loaded libraries receive the HTTP and Active Record instrumentation. Configure the test collector with `hook: :rspec` and `otel_enabled: true` to use that provider. Redis stays uninstrumented in this variant.
+
+## Run locally
+
+Use Ruby from `mise.toml` and run in this directory:
+
+```bash
+bundle install
+bundle exec rspec
+```

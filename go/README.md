@@ -1,9 +1,33 @@
 # Go test
 
-Go test splitting with gotestsum and bktec's built-in result upload. No test collector is required.
+Split your Go tests across parallel jobs and upload results to Test Engine with bktec, without adding a test collector.
 
-Use the `Go test` step in [pipeline.yml](../.buildkite/pipeline.yml). Keep the Tests Buildkite plugin's default result upload enabled.
+## Pipeline
 
-Set `suite-slug` and the test suite's [OIDC policy](https://buildkite.com/docs/pipelines/configure/tests/test-collection/oidc). Adjust result and mise paths; remove `cd go` if your module is at the repository root. Use your own module path rather than copying [go.mod](./go.mod) unchanged.
+```yaml
+steps:
+  - label: ":golang: Go test"
+    parallelism: 2
+    commands:
+      - go install gotest.tools/gotestsum@v1.12.0
+      - bktec run
+    plugins:
+      - tests#v1.1.0:
+          test-runner: gotest
+          result-path: tmp/gotest-result.jsonl
+          suite-slug: your-suite-slug
+          client-version: "3.5.0"
+          tags:
+            - "language.name=go"
+            - "test.framework.name=go-test"
+```
 
-Run locally in this directory with Go from `mise.toml`: `go test ./...`. This does not upload results.
+The Tests Buildkite plugin enables bktec's built-in upload by default. `result-path` is the local JSONL file bktec reads and uploads. Add an [OIDC policy](https://buildkite.com/docs/pipelines/configure/tests/test-collection/oidc) to your test suite so your pipeline can authenticate. Our `Go test` step is in [pipeline.yml](../.buildkite/pipeline.yml).
+
+## Run locally
+
+Use Go from `mise.toml` and run in this directory. This runs the tests without uploading results:
+
+```bash
+go test ./...
+```

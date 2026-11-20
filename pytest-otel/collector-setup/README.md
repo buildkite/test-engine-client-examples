@@ -1,9 +1,41 @@
 # pytest with test collector SDK setup
 
-[conftest.py](./conftest.py) enables SQLite and urllib instrumentation without creating a provider. The Python test collector configures OpenTelemetry.
+Collect pytest results with SQLite and HTTP spans while the Python test collector sets up OpenTelemetry for you.
 
-Use `pytest (OTel setup by collector)` in [pipeline.yml](../../.buildkite/pipeline.yml). The Tests Buildkite plugin sets `upload-results: false`; the test collector sends results through bktec's OTLP relay with xdist enabled.
+## Pipeline
 
-Copy [requirements.txt](./requirements.txt), [pytest.ini](./pytest.ini), and the instrumentation setup. Set `suite-slug` and the test suite's [OIDC policy](https://buildkite.com/docs/pipelines/configure/tests/test-collection/oidc). Adjust test, result, artifact, and mise paths; remove `cd pytest-otel/collector-setup` for tests at the repository root. Keep `BUILDKITE_ANALYTICS_OTEL_ENABLED` and the relay configuration.
+```yaml
+steps:
+  - label: ":pytest: pytest (OTel setup by collector)"
+    commands:
+      - pip install -r requirements.txt
+      - mkdir -p tmp
+      - export BUILDKITE_ANALYTICS_KEY="$$BUILDKITE_BUILD_ID-python-otel-relay-$$BUILDKITE_JOB_ID"
+      - bktec run
+    env:
+      BUILDKITE_ANALYTICS_OTEL_ENABLED: "true"
+      BUILDKITE_TESTS_OTLP_RELAY: "true"
+      PYTEST_ADDOPTS: "-n 3"
+    plugins:
+      - tests#v1.1.0:
+          test-runner: pytest
+          result-path: tmp/otel-relay.json
+          suite-slug: your-suite-slug
+          upload-results: false
+          client-version: "3.5.0"
+```
 
-Run locally in this directory with Python from `mise.toml` and a virtual environment: `pip install -r requirements.txt`, then `BUILDKITE_ANALYTICS_OTEL_ENABLED=true pytest -n 3`.
+The test collector sends results through bktec's OTLP relay, so set `upload-results: false`. `PYTEST_ADDOPTS` starts three xdist workers. Add an [OIDC policy](https://buildkite.com/docs/pipelines/configure/tests/test-collection/oidc) to your test suite so your pipeline can authenticate. Our `pytest (OTel setup by collector)` step is in [pipeline.yml](../../.buildkite/pipeline.yml).
+
+## Test collector
+
+Install the dependencies in [requirements.txt](./requirements.txt), including `buildkite-test-collector[otel]`. Enable your instrumentation before the session starts, as in [conftest.py](./conftest.py), but leave provider setup to the test collector. Adjust `testpaths` in [pytest.ini](./pytest.ini) to your tests.
+
+## Run locally
+
+Use Python from `mise.toml` with an activated virtual environment in this directory:
+
+```bash
+pip install -r requirements.txt
+BUILDKITE_ANALYTICS_OTEL_ENABLED=true pytest -n 3
+```

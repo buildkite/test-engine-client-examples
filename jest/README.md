@@ -1,11 +1,38 @@
 # Jest
 
-Jest with parallel jobs, retries, and a Test Scheduler pool. Copy [jest.config.js](./jest.config.js) and the test collector dependency from [package.json](./package.json).
+Run Jest across parallel jobs with bktec and send results to Test Engine with the JavaScript test collector.
 
-Use the `Jest`, `Jest (Retry Enabled)`, or `Jest (Test Scheduler pool)` steps in [pipeline.yml](../.buildkite/pipeline.yml). The Tests Buildkite plugin sets `upload-results: false`; the JavaScript test collector uploads results.
+## Pipeline
 
-Set `suite-slug` and the test suite's [OIDC policy](https://buildkite.com/docs/pipelines/configure/tests/test-collection/oidc). Adjust result, location prefix, and mise paths; remove `cd jest` for tests at the repository root. Keep the pool's token unsets for job-identity claims.
+```yaml
+steps:
+  - label: ":jest: Jest"
+    parallelism: 2
+    commands:
+      - npm install
+      - bktec run
+    plugins:
+      - tests#v1.1.0:
+          test-runner: jest
+          result-path: jest-result.json
+          suite-slug: your-suite-slug
+          upload-results: false
+          client-version: "3.5.0"
+```
 
-The retry step's `JEST_RETRY_DEMO_MARKER` enables a test that fails once, then passes on retry. Omit the marker and its cleanup when copying into your own test suite.
+The test collector uploads results, so `upload-results: false` disables bktec's result upload. Add an [OIDC policy](https://buildkite.com/docs/pipelines/configure/tests/test-collection/oidc) to your test suite to allow your pipeline to authenticate.
 
-Run locally in this directory with Node from `mise.toml`: `npm install`, then `npm test`.
+See `Jest`, `Jest (Retry Enabled)`, and `Jest (Test Scheduler pool)` in [pipeline.yml](../.buildkite/pipeline.yml). Keep the pool's token unsets for job-identity claims. The retry demo's marker makes our fixture fail once; omit that marker and its cleanup from your own test suite.
+
+## Test collector
+
+Add `buildkite-test-collector` to your dependencies and keep the reporter and `testLocationInResults` setting from [jest.config.js](./jest.config.js). The reporter sends results; the location setting adds source links.
+
+## Run locally
+
+Use Node from `mise.toml` and run these commands in this directory:
+
+```bash
+npm install
+npm test
+```

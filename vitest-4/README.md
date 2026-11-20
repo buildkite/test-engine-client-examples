@@ -1,9 +1,37 @@
 # Vitest 4
 
-Vitest 4 with the Test Engine Client (bktec). Copy [vitest.config.js](./vitest.config.js) and the dependencies from [package.json](./package.json).
+Run Vitest 4 with bktec while the JavaScript test collector sends results to Test Engine.
 
-Use the `Vitest 4` step in [pipeline.yml](../.buildkite/pipeline.yml), which uses `bktec run`. The Tests Buildkite plugin sets `upload-results: false`; the JavaScript test collector uploads results. Keep the explicit `test-cmd` and `retry-cmd` so CLI reporter flags do not replace the test collector reporter.
+## Pipeline
 
-Set `suite-slug` and the test suite's [OIDC policy](https://buildkite.com/docs/pipelines/configure/tests/test-collection/oidc). Adjust result, location prefix, and mise paths; remove `cd vitest-4` for tests at the repository root.
+```yaml
+steps:
+  - label: ":vitest: Vitest 4"
+    commands:
+      - npm ci
+      - bktec run
+    plugins:
+      - tests#v1.1.0:
+          test-runner: vitest
+          test-cmd: "npx vitest run {{testExamples}} --outputFile {{resultPath}}"
+          retry-cmd: "npx vitest run {{testExamples}} --testNamePattern '{{testNamePattern}}' --outputFile {{resultPath}}"
+          result-path: tmp/vitest-results.json
+          suite-slug: your-suite-slug
+          upload-results: false
+          client-version: "3.5.0"
+```
 
-Run locally in this directory with Node from `mise.toml`: `npm ci`, then `npm test`.
+The test collector uploads results, so set `upload-results: false`. Keep the explicit commands: bktec's default `--reporter` flags would replace the test collector reporter. Add an [OIDC policy](https://buildkite.com/docs/pipelines/configure/tests/test-collection/oidc) to your test suite so your pipeline can authenticate. Our `Vitest 4` step is in [pipeline.yml](../.buildkite/pipeline.yml).
+
+## Test collector
+
+Add `buildkite-test-collector` to your dependencies and copy the reporters from [vitest.config.js](./vitest.config.js). The test collector reporter uploads results; the JSON reporter writes the file bktec reads. Keep `includeTaskLocation` for source locations.
+
+## Run locally
+
+Use Node from `mise.toml` and run in this directory:
+
+```bash
+npm ci
+npm test
+```

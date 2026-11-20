@@ -1,9 +1,44 @@
 # Cucumber
 
-Cucumber with parallel jobs. Copy the Ruby test collector setup in [features/support/env.rb](./features/support/env.rb) and the dependencies in [Gemfile](./Gemfile).
+Split your Cucumber features across parallel jobs with bktec and send results to Test Engine with the Ruby test collector.
 
-Use the `Cucumber` step in [pipeline.yml](../.buildkite/pipeline.yml). The Tests Buildkite plugin sets `upload-results: false`; the Ruby test collector uploads results.
+## Pipeline
 
-Set `suite-slug` and the test suite's [OIDC policy](https://buildkite.com/docs/pipelines/configure/tests/test-collection/oidc). Adjust feature, result, location prefix, and mise paths; remove `cd cucumber` for features at the repository root.
+```yaml
+steps:
+  - label: ":cucumber: Cucumber"
+    parallelism: 2
+    commands:
+      - bundle install
+      - mkdir -p tmp
+      - bktec run
+    plugins:
+      - tests#v1.1.0:
+          test-runner: cucumber
+          result-path: tmp/cucumber.json
+          suite-slug: your-suite-slug
+          upload-results: false
+          client-version: "3.5.0"
+```
 
-Run locally in this directory with Ruby from `mise.toml`: `bundle install`, then `bundle exec cucumber`.
+The test collector uploads results, so set `upload-results: false`. Add an [OIDC policy](https://buildkite.com/docs/pipelines/configure/tests/test-collection/oidc) to your test suite so your pipeline can authenticate. Our `Cucumber` step is in [pipeline.yml](../.buildkite/pipeline.yml).
+
+## Test collector
+
+Add `buildkite-test_collector` to your Gemfile, then load it in your Cucumber support code as in [features/support/env.rb](./features/support/env.rb):
+
+```ruby
+require "buildkite/test_collector"
+require "cucumber"
+
+Buildkite::TestCollector.configure(hook: :cucumber)
+```
+
+## Run locally
+
+Use Ruby from `mise.toml` and run these commands in this directory:
+
+```bash
+bundle install
+bundle exec cucumber
+```

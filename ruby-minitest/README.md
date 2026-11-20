@@ -1,9 +1,39 @@
 # Minitest
 
-Minitest file splitting with bktec's custom runner. Copy [Rakefile](./Rakefile), the Ruby test collector setup in [test_helper.rb](./test_helper.rb), and the dependencies in [Gemfile](./Gemfile).
+Split your Minitest files across parallel jobs with bktec's custom runner.
 
-Use the `Minitest` step in [pipeline.yml](../.buildkite/pipeline.yml). The Tests Buildkite plugin sets `upload-results: false`; the Ruby test collector uploads results.
+## Pipeline
 
-Set `suite-slug` and the test suite's [OIDC policy](https://buildkite.com/docs/pipelines/configure/tests/test-collection/oidc). Adjust test, location prefix, and mise paths; remove `cd ruby-minitest` for tests at the repository root. Keep the Rake task's `TEST_FILES` handling so it runs only assigned files.
+```yaml
+steps:
+  - label: ":ruby: Minitest"
+    parallelism: 2
+    commands:
+      - bundle install
+      - bktec run
+    plugins:
+      - tests#v1.1.0:
+          test-runner: custom
+          test-cmd: "bundle exec rake test TEST_FILES='{{testExamples}}'"
+          test-file-pattern: "**/*_test.rb"
+          suite-slug: your-suite-slug
+          upload-results: false
+          client-version: "3.5.0"
+```
 
-Run locally in this directory with Ruby from `mise.toml`: `bundle install`, then `bundle exec rake test`.
+`test-file-pattern` discovers files; `test-cmd` passes each job's assignments to Rake. Keep the `TEST_FILES` handling from [Rakefile](./Rakefile) so each job runs only its files.
+
+The Ruby test collector uploads results, so set `upload-results: false`. Add an [OIDC policy](https://buildkite.com/docs/pipelines/configure/tests/test-collection/oidc) to your test suite so your pipeline can authenticate. Our `Minitest` step is in [pipeline.yml](../.buildkite/pipeline.yml).
+
+## Test collector
+
+Add `buildkite-test_collector` to your Gemfile and configure `hook: :minitest` in your test helper, as in [test_helper.rb](./test_helper.rb). Require that helper from your tests.
+
+## Run locally
+
+Use Ruby from `mise.toml` and run these commands in this directory:
+
+```bash
+bundle install
+bundle exec rake test
+```

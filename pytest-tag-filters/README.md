@@ -1,9 +1,42 @@
 # pytest tag filters
 
-pytest selection by execution tags. Copy the dependencies in [setup.py](./setup.py) and replace the example [test tags](./tests) with your own.
+Run only the pytest tests matching an execution tag, such as `component:frontend`.
 
-Use the `pytest (tag filters)` step in [pipeline.yml](../.buildkite/pipeline.yml). The Tests Buildkite plugin sets `tag-filters: "component:frontend"` and `upload-results: false`; the Python test collector uploads results.
+## Pipeline
 
-Set `suite-slug` and the test suite's [OIDC policy](https://buildkite.com/docs/pipelines/configure/tests/test-collection/oidc). Change `tag-filters`, adjust test and mise paths, and remove `cd pytest-tag-filters` for tests at the repository root.
+```yaml
+steps:
+  - label: ":pytest: pytest (tag filters)"
+    parallelism: 2
+    commands:
+      - pip install -e '.[dev]'
+      - bktec run
+    plugins:
+      - tests#v1.1.0:
+          test-runner: pytest
+          tag-filters: "component:frontend"
+          suite-slug: your-suite-slug
+          upload-results: false
+          client-version: "3.5.0"
+```
 
-Run locally in this directory with Python from `mise.toml` and a virtual environment: `pip install -e '.[dev]'`, then `pytest`. This runs all tests; bktec applies the tag filter in CI.
+Set `tag-filters` to the tests you want to run. The Python test collector uploads results, so set `upload-results: false`. Add an [OIDC policy](https://buildkite.com/docs/pipelines/configure/tests/test-collection/oidc) to your test suite so your pipeline can authenticate. Our `pytest (tag filters)` step is in [pipeline.yml](../.buildkite/pipeline.yml).
+
+## Test collector
+
+Add `buildkite-test-collector` to your test dependencies, as in [setup.py](./setup.py), and tag your tests:
+
+```python
+@pytest.mark.execution_tag("component", "frontend")
+def test_user_login():
+    assert True
+```
+
+## Run locally
+
+Use Python from `mise.toml` and an activated virtual environment in this directory. Direct pytest runs include all tests; bktec applies the tag filter in CI.
+
+```bash
+pip install -e '.[dev]'
+pytest
+```

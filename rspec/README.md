@@ -1,9 +1,49 @@
 # RSpec
 
-RSpec with parallel jobs and Test Scheduler pool exec. Copy the Ruby test collector setup in [spec/spec_helper.rb](./spec/spec_helper.rb) and the dependencies in [Gemfile](./Gemfile).
+Run RSpec with bktec to split your specs across parallel jobs using timings from your Test Engine test suite.
 
-Use the `RSpec` or `RSpec (Test Scheduler pool exec)` steps in [pipeline.yml](../.buildkite/pipeline.yml). Both set `upload-results: false` in the Tests Buildkite plugin. The test collector uses OpenTelemetry; the `RSpec` step sends it through bktec's OTLP relay.
+## Pipeline
 
-Set `suite-slug` and the test suite's [OIDC policy](https://buildkite.com/docs/pipelines/configure/tests/test-collection/oidc). Adjust result and mise paths; remove `cd rspec` for tests at the repository root. Keep pool exec's API-token unset for job-identity claims and its analytics token for test collection.
+Add this step to your pipeline:
 
-Run locally in this directory with Ruby from `mise.toml`: `bundle install`, then `bundle exec rspec`.
+```yaml
+steps:
+  - label: ":rspec: RSpec"
+    parallelism: 2
+    commands:
+      - bundle install
+      - bktec run
+    env:
+      BUILDKITE_TESTS_OTLP_RELAY: "true"
+    plugins:
+      - tests#v1.1.0:
+          test-runner: rspec
+          result-path: tmp/rspec.json
+          suite-slug: your-suite-slug
+          upload-results: false
+          client-version: "3.5.0"
+```
+
+`BUILDKITE_TESTS_OTLP_RELAY` sends test collector data through bktec's OTLP relay. Set `upload-results: false` because the test collector sends the results, and add an [OIDC policy](https://buildkite.com/docs/pipelines/configure/tests/test-collection/oidc) to your test suite so your pipeline can authenticate.
+
+See `RSpec` and `RSpec (Test Scheduler pool exec)` in [pipeline.yml](../.buildkite/pipeline.yml) for our CI steps. Pool exec keeps its API-token unset to request job-identity claims, but retains the analytics token for the test collector.
+
+## Test collector
+
+Add the test collector and OpenTelemetry dependencies from [Gemfile](./Gemfile), then configure your spec helper:
+
+```ruby
+require "opentelemetry/sdk"
+require "buildkite/test_collector"
+
+Buildkite::TestCollector.configure(hook: :rspec, otel_enabled: true)
+```
+
+## Run locally
+
+Use Ruby from `mise.toml` and run these commands in this directory:
+
+```bash
+bundle install
+bundle exec rspec
+```

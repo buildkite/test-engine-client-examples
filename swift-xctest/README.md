@@ -1,9 +1,39 @@
 # SwiftPM XCTest
 
-SwiftPM XCTest without bktec. Link the Swift test collector into your test target as shown in [Package.swift](./Package.swift).
+Run a Swift package's XCTest tests on Linux and send results to Test Engine with the Swift test collector.
 
-Use the `Swift: XCTest (test-collector-swift)` step in [pipeline.yml](../.buildkite/pipeline.yml). The Tests Buildkite plugin sets `upload-results: false` and `install-client: false`; the test collector uploads results using the token forwarded into Docker.
+## Pipeline
 
-Set `suite-slug` and the test suite's [OIDC policy](https://buildkite.com/docs/pipelines/configure/tests/test-collection/oidc). Adjust package paths and remove `cd swift-xctest` if the package is at the repository root. Keep Docker's token forwarding and `--disable-swift-testing` for this XCTest example.
+```yaml
+steps:
+  - label: ":swift: Swift: XCTest (test-collector-swift)"
+    commands:
+      - swift package resolve
+      - swift test --disable-swift-testing
+    plugins:
+      - tests#v1.1.0:
+          test-runner: custom
+          suite-slug: your-suite-slug
+          upload-results: false
+          install-client: false
+      - docker#v5.14.0:
+          image: "swift:6.0-noble"
+          propagate-environment: true
+          environment:
+            - BUILDKITE_ANALYTICS_TOKEN
+```
 
-Run locally in this directory with Swift 6.0: `swift package resolve`, then `swift test --disable-swift-testing`.
+The Tests Buildkite plugin supplies credentials, but this step runs Swift directly: `install-client: false` skips bktec and `upload-results: false` leaves uploads to the test collector. Docker forwards the token to the tests. Add an [OIDC policy](https://buildkite.com/docs/pipelines/configure/tests/test-collection/oidc) to your test suite so your pipeline can authenticate. Our exact step is `Swift: XCTest (test-collector-swift)` in [pipeline.yml](../.buildkite/pipeline.yml).
+
+## Test collector
+
+Add the Swift test collector package and link `BuildkiteTestCollector` into your test target, as in [Package.swift](./Package.swift). XCTest observation loads it automatically. Keep `--disable-swift-testing` to run only XCTest.
+
+## Run locally
+
+Use Swift 6.0 and run in this directory:
+
+```bash
+swift package resolve
+swift test --disable-swift-testing
+```
