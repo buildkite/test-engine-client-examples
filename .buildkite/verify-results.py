@@ -83,7 +83,8 @@ def recorded(build, ids):
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("build", type=int, help="examples pipeline build number")
-    parser.add_argument("--timeout", type=float, default=600, help="seconds to keep checking (default: 600)")
+    parser.add_argument("--timeout", type=float, default=600,
+                        help="seconds after which no new check starts (default: 600)")
     parser.add_argument("--interval", type=float, default=60, help="seconds between checks (default: 60)")
     args = parser.parse_args(argv)
     if not os.environ.get("BUILDKITE_API_TOKEN"):
