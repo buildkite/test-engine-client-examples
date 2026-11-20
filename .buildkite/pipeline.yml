@@ -129,13 +129,17 @@ steps:
         commands:
           - cd vitest-4
           - npm ci
-          - npm test
+          - bktec run
         plugins:
           - tests#v1.1.0:
-              test-runner: custom
+              test-runner: vitest
+              # CLI --reporter replaces configured reporters; keep the collector.
+              test-cmd: "npx vitest run {{testExamples}} --outputFile {{resultPath}}"
+              retry-cmd: "npx vitest run {{testExamples}} --testNamePattern '{{testNamePattern}}' --outputFile {{resultPath}}"
+              result-path: tmp/vitest-results.json
               suite-slug: test-engine-client-examples
               upload-results: false
-              install-client: false
+              client-version: *bktec_version
           - mise#v1.1.6:
               dir: vitest-4
         env:
@@ -146,13 +150,17 @@ steps:
         commands:
           - cd vitest
           - npm ci
-          - npm test
+          - bktec run
         plugins:
           - tests#v1.1.0:
-              test-runner: custom
+              test-runner: vitest
+              # CLI --reporter replaces configured reporters; keep the collector.
+              test-cmd: "npx vitest run {{testExamples}} --outputFile {{resultPath}}"
+              retry-cmd: "npx vitest run {{testExamples}} --testNamePattern '{{testNamePattern}}' --outputFile {{resultPath}}"
+              result-path: tmp/vitest-results.json
               suite-slug: test-engine-client-examples
               upload-results: false
-              install-client: false
+              client-version: *bktec_version
           - mise#v1.1.6:
               dir: vitest
         env:
