@@ -13,6 +13,11 @@ configuration determines how test results are uploaded.
 See the [public Buildkite pipeline](https://buildkite.com/buildkite/test-engine-client-examples)
 for build results and job logs.
 
+The separate [failure demo pipeline](https://buildkite.com/buildkite/test-engine-client-examples-failures)
+runs [`.buildkite/failures.yml`](./.buildkite/failures.yml) daily at 00:00 UTC.
+Its builds are red on purpose: the RSpec fixtures demonstrate bktec retries and
+Test Engine flaky detection. The examples pipeline should stay green.
+
 ## Result uploads
 
 Configure one method to upload results from each test run:
