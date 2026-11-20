@@ -18,6 +18,7 @@ Examples of collecting test results and splitting tests with [Test Engine](https
 | pytest | [Test collector](./pytest/README.md) · [OpenTelemetry](./pytest-otel/README.md) · [Tag filters](./pytest-tag-filters/README.md) | xdist, Test Scheduler pool consume and exec, and tag filters; SQLite and HTTP spans |
 | XCTest / XCUITest | [SwiftPM test collector](./swift-xctest/README.md) · [Xcode OpenTelemetry](./swift-xcuitest/README.md) | SwiftPM on Linux without bktec; build once and split classes across Macs |
 | Android JVM / JUnit | [Test collector](./android/README.md) | Gradle class discovery and a custom runner |
+| Kotlin and Java / JUnit, Kotest | [Test collector](./gradle-jvm/README.md) | Kotlin DSL and Groovy DSL builds, Gradle class discovery, and a custom runner |
 | Go test | [bktec upload](./go/README.md) | Parallel jobs with gotestsum |
 | Rust / nextest | [bktec upload](./rust/README.md) | Custom runner that splits test binaries and tags JUnit selectors |
 

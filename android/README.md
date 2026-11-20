@@ -10,7 +10,7 @@ Copy the `Discover JVM tests` and `Android` steps from [pipeline.yml](../.buildk
 
 Use JDK 17 or later, Android SDK 34, and Gradle 8.3 or later. Copy [test-splitting.gradle.kts](./test-splitting.gradle.kts) to your project root and add `apply(from = "test-splitting.gradle.kts")` to the root `build.gradle.kts`. Apply collector plugin 0.4.1 in each module with JVM tests, as in [app/build.gradle.kts](./app/build.gradle.kts). See [Android](https://buildkite.com/docs/pipelines/configure/tests/test-collection/android-collectors#android).
 
-To split another variant, pass the same `-PsplitTestTask`, such as `-PsplitTestTask=testDemoDebugUnitTest`, to both Gradle commands. For Java or Kotlin JVM projects, use `-PsplitTestTask=test` and a JDK image without the Android SDK.
+To split another variant, pass the same `-PsplitTestTask`, such as `-PsplitTestTask=testDemoDebugUnitTest`, to both Gradle commands. For Kotlin or Java projects without Android, see the [Kotlin and Java example](../gradle-jvm/README.md).
 
 ## Limits
 
