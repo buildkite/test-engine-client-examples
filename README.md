@@ -14,6 +14,7 @@ Examples of collecting test results and splitting tests with [Test Engine](https
 | Jest | [Test collector](./jest/README.md) · [OpenTelemetry](./jest-otel/README.md) | Parallel jobs, retries, and Test Scheduler pool consume; manual, HTTP, and fetch spans |
 | Playwright | [Test collector](./playwright/README.md) · [OpenTelemetry](./playwright-otel/README.md) | Parallel jobs and Test Scheduler pool consume; step, action, and assertion spans |
 | Cypress | [Test collector](./cypress/README.md) | Parallel jobs and Linux browser setup |
+| Mocha | [Test collector](./mocha/README.md) | Custom runner that splits test files |
 | Vitest | [Test collector (5)](./vitest/README.md) · [Test collector (4)](./vitest-4/README.md) · [OpenTelemetry](./vitest-otel/README.md) | bktec with the collector's reporters; hook, manual, HTTP, and fetch spans |
 | pytest | [Test collector](./pytest/README.md) · [OpenTelemetry](./pytest-otel/README.md) · [Tag filters](./pytest-tag-filters/README.md) | xdist, Test Scheduler pool consume and exec, and tag filters; SQLite and HTTP spans |
 | XCTest / XCUITest | [SwiftPM test collector](./swift-xctest/README.md) · [Xcode OpenTelemetry](./swift-xcuitest/README.md) | SwiftPM on Linux without bktec; build once and split classes across Macs |
