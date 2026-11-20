@@ -13,21 +13,34 @@ Gradle 8.3+ running on JDK 17+, bktec 3.5.0, collector 0.4.1 and a Test Engine s
 
 ## Set up your build
 
-1. Apply the collector in each module with tests.
+1. Declare the collector's version once in the root build file, then apply it in
+   each module with tests.
 
-   Kotlin DSL (`build.gradle.kts`):
+   Kotlin DSL:
 
    ```kotlin
+   // Root build.gradle.kts
    plugins {
-       id("com.buildkite.test-collector-android.unit-test-collector-plugin") version "0.4.1"
+       id("com.buildkite.test-collector-android.unit-test-collector-plugin") version "0.4.1" apply false
+   }
+
+   // Each module's build.gradle.kts
+   plugins {
+       id("com.buildkite.test-collector-android.unit-test-collector-plugin")
    }
    ```
 
-   Groovy DSL (`build.gradle`):
+   Groovy DSL:
 
    ```groovy
+   // Root build.gradle
    plugins {
-       id 'com.buildkite.test-collector-android.unit-test-collector-plugin' version '0.4.1'
+       id 'com.buildkite.test-collector-android.unit-test-collector-plugin' version '0.4.1' apply false
+   }
+
+   // Each module's build.gradle
+   plugins {
+       id 'com.buildkite.test-collector-android.unit-test-collector-plugin'
    }
    ```
 
@@ -54,7 +67,8 @@ its classes. Set `suite-slug` and `parallelism`, and keep:
 - `oidc-lifetime: 7200`, because the collector uploads after Gradle finishes and
   the Tests plugin's token otherwise expires after five minutes.
 
-Agents need JDK 17+; this pipeline installs it with mise.
+Agents need JDK 17+; this pipeline installs it with mise. Discovery runs without a
+token, so its log shows `Missing or invalid 'BUILDKITE_ANALYTICS_TOKEN'`. That's expected.
 
 ## Try it locally
 
