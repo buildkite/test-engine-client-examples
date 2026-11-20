@@ -1,52 +1,38 @@
 # Split XCTest and XCUITest across Macs
 
-Build your Xcode project once, then split XCTest and XCUITest classes across Macs. The Swift test collector sends results through bktec's OpenTelemetry relay.
+Build an Xcode project once, then split its XCTest and XCUITest classes across Macs with bktec's custom runner. The Swift test collector sends results to Test Engine through bktec's OTLP relay.
 
 ## Pipeline
 
-```yaml
-steps:
-  - label: ":swift: XCUITest build and discover"
-    key: swift-xcuitest-build
-    command: bin/build
-    agents:
-      queue: your-macos-queue
-    artifact_paths: artifacts/tests.tar.gz
-  - label: ":swift: XCUITest shard %n"
-    depends_on: swift-xcuitest-build
-    parallelism: 2
-    commands:
-      - buildkite-agent artifact download artifacts/tests.tar.gz . --step swift-xcuitest-build
-      - tar -xzf artifacts/tests.tar.gz -C artifacts
-      - bktec run --plan-out artifacts/plan.json
-    agents:
-      queue: your-macos-queue
-    env:
-      BUILDKITE_TEST_ENGINE_SELECTOR_FILE: artifacts/selectors.txt
-      BUILDKITE_TESTS_OTLP_RELAY: "true"
-      BUILDKITE_TESTS_OTLP_RELAY_BATCHING: "true"
-    plugins:
-      - tests#v1.1.0:
-          test-runner: custom
-          test-cmd: bin/test {{testExamples}}
-          suite-slug: your-suite-slug
-          upload-results: false
-          client-version: "3.5.0"
-```
-
-Set your macOS queue and add an [OIDC policy](https://buildkite.com/docs/pipelines/configure/tests/test-collection/oidc) to your test suite. `upload-results: false` leaves uploads to the test collector. Our `XCUITest build and discover` and `XCUITest shard %n` steps are in [pipeline.yml](../.buildkite/pipeline.yml); this snippet puts your project and scripts at the repository root.
+Copy the `XCUITest build and discover` and `XCUITest shard %n` steps from [pipeline.yml](../.buildkite/pipeline.yml) and [adapt them](../README.md#adapt-a-step), setting `queue` to your macOS agents. The build step archives the test products and the list of test classes. Each shard downloads the archive and runs only its classes, without rebuilding.
 
 ## Test collector
 
-Copy [bin/build](./bin/build) and [bin/test](./bin/test), update their project, scheme, test plan, and simulator, and link the Swift test collector into each test target. Use matching Xcode versions and simulator architectures on all jobs, with jq installed. Keep `TEST_RUNNER_` forwarding, method filtering, one enabled test-plan configuration, and `PRODUCT_NAME` equal to the target name. This custom runner does not configure bktec retries or muting.
+Copy [bin/build](./bin/build) and [bin/test](./bin/test), and set your project or workspace, shared scheme, test plan, and simulator. Link `test-collector-swift` 2.0.0-beta.5, a prerelease, into each test target. Keep the relay variables, and the `TEST_RUNNER_` forwarding in `bin/test` that passes the relay's endpoint, token, and build details to the tests. See the collector's [setup steps](https://github.com/buildkite/test-collector-swift/blob/v2.0.0-beta.5/README.md#step-3).
+
+This collector sends results only as OpenTelemetry spans, so OTLP ingestion must be enabled for your Buildkite organization. Until it is, every upload is rejected and no results appear in Test Engine.
+
+## Limits
+
+- Use the same Xcode version and simulator architecture on every job, with jq installed.
+- Use a test plan with exactly one configuration, enabled. Remove disabled configurations too.
+- Keep `PRODUCT_NAME` equal to the target name, so timing selectors match `Target/Class`.
+- Only XCTest, not Swift Testing. Tests must not change between discovery and execution, and test identifiers can't contain whitespace, quotes, or backslashes.
+- New tests, first runs, and history older than seven days use default timings. Check `plan.json`.
+- bktec doesn't read results from this step, so it can't retry or mute tests. Xcode and fastlane retries work, and each attempt is collected separately.
+- Relay delivery is best effort: missing results can leave a job green, and unfinished tests have no result.
+
+## Fastlane
+
+Keep discovery and method filtering in the scripts. To replace the final `xcodebuild` in `bin/test`, run `scan` from the project directory with `xctestrun`, `test_without_building: true`, `destination`, `only_testing` (method identifiers, without `-only-testing:`), and `parallel_testing: false`. Don't add build flags through `xcargs`.
 
 ## Run locally
 
-Run in this directory on a Mac with Xcode 26.2:
+Use a Mac with Xcode 26.2 in this directory:
 
 ```bash
 bin/build
 bin/test ExampleAppUITests/LaunchTests ExampleAppUITests/StatusTests
 ```
 
-Set `XCUITEST_DESTINATION` for both commands to use a simulator other than iPhone 17. Local commands run tests without starting the OTLP relay.
+Set `XCUITEST_DESTINATION` for both commands to use a simulator other than iPhone 17. Local runs don't start the relay.

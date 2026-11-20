@@ -1,36 +1,21 @@
 # Jest
 
-Run Jest across parallel jobs with bktec and send results to Test Engine with the JavaScript test collector.
+Split Jest tests across parallel jobs with bktec. The JavaScript test collector sends results to Test Engine.
 
 ## Pipeline
 
-```yaml
-steps:
-  - label: ":jest: Jest"
-    parallelism: 2
-    commands:
-      - npm install
-      - bktec run
-    plugins:
-      - tests#v1.1.0:
-          test-runner: jest
-          result-path: jest-result.json
-          suite-slug: your-suite-slug
-          upload-results: false
-          client-version: "3.5.0"
-```
+Copy the `Jest` step from [pipeline.yml](../.buildkite/pipeline.yml) and [adapt it](../README.md#adapt-a-step). Two more steps build on it:
 
-The test collector uploads results, so `upload-results: false` disables bktec's result upload. Add an [OIDC policy](https://buildkite.com/docs/pipelines/configure/tests/test-collection/oidc) to your test suite to allow your pipeline to authenticate.
-
-See `Jest`, `Jest (Retry Enabled)`, and `Jest (Test Scheduler pool)` in [pipeline.yml](../.buildkite/pipeline.yml). Keep the pool's token unsets for job-identity claims. The retry demo's marker makes our fixture fail once; omit that marker and its cleanup from your own test suite.
+- `Jest (Retry Enabled)` retries failed tests with bktec. Remove `JEST_RETRY_DEMO_MARKER` and its `rm` line, which make a demo test fail once.
+- `Jest (Test Scheduler pool)` runs batches from a pool shared by the step's jobs.
 
 ## Test collector
 
-Add `buildkite-test-collector` to your dependencies and keep the reporter and `testLocationInResults` setting from [jest.config.js](./jest.config.js). The reporter sends results; the location setting adds source links.
+Add `buildkite-test-collector` and keep the reporter and `testLocationInResults` from [jest.config.js](./jest.config.js). See [Jest](https://buildkite.com/docs/pipelines/configure/tests/test-collection/javascript-collectors#configure-the-test-framework-jest).
 
 ## Run locally
 
-Use Node from `mise.toml` and run these commands in this directory:
+Use Node from `mise.toml` in this directory:
 
 ```bash
 npm install

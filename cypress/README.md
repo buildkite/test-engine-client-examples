@@ -1,35 +1,20 @@
 # Cypress
 
-Run Cypress across parallel jobs with bktec and send results to Test Engine with the JavaScript test collector.
+Split Cypress specs across parallel jobs with bktec. The JavaScript test collector sends results to Test Engine.
 
 ## Pipeline
 
-```yaml
-steps:
-  - label: ":cypress: Cypress"
-    parallelism: 2
-    commands:
-      - bin/setup
-      - bktec run
-    plugins:
-      - tests#v1.1.0:
-          test-runner: cypress
-          suite-slug: your-suite-slug
-          upload-results: false
-          client-version: "3.5.0"
-```
+Copy the `Cypress` step from [pipeline.yml](../.buildkite/pipeline.yml) and [adapt it](../README.md#adapt-a-step). bktec doesn't read Cypress results, so the collector is the only way to upload them, and bktec can't retry or mute tests.
 
-Copy [bin/setup](./bin/setup) if your Linux agents need Cypress's browser dependencies, or replace it with your own setup command. Our script uses apt and installs npm dependencies too.
-
-The test collector uploads results, so set `upload-results: false`. Add an [OIDC policy](https://buildkite.com/docs/pipelines/configure/tests/test-collection/oidc) to your test suite so your pipeline can authenticate. Our `Cypress` step is in [pipeline.yml](../.buildkite/pipeline.yml).
+[bin/setup](./bin/setup) installs Cypress's Linux dependencies with `apt-get` as root, then the npm packages and the Cypress binary. Replace it if your agents already have them.
 
 ## Test collector
 
-Add `buildkite-test-collector` to your dependencies and set the reporter to `buildkite-test-collector/cypress/reporter`, as in [cypress.config.js](./cypress.config.js). Keep `token_name: "BUILDKITE_ANALYTICS_TOKEN"` in the reporter options.
+Add `buildkite-test-collector` and keep the reporter and its `token_name` option from [cypress.config.js](./cypress.config.js). See [Cypress](https://buildkite.com/docs/pipelines/configure/tests/test-collection/javascript-collectors#configure-the-test-framework-cypress).
 
 ## Run locally
 
-Use Node from `mise.toml` with Cypress's system dependencies installed, then run in this directory:
+Install [Cypress's system dependencies](https://docs.cypress.io/app/get-started/install-cypress#Linux-Prerequisites), then use Node from `mise.toml` in this directory:
 
 ```bash
 npm install

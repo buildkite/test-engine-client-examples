@@ -1,42 +1,12 @@
 # RSpec OpenTelemetry
 
-Collect RSpec results and HTTP and database spans with OpenTelemetry, whether your test suite or the Ruby test collector owns the SDK setup.
+Send RSpec results to Test Engine as OpenTelemetry spans, with HTTP, Active Record, and Redis child spans, through bktec's OTLP relay.
 
-## Pipeline
+## Choose a setup
 
-Add this step after choosing one of the test collector setups below:
+- [collector-setup](./collector-setup/README.md): the Ruby test collector configures the OpenTelemetry SDK and installs the instrumentation you add. Start here.
+- [suite-setup](./suite-setup/README.md): your suite configures the SDK, and the collector attaches to it. Suites that already configure OpenTelemetry [aren't yet supported](https://buildkite.com/docs/pipelines/configure/tests/test-collection/ruby-collectors#collecting-rspec-tests-with-opentelemetry).
 
-```yaml
-steps:
-  - label: ":rspec: RSpec (OpenTelemetry setup by test collector)"
-    commands:
-      - bundle install
-      - bktec run
-    env:
-      BUILDKITE_TESTS_OTLP_RELAY: "true"
-    plugins:
-      - tests#v1.1.0:
-          test-runner: rspec
-          result-path: tmp/rspec.json
-          suite-slug: your-suite-slug
-          upload-results: false
-          client-version: "3.5.0"
-```
+Copy the files from the setup you choose, not this directory.
 
-The test collector sends results through bktec's OTLP relay, so set `upload-results: false`. Add an [OIDC policy](https://buildkite.com/docs/pipelines/configure/tests/test-collection/oidc) to your test suite so your pipeline can authenticate. Both `RSpec (OpenTelemetry setup by test collector)` and `RSpec (OpenTelemetry setup in suite)` are in [pipeline.yml](../.buildkite/pipeline.yml).
-
-## Test collector
-
-- Use [collector-setup](./collector-setup/README.md) if you want the test collector to configure the SDK and registered instrumentation.
-- Use [suite-setup](./suite-setup/README.md) if your tests already configure the SDK. This variant selects HTTP and Active Record instrumentation explicitly.
-
-Copy the chosen variant's dependencies and spec helper into your project, not the enclosing example directory.
-
-## Run locally
-
-Use Ruby from the chosen variant's `mise.toml` and run inside that variant:
-
-```bash
-bundle install
-bundle exec rspec
-```
+OpenTelemetry collection is experimental. Child spans count toward your plan's [trace ingestion limits](https://buildkite.com/pricing/feature-comparison) and can include URLs and database statements, so review what your instrumentation records.

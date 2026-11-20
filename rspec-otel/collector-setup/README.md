@@ -1,35 +1,35 @@
-# RSpec with test collector SDK setup
+# RSpec with collector OpenTelemetry setup
 
-Collect RSpec results and HTTP, SQL, and Redis spans while the Ruby test collector sets up OpenTelemetry for you.
+Send RSpec results to Test Engine as OpenTelemetry spans, with HTTP, Active Record, and Redis child spans. The Ruby test collector configures the OpenTelemetry SDK.
 
 ## Pipeline
 
-```yaml
-steps:
-  - label: ":rspec: RSpec (OpenTelemetry setup by test collector)"
-    commands:
-      - bundle install
-      - bktec run
-    env:
-      BUILDKITE_TESTS_OTLP_RELAY: "true"
-    plugins:
-      - tests#v1.1.0:
-          test-runner: rspec
-          result-path: tmp/rspec.json
-          suite-slug: your-suite-slug
-          upload-results: false
-          client-version: "3.5.0"
-```
-
-The test collector sends results through bktec's OTLP relay, so set `upload-results: false`. Add an [OIDC policy](https://buildkite.com/docs/pipelines/configure/tests/test-collection/oidc) to your test suite so your pipeline can authenticate. Our `RSpec (OpenTelemetry setup by test collector)` step is in [pipeline.yml](../../.buildkite/pipeline.yml).
+Copy the `RSpec (OpenTelemetry setup by test collector)` step from [pipeline.yml](../../.buildkite/pipeline.yml) and [adapt it](../../README.md#adapt-a-step). `BUILDKITE_TESTS_OTLP_RELAY` makes bktec forward the collector's spans to Test Engine and refresh their token. See [Relay OpenTelemetry traces](https://github.com/buildkite/test-engine-client/tree/v3.5.0#relay-opentelemetry-traces).
 
 ## Test collector
 
-Add the dependencies from [Gemfile](./Gemfile) and require your instrumentation before configuring the test collector with `hook: :rspec` and `otel_enabled: true`, as in [spec/spec_helper.rb](./spec/spec_helper.rb). Leave provider setup to the test collector; use [suite-setup](../suite-setup/README.md) if you already configure a provider.
+Add the gems from [Gemfile](./Gemfile). In [spec/spec_helper.rb](./spec/spec_helper.rb), require each instrumentation, then configure the collector with `otel_enabled: true`. The collector configures the SDK and installs the instrumentation when the suite starts. See [Add instrumentation](https://buildkite.com/docs/pipelines/configure/tests/test-collection/ruby-collectors#collecting-rspec-tests-with-opentelemetry-add-instrumentation) and the collector's [OpenTelemetry guide](https://github.com/buildkite/bktest/blob/test-collector-ruby/v2.17.1/test-collector-ruby/docs/opentelemetry.md#choosing-instrumentation).
+
+OpenTelemetry collection is experimental. Child spans count toward your plan's [trace ingestion limits](https://buildkite.com/pricing/feature-comparison) and can include URLs and database statements, so review what your instrumentation records.
+
+## Expected traces
+
+```text
+test.execution "OpenTelemetry spans captures an HTTP request"
+└── test.body
+    ├── connect
+    └── GET
+
+test.execution "OpenTelemetry spans captures a Redis command"
+└── test.body
+    └── SET
+```
+
+The Active Record test has `create!`, `save!`, and query spans. Active Record spans don't include SQL.
 
 ## Run locally
 
-Use Ruby from `mise.toml` and run in this directory:
+Use Ruby from `mise.toml` in this directory:
 
 ```bash
 bundle install

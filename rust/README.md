@@ -1,40 +1,28 @@
 # Split Rust tests by nextest binary
 
-Split nextest test binaries across parallel jobs with bktec's custom runner and upload their JUnit results to Test Engine.
+Split nextest test binaries across parallel jobs with bktec's custom runner, which uploads tagged JUnit results to Test Engine. You don't need a test collector.
 
 ## Pipeline
 
-```yaml
-steps:
-  - label: ":rust: Rust / nextest"
-    parallelism: 2
-    commands:
-      - mkdir -p target
-      - bin/discover > target/selectors.txt
-      - '"$$BUILDKITE_TEST_ENGINE_CLIENT_PATH" run --plan-out target/plan.json'
-    env:
-      BUILDKITE_TEST_ENGINE_SELECTOR_FILE: target/selectors.txt
-    plugins:
-      - tests#v1.1.0:
-          test-runner: custom
-          test-cmd: "bin/test {{testExamples}}"
-          result-path: target/nextest/ci/buildkite.xml
-          suite-slug: your-suite-slug
-          client-version: "3.5.0"
-          tags:
-            - "language.name=rust"
-            - "test.framework.name=nextest"
-```
+Copy the `Rust / nextest` step from [pipeline.yml](../.buildkite/pipeline.yml) and [adapt it](../README.md#adapt-a-step). Each job lists binaries with `bin/discover`, and bktec passes the job's binaries to `bin/test`.
 
-bktec uploads the tagged JUnit report; you don't need a test collector. Add an [OIDC policy](https://buildkite.com/docs/pipelines/configure/tests/test-collection/oidc) to your test suite. Our `Rust / nextest` step, including report artifacts, is in [pipeline.yml](../.buildkite/pipeline.yml).
+- Keep the `unset` line. Discovery can compile for longer than the plugin's token lasts, and bktec then requests its own.
+- The step runs `$BUILDKITE_TEST_ENGINE_CLIENT_PATH`, the plugin's bktec, even if another `bktec` is on `PATH`.
 
 ## Configure your workspace
 
-Copy [bin/discover](./bin/discover), [bin/test](./bin/test), and [.config/nextest.toml](./.config/nextest.toml) into your Cargo workspace. The snippet assumes that workspace is at the repository root. Keep the JUnit selector tags added by `bin/test` so results match the assigned binaries. Don't combine this with nextest's `--partition`; this custom runner does not configure bktec retries or muting. Run doctests separately.
+Copy [bin/discover](./bin/discover), [bin/test](./bin/test), and [.config/nextest.toml](./.config/nextest.toml) into your Cargo workspace, merging the config if you have one. `bin/test` tags each JUnit test case with its binary ID, which Test Engine uses for timings; keep those tags. Agents need Python 3.8 or later, Rust, and cargo-nextest.
+
+## Limits
+
+- Splits by binary, not by test, so a large binary stays on one job. Don't add nextest's `--partition`.
+- Every job discovers and compiles. Run doctests separately.
+- bktec can't retry tests. Muting has no effect: `bin/test` keeps nextest's failure exit code, `100`, and bktec only treats exit code `1` as muted failures.
+- Manual test selection doesn't match exact binaries, especially IDs with `::`.
 
 ## Run locally
 
-Use Python 3.8+ and Rust and nextest from `mise.toml` in this directory. These selectors belong to the example; use `bin/discover` to find yours:
+Use Python 3.8 or later, and Rust and nextest from `mise.toml`, in this directory. These selectors belong to the example; run `bin/discover` to find yours:
 
 ```bash
 bin/discover
@@ -42,4 +30,4 @@ bin/test rust-example
 bin/test rust-example::arithmetic
 ```
 
-Each invocation replaces the report at `target/nextest/ci/buildkite.xml`; use separate checkouts for concurrent shards.
+Each run replaces `target/nextest/ci/buildkite.xml`, so use separate checkouts for concurrent shards.
