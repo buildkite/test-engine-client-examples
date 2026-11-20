@@ -8,7 +8,7 @@ Examples of collecting test results and splitting tests with [Test Engine](https
 
 | Runner | Example | What it shows |
 | --- | --- | --- |
-| RSpec | [Test collector](./rspec/README.md) · [OpenTelemetry](./rspec-otel/README.md) | Parallel jobs and Test Scheduler pool exec, with results sent as OpenTelemetry spans; HTTP, Active Record, and Redis spans |
+| RSpec | [Test collector](./rspec/README.md) · [OpenTelemetry](./rspec-otel/) | Parallel jobs and Test Scheduler pool exec, with collector-configured OpenTelemetry; HTTP, Active Record, and Redis spans |
 | Minitest | [Test collector](./ruby-minitest/README.md) | Custom runner that splits test files |
 | Cucumber | [Test collector](./cucumber/README.md) | Parallel jobs |
 | Jest | [Test collector](./jest/README.md) · [OpenTelemetry](./jest-otel/README.md) | Parallel jobs, retries, and Test Scheduler pool consume; manual, HTTP, and fetch spans |
@@ -16,7 +16,7 @@ Examples of collecting test results and splitting tests with [Test Engine](https
 | Cypress | [Test collector](./cypress/README.md) | Parallel jobs and Linux browser setup |
 | Mocha | [Test collector](./mocha/README.md) | Custom runner that splits test files |
 | Vitest | [Test collector (5)](./vitest/README.md) · [Test collector (4)](./vitest-4/README.md) · [OpenTelemetry](./vitest-otel/README.md) | bktec with the collector's reporters; hook, manual, HTTP, and fetch spans |
-| pytest | [Test collector](./pytest/README.md) · [OpenTelemetry](./pytest-otel/README.md) · [Tag filters](./pytest-tag-filters/README.md) | xdist, Test Scheduler pool consume and exec, and tag filters; SQLite and HTTP spans |
+| pytest | [Test collector](./pytest/README.md) · [OpenTelemetry](./pytest-otel/) · [Tag filters](./pytest-tag-filters/README.md) | xdist, Test Scheduler pool consume and exec, and tag filters; collector-configured OpenTelemetry with SQLite and HTTP spans |
 | XCTest / XCUITest | [SwiftPM test collector](./swift-xctest/README.md) · [Xcode OpenTelemetry](./swift-xcuitest/README.md) | SwiftPM on Linux without bktec; build once and split classes across Macs |
 | Android JVM / JUnit | [Test collector](./android/README.md) | Gradle class discovery and a custom runner |
 | Kotlin and Java / JUnit, Kotest | [Test collector](./gradle-jvm/README.md) | Kotlin DSL and Groovy DSL builds, Gradle class discovery, and a custom runner |
