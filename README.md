@@ -50,9 +50,9 @@ step for the complete configuration.
 
 ## Gradle examples
 
-- [`gradle-jvm`](./gradle-jvm): split Java and Kotlin test classes across jobs
-  with bktec's custom runner. Despite its name, the Android collector's Gradle
-  plugin works with plain JVM projects.
+- [`gradle-jvm`](./gradle-jvm): split Kotlin and Java test classes across jobs
+  with bktec's custom runner, with Kotlin DSL and Groovy DSL builds. Despite its
+  name, the Android collector's Gradle plugin works with plain JVM projects.
 - [`android`](./android): split an Android app's JVM unit tests the same way.
 
 ## Swift examples

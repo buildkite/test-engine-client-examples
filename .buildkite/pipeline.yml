@@ -637,6 +637,8 @@ steps:
               suite-slug: test-engine-client-examples
               upload-results: false
               client-version: *bktec_version
+              # The collector uploads after Gradle finishes; the default token lasts five minutes.
+              oidc-lifetime: 7200
           - mise#v1.1.6:
               dir: gradle-jvm
 
