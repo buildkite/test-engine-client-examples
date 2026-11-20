@@ -1,0 +1,9 @@
+{
+  "reporterEnabled": "spec, buildkite-test-collector/mocha/reporter",
+  "buildkiteTestCollectorMochaReporterReporterOptions": {
+    "token_name": "BUILDKITE_ANALYTICS_TOKEN",
+    "tags": {
+      "test.framework.name": "mocha"
+    }
+  }
+}
