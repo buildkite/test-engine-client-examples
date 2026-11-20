@@ -65,6 +65,11 @@ class VerifyResultsTest(unittest.TestCase):
                     raise HTTPError(url, 401 if scenario == "auth" else 503, "failure", {}, None)
                 if scenario == "missing" or (scenario == "late" and clock[0] == 0):
                     return response([])
+                if scenario == "not-a-list":
+                    return response({})
+                if scenario in ("null-counts", "list-counts"):
+                    counts = None if scenario == "null-counts" else ["passed"] * 10 + ["failed"]
+                    return response([{"executions_count": 11, "executions_count_by_result": counts}])
                 results = {"passed": 1, "failed": 10} if scenario == "mismatch" else {"passed": 10, "failed": 1}
             elif tags == "build.id:build-id,build.job_id:shard0":
                 # All tests may land on one shard; an empty peer is valid.
@@ -119,12 +124,14 @@ class VerifyResultsTest(unittest.TestCase):
                 self.assertIn("FAIL: build 1303, 1/2 examples unverified", output)
 
     def test_api_errors_are_not_reported_as_missing_results(self):
-        for scenario, verdict in [("api", "API ERROR"), ("auth", "AUTH ERROR")]:
+        for scenario, verdict in [("api", "API ERROR"), ("auth", "AUTH ERROR"), ("not-a-list", "API ERROR"),
+                                  ("null-counts", "API ERROR"), ("list-counts", "API ERROR")]:
             with self.subTest(scenario=scenario):
                 status, output = self.run_check(scenario)
                 self.assertEqual(status, 2)
                 self.assertIn(verdict, output)
                 self.assertNotIn("MISSING", output)
+                self.assertNotIn("PASS", output)
 
     def test_new_examples_cannot_silently_escape_verification(self):
         status, output = self.run_check("unknown")

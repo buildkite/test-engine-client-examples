@@ -65,8 +65,13 @@ def recorded(build, ids):
         })
         while url:
             tests, link = get(url)
+            if not isinstance(tests, list):
+                raise TypeError("Tests API returned a page that isn't a list")
             for test in tests:
-                total.update(test["executions_count_by_result"])
+                results = test["executions_count_by_result"]
+                if not isinstance(results, dict):
+                    raise TypeError("Tests API returned result counts that aren't an object")
+                total.update(results)
             next_page = re.search(r'<([^>]+)>; rel="next"', link)
             url = next_page and next_page[1]
     return +total  # Drop zero counts.
