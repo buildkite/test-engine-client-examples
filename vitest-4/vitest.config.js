@@ -4,6 +4,7 @@ export default {
   test: {
     reporters: [
       'default',
+      'json',
       ['buildkite-test-collector/vitest/reporter', {
         tags: {
           'test.framework.name': 'vitest',
@@ -11,6 +12,7 @@ export default {
         },
       }],
     ],
+    outputFile: 'tmp/vitest-results.json',
     includeTaskLocation: true,
   },
 };
