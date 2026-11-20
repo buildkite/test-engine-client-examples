@@ -1,59 +1,19 @@
 # Playwright OpenTelemetry
 
-Collect test results and nested Playwright steps with
-`buildkite-test-collector` 1.16.0. For JSON uploads, see [`playwright`](../playwright).
+Playwright test results with nested steps, browser actions, and assertions. Copy [playwright.config.js](./playwright.config.js) and the OpenTelemetry dependencies in [package.json](./package.json). See the [collector guide] for SDK requirements and tracing limits.
 
-## Setup
+Use `Playwright (OpenTelemetry)` in [pipeline.yml](../.buildkite/pipeline.yml). The Tests Buildkite plugin sets `upload-results: false`; the JavaScript test collector sends results through bktec's OTLP relay. This step uses a custom runner, not the JSON example's Playwright runner.
 
-Use Node 24.19.0 from `mise.toml`. From the repository root:
+Set `suite-slug` and the test suite's [OIDC policy](https://buildkite.com/docs/pipelines/configure/tests/test-collection/oidc). Adjust test, output, location prefix, and mise paths; remove `cd playwright-otel` for tests at the repository root. Keep the relay configuration and use your own prefix in `BUILDKITE_ANALYTICS_KEY`.
+
+Run locally in this directory with Node from `mise.toml`:
 
 ```sh
-npm ci --prefix playwright-otel
-cd playwright-otel
+npm ci
 npx playwright install --with-deps chromium
-export BUILDKITE_ANALYTICS_TOKEN="your-suite-token"
 npm test
 ```
 
-The dependencies use the [collector guide]'s SDK 3 setup: API `^1.10`,
-`sdk-trace` `^3`, and the OTLP protobuf exporter `~0.301.0`.
-Playwright's reporter does not need `context-async-hooks`.
-SDK 3 requires Node 22.15+ and API 1.10+. When upgrading from collector 1.14.0,
-replace `sdk-trace-base` with `sdk-trace` (SDK 2.9+ or 3); without it,
-OpenTelemetry mode warns and uploads nothing.
-
-Without a suite token, tests run without uploading. OpenTelemetry mode never
-falls back to JSON.
-
-Tracing comes from Playwright's reporter. It captures steps, actions and
-assertions, not HTTP calls, manual worker spans or browser application traces.
-The test uses inline HTML, not an external service.
-
-## Expected traces
-
-Each test attempt has a separate trace. Hooks, fixtures and setup also appear;
-the checkout portion looks like:
-
-```text
-test.execution "confirms an order"
-└── checkout
-    ├── Fill "3"
-    └── submit order
-        ├── Click
-        └── Expect "toHaveText"
-```
-
-## CI
-
-The [pipeline](../.buildkite/pipeline.yml) runs `bktec run` with its OTLP relay.
-Keep `upload-results: false` so only the collector uploads results.
-
-## Notes
-
-OpenTelemetry support is experimental. Child spans require a plan that includes
-them and are billed by data ingested. Review step titles and span attributes for
-sensitive data before using real application data.
-
-See the [collector guide] for supported versions, instrumentation and limitations.
+Set `BUILDKITE_ANALYTICS_TOKEN` to upload locally.
 
 [collector guide]: https://github.com/buildkite/bktest/blob/test-collector-javascript/v1.16.0/test-collector-javascript/docs/opentelemetry.md#setup-1

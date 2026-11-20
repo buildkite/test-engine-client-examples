@@ -1,58 +1,11 @@
 # Jest OpenTelemetry
 
-Collect test results, manual spans and local HTTP and fetch spans with
-`buildkite-test-collector` 1.16.0. For JSON uploads, see [`jest`](../jest).
+Jest test results with manual, HTTP, and fetch spans. Copy [jest.config.js](./jest.config.js) and the OpenTelemetry dependencies in [package.json](./package.json); keep both the test collector runtime and reporter. See the [collector guide] for SDK requirements.
 
-## Setup
+Use `Jest (OTel setup by collector)` in [pipeline.yml](../.buildkite/pipeline.yml). The Tests Buildkite plugin sets `upload-results: false`; the JavaScript test collector sends results through bktec's OTLP relay. The JSON file is local input for bktec, not a second upload.
 
-Use Node 24.19.0 from `mise.toml`. From the repository root:
+Set `suite-slug` and the test suite's [OIDC policy](https://buildkite.com/docs/pipelines/configure/tests/test-collection/oidc). Adjust result, location prefix, and mise paths; remove `cd jest-otel` for tests at the repository root. Keep the relay configuration and use your own prefix in `BUILDKITE_ANALYTICS_KEY`.
 
-```sh
-npm ci --prefix jest-otel
-export BUILDKITE_ANALYTICS_TOKEN="your-suite-token"
-npm test --prefix jest-otel -- --runInBand
-```
-
-The dependencies use the [collector guide]'s SDK 3 setup: API `^1.10`,
-`sdk-trace` and `context-async-hooks` `^3`, and the OTLP protobuf exporter
-`~0.301.0`, with HTTP `^0.301.0` and undici `^0.35.0` instrumentation.
-SDK 3 requires Node 22.15+ and API 1.10+. When upgrading from collector 1.14.0,
-replace `sdk-trace-base` with `sdk-trace` (SDK 2.9+ or 3); without it,
-OpenTelemetry mode warns and uploads nothing.
-
-Without a suite token, tests run without uploading. OpenTelemetry mode never
-falls back to JSON.
-
-The collector runtime records spans in Jest workers. The reporter uploads them;
-no separate SDK setup is needed.
-
-## Expected traces
-
-Each test has a separate trace. No external service is required.
-
-```text
-test.execution "captures a manual child span"
-└── process order
-
-test.execution "captures an HTTP request"
-└── GET (HTTP client, /health)
-    └── GET (in-process HTTP server)
-```
-
-The fetch test has a fetch client → HTTP server chain.
-
-## CI
-
-The [pipeline](../.buildkite/pipeline.yml) runs `bktec run` with its OTLP relay.
-Keep `upload-results: false` so only the collector uploads results. The JSON file
-bktec requests is local input for scheduling and retries, not another upload.
-
-## Notes
-
-OpenTelemetry support is experimental. Child spans require a plan that includes
-them and are billed by data ingested. Review URLs and span attributes for sensitive
-data before using real application data.
-
-See the [collector guide] for supported versions, instrumentation and limitations.
+Run locally in this directory with Node from `mise.toml`: `npm ci`, then `npm test -- --runInBand`. Set `BUILDKITE_ANALYTICS_TOKEN` to upload locally.
 
 [collector guide]: https://github.com/buildkite/bktest/blob/test-collector-javascript/v1.16.0/test-collector-javascript/docs/opentelemetry.md#setup-1
