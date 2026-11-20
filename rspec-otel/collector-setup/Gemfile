@@ -17,4 +17,4 @@ gem "opentelemetry-sdk", "~> 1.13", require: false
 # Used by the example specs to produce HTTP, Active Record, and Redis spans.
 gem "activerecord", "~> 8.0"
 gem "redis", "~> 5.0"
-gem "sqlite3", "~> 2.0"
+gem "sqlite3", "~> 2.10"
