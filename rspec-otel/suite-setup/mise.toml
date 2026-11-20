@@ -1,5 +1,0 @@
-[tools]
-ruby = "3.4"
-
-[settings.ruby]
-compile = false

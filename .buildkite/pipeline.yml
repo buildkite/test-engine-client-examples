@@ -48,26 +48,9 @@ steps:
           - mise#v1.1.6:
               dir: rspec
 
-      - label: ":rspec: RSpec (OpenTelemetry setup in suite)"
-        commands:
-          - cd rspec-otel/suite-setup
-          - bundle install
-          - bktec run
-        env:
-          BUILDKITE_TESTS_OTLP_RELAY: "true"
-        plugins:
-          - tests#v1.1.0:
-              test-runner: rspec
-              result-path: tmp/rspec.json
-              suite-slug: test-engine-client-examples
-              upload-results: false
-              client-version: *bktec_version
-          - mise#v1.1.6:
-              dir: rspec-otel/suite-setup
-
       - label: ":rspec: RSpec (OpenTelemetry setup by test collector)"
         commands:
-          - cd rspec-otel/collector-setup
+          - cd rspec-otel
           - bundle install
           - bktec run
         env:
@@ -80,7 +63,7 @@ steps:
               upload-results: false
               client-version: *bktec_version
           - mise#v1.1.6:
-              dir: rspec-otel/collector-setup
+              dir: rspec-otel
 
       - label: ":ruby: Minitest"
         parallelism: 2
@@ -486,13 +469,13 @@ steps:
       - label: ":pytest: pytest (OTel setup by collector)"
         key: pytest-otel-relay
         commands:
-          - cd pytest-otel/collector-setup
+          - cd pytest-otel
           - pip install -r requirements.txt
           - mkdir -p tmp
           - export BUILDKITE_ANALYTICS_KEY="$$BUILDKITE_BUILD_ID-python-otel-relay-$$BUILDKITE_JOB_ID"
           - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
           - bktec run
-        artifact_paths: pytest-otel/collector-setup/tmp/otel-relay.json
+        artifact_paths: pytest-otel/tmp/otel-relay.json
         env:
           BUILDKITE_ANALYTICS_OTEL_ENABLED: "true"
           BUILDKITE_TESTS_OTLP_RELAY: "true"
@@ -505,31 +488,7 @@ steps:
               upload-results: false
               client-version: *bktec_version
           - mise#v1.1.6:
-              dir: pytest-otel/collector-setup
-
-      - label: ":pytest: pytest (OTel setup in suite)"
-        key: pytest-otel-suite-relay
-        commands:
-          - cd pytest-otel/suite-setup
-          - pip install -r requirements.txt
-          - mkdir -p tmp
-          - export BUILDKITE_ANALYTICS_KEY="$$BUILDKITE_BUILD_ID-python-otel-suite-$$BUILDKITE_JOB_ID"
-          - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
-          - bktec run
-        artifact_paths: pytest-otel/suite-setup/tmp/otel-relay.json
-        env:
-          BUILDKITE_ANALYTICS_OTEL_ENABLED: "true"
-          BUILDKITE_TESTS_OTLP_RELAY: "true"
-          PYTEST_ADDOPTS: "-n 3"
-        plugins:
-          - tests#v1.1.0:
-              test-runner: pytest
-              result-path: tmp/otel-relay.json
-              suite-slug: test-engine-client-examples
-              upload-results: false
-              client-version: *bktec_version
-          - mise#v1.1.6:
-              dir: pytest-otel/suite-setup
+              dir: pytest-otel
 
   - group: ":apple: iOS / macOS"
     steps:
