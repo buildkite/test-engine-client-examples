@@ -5,6 +5,7 @@
   ":rspec: RSpec (OpenTelemetry setup by test collector)": {"passed": 3},
   ":ruby: Minitest": {"passed": 1},
   ":cucumber: Cucumber": {"passed": 4},
+  ":mocha: Mocha": {"passed": 2},
   ":vitest: Vitest 4": {"passed": 1, "pending": 1, "skipped": 2},
   ":vitest: Vitest": {"passed": 1, "pending": 1, "skipped": 2},
   ":vitest: Vitest (OpenTelemetry)": {"passed": 3},
