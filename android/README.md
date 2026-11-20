@@ -1,46 +1,33 @@
 # Split Android JVM unit tests across Buildkite jobs
 
-Gradle discovers test classes once. bktec splits them across two jobs using
-Test Engine timing history, and collector 0.4.1 uploads the results.
+Discover Android JVM test classes with Gradle once, then split them across parallel jobs with bktec's custom runner. The Android test collector sends results to Test Engine.
 
-## Requirements
+## Pipeline
 
-JDK 17+, Android SDK 34, Gradle 8.3+ (wrapper: 8.9), bktec 3.5.0 and a Test Engine
-suite. The pipeline's Docker image supplies the JDK and SDK.
+Copy the `Discover JVM tests` and `Android` steps from [pipeline.yml](../.buildkite/pipeline.yml) and [adapt them](../README.md#adapt-a-step). Discovery dry-runs `testDebugUnitTest` in every module and saves the class lists as artifacts. Each job downloads them and runs only its classes in the Android SDK container, which receives the token and build details through the `--env` flags.
 
-## Setup
+## Test collector
 
-Apply the collector in each module with JVM tests:
+Use JDK 17 or later, Android SDK 34, and Gradle 8.3 or later. Copy [test-splitting.gradle.kts](./test-splitting.gradle.kts) to your project root and add `apply(from = "test-splitting.gradle.kts")` to the root `build.gradle.kts`. Apply collector plugin 0.4.1 in each module with JVM tests, as in [app/build.gradle.kts](./app/build.gradle.kts). See [Android](https://buildkite.com/docs/pipelines/configure/tests/test-collection/android-collectors#android).
 
-```kotlin
-plugins {
-    id("com.buildkite.test-collector-android.unit-test-collector-plugin") version "0.4.1"
-}
-```
-
-Copy [test-splitting.gradle.kts](./test-splitting.gradle.kts) to your project root
-and add `apply(from = "test-splitting.gradle.kts")` to the root `build.gradle.kts`.
-Copy the Android group from [the pipeline](../.buildkite/pipeline.yml), set
-`suite-slug` and `parallelism`, and keep `upload-results: false` to avoid duplicate uploads.
-
-Discovery dry-runs `testDebugUnitTest` in every module; shards download its class
-lists and run only their assignments. For another variant, pass
-`-PsplitTestTask=testDemoDebugUnitTest` to both Gradle commands. For Kotlin and Java
-projects without Android, see the [Kotlin and Java example](../gradle-jvm/README.md).
+To split another variant, pass the same `-PsplitTestTask`, such as `-PsplitTestTask=testDemoDebugUnitTest`, to both Gradle commands. For Kotlin or Java projects without Android, see the [Kotlin and Java example](../gradle-jvm/README.md).
 
 ## Limits
 
-- JVM `Test` tasks only, not instrumented tests. Use a separate group and suite per variant.
-- Splits whole outer classes or suites, including nested, parameterized and factory tests.
-- Binary class names must be unique across modules, with no whitespace, apostrophes or `*`.
-- Disabled, skipped and empty tasks add no classes. Missing owners and skipped assigned tasks fail.
-- New classes use default durations; timing history can take about an hour to appear.
-- No bktec retries or muting. Gradle failures stay nonzero and fail the pipeline step.
-- Each job configures and compiles. Keep `--no-configuration-cache`; test tasks always rerun.
-- Discovery and Docker add overhead. Measure before expecting a speedup; filtering can expose order-dependent tests.
+- Only JVM `Test` tasks, not instrumented tests. Use a separate step and test suite for each variant.
+- Splits whole outer classes or suites, including nested, parameterized, and factory tests.
+- Binary class names must be unique across modules, with no whitespace, apostrophes, or `*`.
+- Disabled, skipped, and empty tasks add no classes. Missing owners and skipped assigned tasks fail the job.
+- New classes use default timings until history appears, which can take about an hour.
+- bktec doesn't read results from this step, so it can't retry or mute tests. Gradle failures fail the job.
+- Every job configures and compiles. Keep `--no-configuration-cache`; test tasks always rerun.
+- Discovery and Docker add overhead. Measure before expecting a speedup, and watch for order-dependent tests.
 
-## Credentials and Docker
+## Run locally
 
-The Tests plugin mints a five-minute suite token on the host; set `oidc-lifetime`
-for longer jobs. Only that token and build metadata enter Gradle's container;
-discovery gets no credentials, and neither container gets agent credentials or sockets.
+Use JDK 17 and Android SDK 34 in this directory. Replace the class name with one from discovery:
+
+```bash
+./gradlew --no-configuration-cache splitTests -PdiscoverTests
+./gradlew --no-configuration-cache --continue splitTests -PtestClasses="com.buildkite.examples.PassingTest"
+```
