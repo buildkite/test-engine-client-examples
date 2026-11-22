@@ -57,8 +57,13 @@ def get(url):
                     delay = parsedate_to_datetime(delay).timestamp() - time.time()
             else:
                 # Buildkite's Reset headers are seconds, not Unix timestamps.
-                delay = max(float(error.headers.get("RateLimit-User-Reset", 0)),
-                            float(error.headers.get("RateLimit-Reset", 0))) or 60
+                resets = [float(error.headers[f"{prefix}-Reset"])
+                          for prefix in ("RateLimit-User", "RateLimit")
+                          if error.headers.get(f"{prefix}-Remaining") == "0"
+                          and f"{prefix}-Reset" in error.headers]
+                delay = max(resets) if resets else max(
+                    float(error.headers.get("RateLimit-User-Reset", 0)),
+                    float(error.headers.get("RateLimit-Reset", 0))) or 60
             if time.monotonic() + max(1.3, delay) > retry_deadline:
                 die("API ERROR: rate-limit retry would exceed --timeout")
             print(f"RATE LIMITED: retrying in {max(1.3, delay):.1f}s", flush=True)
@@ -72,15 +77,23 @@ def job_ids(build_number):
     while url:
         page, _ = get(url)
         for job in page["items"]:
-            if job["type"] == "script" and job.get("started_at") and not job.get("retried"):
+            if job["type"] == "script" and not job.get("retried"):
+                if not job.get("started_at"):
+                    die(f"BUILD INCOMPLETE: {job['name']}: {job.get('state', 'not started')}")
                 label = re.sub(r"XCUITest shard \d+", "XCUITest shard %n", job["name"])
                 jobs.setdefault(label, []).append(job["id"])
         url = page["links"].get("next")
     return {label: ids for label, ids in jobs.items() if label not in NO_RESULTS}
 
 
-def recorded(url):
+def recorded(build, job_id=None):
     """Sum paginated test metrics (a JSON array, with Link-header pagination)."""
+    tags = f"build.id:{build['id']}"
+    if job_id is not None:
+        tags += f",build.job_id:{job_id}"
+    url = f"{SUITE}/tests?" + urlencode({
+        "tags": tags, "min_timestamp": build["created_at"], "per_page": 100,
+    })
     total = Counter()
     while url:
         tests, link = get(url)
@@ -125,6 +138,8 @@ def main(argv=None):
         die(f"CONFIG ERROR: steps without expectations: {sorted(unknown)}")
     for label in sorted(expected.keys() - jobs.keys()):
         print(f"NOT RUN: {label}")
+    if not jobs:
+        die("BUILD INCOMPLETE: no examples to check")
     expected = {label: expected[label] for label in jobs}
     wanted_total = sum(expected.values(), Counter())
 
@@ -132,7 +147,7 @@ def main(argv=None):
     retry_deadline = started + args.timeout
     while True:
         try:
-            total = recorded(f"{API}/analytics/organizations/buildkite/builds/{build['id']}/tests?per_page=100")
+            total = recorded(build)
             error = None
         except API_ERRORS as err:  # Retry on the next check.
             total, error = Counter(), err
@@ -145,14 +160,15 @@ def main(argv=None):
     if error:
         die(f"API ERROR: {error}")
     try:
-        counts = {}
-        for label, ids in jobs.items():
-            counts[label] = Counter()
-            for job_id in ids:
-                counts[label].update(recorded(f"{SUITE}/tests?" + urlencode({
-                    "tags": f"build.id:{build['id']},build.job_id:{job_id}",
-                    "min_timestamp": build["created_at"], "per_page": 100,
-                })))
+        counts, pending = {}, list(jobs)
+        while True:
+            for label in pending:
+                counts[label] = sum((recorded(build, job_id) for job_id in jobs[label]), Counter())
+            pending = [label for label in jobs if expected[label] - counts[label]]
+            if not pending or time.monotonic() + args.interval > retry_deadline:
+                break
+            print(f"WAIT: results still deficient for {pending}", flush=True)
+            time.sleep(args.interval)
     except API_ERRORS as error:
         die(f"API ERROR: {error}")
     unverified = {label for label in expected if counts[label] != expected[label]}
