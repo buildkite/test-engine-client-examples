@@ -12,7 +12,7 @@ steps:
       - npm ci
       - bktec run
     plugins:
-      - tests#v1.1.0:
+      - tests#v1.2.0:
           test-runner: custom
           test-cmd: "npx mocha {{testExamples}} --reporter mocha-multi-reporters --reporter-options configFile=reporter-config.json"
           test-file-pattern: "src/**/*.test.js"

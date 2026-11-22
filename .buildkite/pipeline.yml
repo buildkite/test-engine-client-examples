@@ -15,7 +15,7 @@ steps:
         env:
           BUILDKITE_TESTS_OTLP_RELAY: "true"
         plugins:
-          - tests#v1.1.0:
+          - tests#v1.2.0:
               test-runner: rspec
               result-path: tmp/rspec.json
               suite-slug: test-engine-client-examples
@@ -39,7 +39,7 @@ steps:
           - unset BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
           - bktec pool exec --pool-lease-max-attempts 2 -- bundle exec buildkite-rspec
         plugins:
-          - tests#v1.1.0:
+          - tests#v1.2.0:
               test-runner: rspec
               result-path: tmp/rspec.json
               suite-slug: test-engine-client-examples
@@ -56,7 +56,7 @@ steps:
         env:
           BUILDKITE_TESTS_OTLP_RELAY: "true"
         plugins:
-          - tests#v1.1.0:
+          - tests#v1.2.0:
               test-runner: rspec
               result-path: tmp/rspec.json
               suite-slug: test-engine-client-examples
@@ -72,7 +72,7 @@ steps:
           - bundle install
           - bktec run
         plugins:
-          - tests#v1.1.0:
+          - tests#v1.2.0:
               test-runner: custom
               test-cmd: "bundle exec rake test TEST_FILES='{{testExamples}}'"
               test-file-pattern: "**/*_test.rb"
@@ -92,7 +92,7 @@ steps:
           - mkdir -p tmp
           - bktec run
         plugins:
-          - tests#v1.1.0:
+          - tests#v1.2.0:
               test-runner: cucumber
               result-path: tmp/cucumber.json
               suite-slug: test-engine-client-examples
@@ -103,8 +103,7 @@ steps:
         env:
           BUILDKITE_ANALYTICS_LOCATION_PREFIX: cucumber
 
-  # The tests plugin exports a short-lived token before setup. Unset it before
-  # bktec so long dependency installs cannot leave it with stale credentials.
+  # Some steps request fresh bktec tokens after dependency setup.
   - group: ":javascript: JavaScript"
     steps:
       - label: ":mocha: Mocha"
@@ -116,7 +115,7 @@ steps:
           - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
           - bktec run
         plugins:
-          - tests#v1.1.0:
+          - tests#v1.2.0:
               test-runner: custom
               test-cmd: "npx mocha {{testExamples}} --reporter mocha-multi-reporters --reporter-options configFile=reporter-config.json"
               test-file-pattern: "src/**/*.test.js"
@@ -135,7 +134,7 @@ steps:
           - npm ci
           - bktec run
         plugins:
-          - tests#v1.1.0:
+          - tests#v1.2.0:
               test-runner: vitest
               # CLI --reporter replaces configured reporters; keep the collector.
               test-cmd: "npx vitest run {{testExamples}} --outputFile {{resultPath}}"
@@ -156,7 +155,7 @@ steps:
           - npm ci
           - bktec run
         plugins:
-          - tests#v1.1.0:
+          - tests#v1.2.0:
               test-runner: vitest
               # CLI --reporter replaces configured reporters; keep the collector.
               test-cmd: "npx vitest run {{testExamples}} --outputFile {{resultPath}}"
@@ -183,7 +182,7 @@ steps:
           BUILDKITE_TESTS_OTLP_RELAY_BATCHING: "true"
           BUILDKITE_ANALYTICS_LOCATION_PREFIX: vitest-otel
         plugins:
-          - tests#v1.1.0:
+          - tests#v1.2.0:
               test-runner: vitest
               # CLI --reporter replaces configured reporters; keep the collector.
               test-cmd: "npx vitest run {{testExamples}} --outputFile {{resultPath}}"
@@ -203,7 +202,7 @@ steps:
           - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
           - bktec run
         plugins:
-          - tests#v1.1.0:
+          - tests#v1.2.0:
               test-runner: jest
               result-path: jest-result.json
               suite-slug: test-engine-client-examples
@@ -222,7 +221,7 @@ steps:
           - rm -f tmp/jest-retry-demo
           - bktec run
         plugins:
-          - tests#v1.1.0:
+          - tests#v1.2.0:
               test-runner: jest
               result-path: jest-result.json
               retry-count: 3
@@ -249,7 +248,7 @@ steps:
           BUILDKITE_TESTS_OTLP_RELAY_BATCHING: "true"
           BUILDKITE_ANALYTICS_LOCATION_PREFIX: jest-otel
         plugins:
-          - tests#v1.1.0:
+          - tests#v1.2.0:
               test-runner: jest
               result-path: jest-result.json
               suite-slug: test-engine-client-examples
@@ -270,7 +269,7 @@ steps:
           - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
           - bktec pool consume --pool-lease-max-attempts 2
         plugins:
-          - tests#v1.1.0:
+          - tests#v1.2.0:
               test-runner: jest
               result-path: jest-result.json
               suite-slug: test-engine-client-examples
@@ -289,7 +288,7 @@ steps:
           - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
           - bktec run
         plugins:
-          - tests#v1.1.0:
+          - tests#v1.2.0:
               test-runner: cypress
               suite-slug: test-engine-client-examples
               upload-results: false
@@ -306,7 +305,7 @@ steps:
           - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
           - bktec run
         plugins:
-          - tests#v1.1.0:
+          - tests#v1.2.0:
               test-runner: playwright
               result-path: tmp/playwright-results.json
               suite-slug: test-engine-client-examples
@@ -331,7 +330,7 @@ steps:
           BUILDKITE_TESTS_OTLP_RELAY: "true"
           BUILDKITE_TESTS_OTLP_RELAY_BATCHING: "true"
         plugins:
-          - tests#v1.1.0:
+          - tests#v1.2.0:
               test-runner: custom
               test-cmd: "npm test -- {{testExamples}}"
               test-file-pattern: "tests/**/*.spec.js"
@@ -354,7 +353,7 @@ steps:
           - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
           - bktec pool consume --pool-lease-max-attempts 2
         plugins:
-          - tests#v1.1.0:
+          - tests#v1.2.0:
               test-runner: playwright
               test-file-pattern: "tests/**/*.spec.js"
               result-path: tmp/playwright-results.json
@@ -375,7 +374,7 @@ steps:
           - pip install -e '.[dev]'
           - bktec run
         plugins:
-          - tests#v1.1.0:
+          - tests#v1.2.0:
               test-runner: pytest
               suite-slug: test-engine-client-examples
               upload-results: false
@@ -393,7 +392,7 @@ steps:
           PYTEST_XDIST_ENABLED: "true"
           PYTEST_ADDOPTS: "-n 3 -o log_cli=true -o log_cli_level=DEBUG"
         plugins:
-          - tests#v1.1.0:
+          - tests#v1.2.0:
               test-runner: pytest
               suite-slug: test-engine-client-examples
               upload-results: false
@@ -408,7 +407,7 @@ steps:
           - pip install -e '.[dev]'
           - bktec run
         plugins:
-          - tests#v1.1.0:
+          - tests#v1.2.0:
               test-runner: pytest
               tag-filters: "component:frontend"
               suite-slug: test-engine-client-examples
@@ -429,7 +428,7 @@ steps:
           - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
           - bktec pool consume --pool-lease-max-attempts 2
         plugins:
-          - tests#v1.1.0:
+          - tests#v1.2.0:
               test-runner: pytest
               suite-slug: test-engine-client-examples
               upload-results: false
@@ -458,7 +457,7 @@ steps:
           - unset BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
           - bktec pool exec --pool-lease-max-attempts 2 -- buildkite-pytest
         plugins:
-          - tests#v1.1.0:
+          - tests#v1.2.0:
               test-runner: pytest
               suite-slug: test-engine-client-examples
               upload-results: false
@@ -481,7 +480,7 @@ steps:
           BUILDKITE_TESTS_OTLP_RELAY: "true"
           PYTEST_ADDOPTS: "-n 3"
         plugins:
-          - tests#v1.1.0:
+          - tests#v1.2.0:
               test-runner: pytest
               result-path: tmp/otel-relay.json
               suite-slug: test-engine-client-examples
@@ -504,7 +503,7 @@ steps:
         env:
           BUILDKITE_ANALYTICS_TAGS: '{"test.framework.name":"xctest","language.name":"swift","custom.tag.from":"upload"}'
         plugins:
-          - tests#v1.1.0:
+          - tests#v1.2.0:
               test-runner: custom
               suite-slug: test-engine-client-examples
               upload-results: false
@@ -542,7 +541,7 @@ steps:
           BUILDKITE_TESTS_OTLP_RELAY: "true"
           BUILDKITE_TESTS_OTLP_RELAY_BATCHING: "true"
         plugins:
-          - tests#v1.1.0:
+          - tests#v1.2.0:
               test-runner: custom
               test-cmd: swift-xcuitest/bin/test {{testExamples}}
               suite-slug: test-engine-client-examples
@@ -574,7 +573,7 @@ steps:
         env:
           BUILDKITE_TEST_ENGINE_SELECTOR_FILE: build/test-selectors/all.txt
         plugins:
-          - tests#v1.1.0:
+          - tests#v1.2.0:
               test-runner: custom
               test-cmd: >-
                 sh -c 'docker run --rm --user 0:0 --volume "$$PWD:/workdir" --workdir /workdir
@@ -613,13 +612,13 @@ steps:
         env:
           BUILDKITE_TEST_ENGINE_SELECTOR_FILE: build/test-selectors/all.txt
         plugins:
-          - tests#v1.1.0:
+          - tests#v1.2.0:
               test-runner: custom
               test-cmd: "./gradlew --no-daemon --no-configuration-cache --continue splitTests -PtestClasses='{{testExamples}}'"
               suite-slug: test-engine-client-examples
               upload-results: false
               client-version: *bktec_version
-              # The collector uploads as each test task finishes; tokens last five minutes by default.
+              # Cover setup and test-collector uploads with a two-hour token.
               oidc-lifetime: 7200
           - mise#v1.1.6:
               dir: gradle-jvm
@@ -633,7 +632,7 @@ steps:
           - go install gotest.tools/gotestsum@v1.12.0
           - bktec run
         plugins:
-          - tests#v1.1.0:
+          - tests#v1.2.0:
               test-runner: gotest
               result-path: tmp/gotest-result.jsonl
               suite-slug: test-engine-client-examples
@@ -653,7 +652,7 @@ steps:
           - cd rust
           - mkdir -p target
           - bin/discover > target/selectors.txt
-          # Discovery can compile the workspace and outlast the plugin's tokens.
+          # Request fresh credentials after compiling the workspace during discovery.
           - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
           - '"$$BUILDKITE_TEST_ENGINE_CLIENT_PATH" run --plan-out target/plan.json'
         artifact_paths:
@@ -662,7 +661,7 @@ steps:
         env:
           BUILDKITE_TEST_ENGINE_SELECTOR_FILE: target/selectors.txt
         plugins:
-          - tests#v1.1.0:
+          - tests#v1.2.0:
               test-runner: custom
               test-cmd: "bin/test {{testExamples}}"
               result-path: target/nextest/ci/buildkite.xml
