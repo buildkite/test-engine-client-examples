@@ -159,17 +159,20 @@ def main(argv=None):
 
     if error:
         die(f"API ERROR: {error}")
-    try:
-        counts, pending = {}, list(jobs)
-        while True:
-            for label in pending:
+    counts, pending = {}, list(jobs)
+    while True:
+        error = None
+        for label in pending:
+            try:
                 counts[label] = sum((recorded(build, job_id) for job_id in jobs[label]), Counter())
-            pending = [label for label in jobs if expected[label] - counts[label]]
-            if not pending or time.monotonic() + args.interval > retry_deadline:
-                break
-            print(f"WAIT: results still deficient for {pending}", flush=True)
-            time.sleep(args.interval)
-    except API_ERRORS as error:
+            except API_ERRORS as err:
+                error = err
+        pending = [label for label in jobs if label not in counts or expected[label] - counts[label]]
+        if not pending or time.monotonic() + args.interval > retry_deadline:
+            break
+        print(f"WAIT: results still deficient for {pending}", flush=True)
+        time.sleep(args.interval)
+    if error:
         die(f"API ERROR: {error}")
     unverified = {label for label in expected if counts[label] != expected[label]}
     for label, wanted in expected.items():

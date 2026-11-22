@@ -21,6 +21,7 @@ EXPECTED = {JEST: {"passed": 10, "failed": 1}, SWIFT: {"passed": 2}}
 class VerifyResultsTest(unittest.TestCase):
     def run_check(self, scenario="normal"):
         clock, calls, polls = [0], [], [0]
+        breakdown_errors = [0]
 
         def response(data, link=""):
             result = io.BytesIO(json.dumps(data).encode())
@@ -128,6 +129,9 @@ class VerifyResultsTest(unittest.TestCase):
                 if "page" not in query:
                     return response(metrics({"passed": 1}), f'<{url}&page=2>; rel="next"')
                 self.assertEqual(query["page"], ["2"])
+                if scenario == "job-api" or (scenario == "job-transient" and not breakdown_errors[0]):
+                    breakdown_errors[0] += 1
+                    raise HTTPError(url, 503, "temporary failure", {}, None)
                 return response(metrics({"passed": 2 if scenario == "redistributed" else 1}))
             self.assertEqual(tags, "build.id:build-id,build.job_id:shard1")
             return response([])
@@ -242,6 +246,14 @@ class VerifyResultsTest(unittest.TestCase):
         self.assertLessEqual(len(calls), 14)  # Retries share the original timeout.
         self.assertEqual(sum(q.get("tags") == ["build.id:build-id,build.job_id:retry"] for _, _, q in calls), 1)
 
+    def test_transient_breakdown_error_retries_without_keeping_partial_counts(self):
+        status, output, calls = self.run_check("job-transient")
+        self.assertEqual(status, 0)
+        self.assertIn("WAIT", output)
+        self.assertIn("PASS: build 1349, 0/2 examples unverified", output)
+        self.assertEqual(sum(q.get("tags") == ["build.id:build-id,build.job_id:retry"] for _, _, q in calls), 1)
+        self.assertLessEqual(len(calls), 13)
+
     def test_rate_limit_ignores_unexhausted_org_reset(self):
         status, output, calls = self.run_check("two-limiters")
         self.assertEqual(status, 0)
@@ -259,13 +271,15 @@ class VerifyResultsTest(unittest.TestCase):
     def test_api_errors_are_not_reported_as_missing_results(self):
         for scenario, verdict in (("api", "API ERROR"), ("auth", "AUTH ERROR"), ("not-a-list", "API ERROR"),
                                   ("null-counts", "API ERROR"), ("list-counts", "API ERROR"),
-                                  ("unfinished", "BUILD NOT FINISHED")):
+                                  ("unfinished", "BUILD NOT FINISHED"), ("job-api", "API ERROR")):
             with self.subTest(scenario=scenario):
-                status, output, _ = self.run_check(scenario)
+                status, output, calls = self.run_check(scenario)
                 self.assertEqual(status, 2)
                 self.assertIn(verdict, output)
                 self.assertNotIn("MISSING", output)
                 self.assertNotIn("PASS", output)
+                if scenario == "job-api":
+                    self.assertLessEqual(len(calls), 14)
 
     def test_new_examples_cannot_silently_escape_verification(self):
         status, output, _ = self.run_check("unknown")
