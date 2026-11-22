@@ -7,6 +7,6 @@
   },
   "devDependencies": {
     "buildkite-test-collector": "1.16.0",
-    "vitest": "4.1.11"
+    "vitest": "4.1.12"
   }
 }
