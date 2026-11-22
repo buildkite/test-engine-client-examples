@@ -19,14 +19,14 @@ steps:
       - export TMPDIR="$$(mktemp -d)"
       - bktec run
     plugins:
-      - tests#v1.1.0:
+      - tests#v1.2.0:
           test-runner: rspec
           test-file-pattern: "*_spec.rb"
           result-path: tmp/rspec.json
           suite-slug: examples-rspec-failures
           client-version: "${BKTEC_VERSION:-3.5.0}"
           retry-count: 2
-          # v1.1.0 defaults to 300 seconds, which can expire during setup.
+          # Cover setup, retries and uploads with a two-hour token.
           oidc-lifetime: 7200
       - mise#v1.1.6:
           dir: .buildkite/fixtures/rspec
