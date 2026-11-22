@@ -3,6 +3,7 @@
 
 import argparse
 from collections import Counter
+from email.utils import parsedate_to_datetime
 import json
 import os
 from pathlib import Path
@@ -22,6 +23,8 @@ NO_RESULTS = {
 }
 # Network, HTTP, JSON, and unexpected response shapes.
 API_ERRORS = (OSError, ValueError, KeyError, TypeError)
+next_request = 0
+retry_deadline = float("inf")
 
 
 def die(message):
@@ -30,17 +33,36 @@ def die(message):
 
 
 def get(url):
+    global next_request
     request = Request(url, headers={
         "Authorization": f"Bearer {os.environ['BUILDKITE_API_TOKEN']}",
         "Buildkite-Version": "2026-08-01",
     })
-    try:
-        with urlopen(request, timeout=30) as response:
-            return json.load(response), response.headers.get("Link", "")
-    except HTTPError as error:
-        if error.code in (401, 403):
-            die(f"AUTH ERROR: HTTP {error.code}; check the token's scopes and access")
-        raise
+    while True:
+        time.sleep(max(0, next_request - time.monotonic()))
+        next_request = time.monotonic() + 1.3  # At most 47 requests in any minute.
+        try:
+            with urlopen(request, timeout=30) as response:
+                return json.load(response), response.headers.get("Link", "")
+        except HTTPError as error:
+            if error.code in (401, 403):
+                die(f"AUTH ERROR: HTTP {error.code}; check the token's scopes and access")
+            if error.code != 429:
+                raise
+            delay = error.headers.get("Retry-After")
+            if delay is not None:
+                try:
+                    delay = float(delay)
+                except ValueError:
+                    delay = parsedate_to_datetime(delay).timestamp() - time.time()
+            else:
+                # Buildkite's Reset headers are seconds, not Unix timestamps.
+                delay = max(float(error.headers.get("RateLimit-User-Reset", 0)),
+                            float(error.headers.get("RateLimit-Reset", 0))) or 60
+            if time.monotonic() + max(1.3, delay) > retry_deadline:
+                die("API ERROR: rate-limit retry would exceed --timeout")
+            print(f"RATE LIMITED: retrying in {max(1.3, delay):.1f}s", flush=True)
+            next_request = time.monotonic() + max(1.3, delay)
 
 
 def job_ids(build_number):
@@ -50,43 +72,42 @@ def job_ids(build_number):
     while url:
         page, _ = get(url)
         for job in page["items"]:
-            if job["type"] == "script" and not job.get("retried"):
+            if job["type"] == "script" and job.get("started_at") and not job.get("retried"):
                 label = re.sub(r"XCUITest shard \d+", "XCUITest shard %n", job["name"])
                 jobs.setdefault(label, []).append(job["id"])
         url = page["links"].get("next")
     return {label: ids for label, ids in jobs.items() if label not in NO_RESULTS}
 
 
-def recorded(build, ids):
-    """Sum the results Test Engine recorded for these jobs of the build."""
+def recorded(url):
+    """Sum paginated test metrics (a JSON array, with Link-header pagination)."""
     total = Counter()
-    for job_id in ids:
-        url = f"{SUITE}/tests?" + urlencode({
-            "tags": f"build.id:{build['id']},build.job_id:{job_id}",
-            "min_timestamp": build["created_at"],
-            "per_page": 100,
-        })
-        while url:
-            tests, link = get(url)
-            if not isinstance(tests, list):
-                raise TypeError("Tests API returned a page that isn't a list")
-            for test in tests:
-                results = test["executions_count_by_result"]
-                if not isinstance(results, dict):
-                    raise TypeError("Tests API returned result counts that aren't an object")
-                total.update(results)
-            next_page = re.search(r'<([^>]+)>; rel="next"', link)
-            url = next_page and next_page[1]
+    while url:
+        tests, link = get(url)
+        if not isinstance(tests, list):
+            raise TypeError("Tests API returned a page that isn't a list")
+        for test in tests:
+            results = test["executions_count_by_result"]
+            if not isinstance(results, dict):
+                raise TypeError("Tests API returned result counts that aren't an object")
+            total.update(results)
+        next_page = re.search(r'<([^>]+)>; rel="next"', link)
+        url = next_page and next_page[1]
     return +total  # Drop zero counts.
 
 
 def main(argv=None):
+    global next_request, retry_deadline
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("build", type=int, help="examples pipeline build number")
     parser.add_argument("--timeout", type=float, default=600,
                         help="seconds after which no new check starts (default: 600)")
     parser.add_argument("--interval", type=float, default=60, help="seconds between checks (default: 60)")
     args = parser.parse_args(argv)
+    if args.timeout < 0 or args.interval <= 0:
+        parser.error("--timeout must be nonnegative and --interval must be positive")
+    next_request = 0
+    retry_deadline = time.monotonic() + args.timeout
     if not os.environ.get("BUILDKITE_API_TOKEN"):
         die("AUTH ERROR: set BUILDKITE_API_TOKEN to a token with read_builds and read_suites")
     expected = {label: +Counter(results) for label, results in
@@ -99,34 +120,55 @@ def main(argv=None):
         jobs = job_ids(args.build)
     except API_ERRORS as error:
         die(f"API ERROR: cannot read build {args.build}: {error}")
-    if jobs.keys() != expected.keys():
-        differ = sorted(jobs.keys() ^ expected.keys())
-        die(f"CONFIG ERROR: build labels and expected-results.json differ: {differ}")
+    unknown = jobs.keys() - expected.keys()
+    if unknown:
+        die(f"CONFIG ERROR: steps without expectations: {sorted(unknown)}")
+    for label in sorted(expected.keys() - jobs.keys()):
+        print(f"NOT RUN: {label}")
+    expected = {label: expected[label] for label in jobs}
+    wanted_total = sum(expected.values(), Counter())
 
-    started, delayed = time.monotonic(), set()
+    started = time.monotonic()
+    retry_deadline = started + args.timeout
     while True:
         try:
-            counts, error = {label: recorded(build, ids) for label, ids in jobs.items()}, None
+            total = recorded(f"{API}/analytics/organizations/buildkite/builds/{build['id']}/tests?per_page=100")
+            error = None
         except API_ERRORS as err:  # Retry on the next check.
-            counts, error = {}, err
-        unverified = {label for label, wanted in expected.items() if counts.get(label) != wanted}
+            total, error = Counter(), err
         elapsed = time.monotonic() - started
-        if not unverified or elapsed + args.interval > args.timeout:
+        if (not error and not (wanted_total - total)) or elapsed + args.interval > args.timeout:
             break
-        delayed |= unverified
-        print(f"WAIT {elapsed:.1f}s: {len(unverified)} examples not verified yet", flush=True)
+        print(f"WAIT {elapsed:.1f}s: build totals expected {dict(wanted_total)}, recorded {dict(total)}", flush=True)
         time.sleep(args.interval)
 
     if error:
         die(f"API ERROR: {error}")
+    try:
+        counts = {}
+        for label, ids in jobs.items():
+            counts[label] = Counter()
+            for job_id in ids:
+                counts[label].update(recorded(f"{SUITE}/tests?" + urlencode({
+                    "tags": f"build.id:{build['id']},build.job_id:{job_id}",
+                    "min_timestamp": build["created_at"], "per_page": 100,
+                })))
+    except API_ERRORS as error:
+        die(f"API ERROR: {error}")
+    unverified = {label for label in expected if counts[label] != expected[label]}
     for label, wanted in expected.items():
         if label in unverified:
             got = counts[label]
-            print(f"{'MISMATCH' if got else 'MISSING'}: {label}: expected {dict(wanted)}, recorded {dict(got)}")
+            verdict = "MISSING" if not got else "DUPLICATE" if not (wanted - got) else "MISMATCH"
+            print(f"{verdict}: {label}: expected {dict(wanted)}, recorded {dict(got)}")
         else:
-            print(f"{'LATE' if label in delayed else 'OK'}: {label}")
+            print(f"OK: {label}")
+    elapsed = time.monotonic() - started
     print(f"{'FAIL' if unverified else 'PASS'}: build {args.build}, "
           f"{len(unverified)}/{len(expected)} examples unverified, elapsed {elapsed:.1f}s")
+    if unverified:
+        print("Recorded counts (review before updating expected-results.json):")
+        print(json.dumps({label: dict(got) for label, got in counts.items()}, indent=2))
     return 1 if unverified else 0
 
 
