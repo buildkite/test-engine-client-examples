@@ -6,7 +6,6 @@ Split nextest test binaries across parallel jobs with bktec's custom runner, whi
 
 Copy the `Rust / nextest` step from [pipeline.yml](../.buildkite/pipeline.yml) and [adapt it](../README.md#adapt-a-step). Each job lists binaries with `bin/discover`, and bktec passes the job's binaries to `bin/test`.
 
-- Keep the `unset` line. Discovery can compile for longer than the plugin's token lasts, and bktec then requests its own.
 - The step runs `$BUILDKITE_TEST_ENGINE_CLIENT_PATH`, the plugin's bktec, even if another `bktec` is on `PATH`.
 
 ## Configure your workspace
