@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Check that Test Engine recorded the expected results for an examples build."""
+"""Check Test Engine result counts for an examples build."""
 
 import argparse
 from collections import Counter
@@ -21,7 +21,6 @@ NO_RESULTS = {
     ":pipeline:", ":swift: XCUITest build and discover", ":android: Discover JVM tests",
     ":gradle: Discover Kotlin / Java tests",
 }
-# Network, HTTP, JSON, and unexpected response shapes.
 API_ERRORS = (OSError, ValueError, KeyError, TypeError)
 next_request = 0
 retry_deadline = float("inf")
@@ -40,7 +39,7 @@ def get(url):
     })
     while True:
         time.sleep(max(0, next_request - time.monotonic()))
-        next_request = time.monotonic() + 1.3  # At most 47 requests in any minute.
+        next_request = time.monotonic() + 1.3  # Below 50 requests/minute.
         try:
             with urlopen(request, timeout=30) as response:
                 return json.load(response), response.headers.get("Link", "")
@@ -56,7 +55,7 @@ def get(url):
                 except ValueError:
                     delay = parsedate_to_datetime(delay).timestamp() - time.time()
             else:
-                # Buildkite's Reset headers are seconds, not Unix timestamps.
+                # Reset headers are delays in seconds.
                 resets = [float(error.headers[f"{prefix}-Reset"])
                           for prefix in ("RateLimit-User", "RateLimit")
                           if error.headers.get(f"{prefix}-Remaining") == "0"
@@ -71,7 +70,6 @@ def get(url):
 
 
 def job_ids(build_number):
-    """Map each example label to its job IDs. Parallel XCUITest shards share one label."""
     jobs = {}
     url = f"{PIPELINE}/builds/{build_number}/jobs?per_page=100&include_retried_jobs=false"
     while url:
@@ -87,7 +85,6 @@ def job_ids(build_number):
 
 
 def recorded(build, job_id=None):
-    """Sum paginated test metrics (a JSON array, with Link-header pagination)."""
     tags = f"build.id:{build['id']}"
     if job_id is not None:
         tags += f",build.job_id:{job_id}"
@@ -112,9 +109,9 @@ def recorded(build, job_id=None):
 def main(argv=None):
     global next_request, retry_deadline
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("build", type=int, help="examples pipeline build number")
+    parser.add_argument("build", type=int, help="examples build number")
     parser.add_argument("--timeout", type=float, default=600,
-                        help="seconds after which no new check starts (default: 600)")
+                        help="polling budget in seconds (default: 600)")
     parser.add_argument("--interval", type=float, default=60, help="seconds between checks (default: 60)")
     args = parser.parse_args(argv)
     if args.timeout < 0 or args.interval <= 0:
@@ -149,7 +146,7 @@ def main(argv=None):
         try:
             total = recorded(build)
             error = None
-        except API_ERRORS as err:  # Retry on the next check.
+        except API_ERRORS as err:
             total, error = Counter(), err
         elapsed = time.monotonic() - started
         if (not error and not (wanted_total - total)) or elapsed + args.interval > args.timeout:
