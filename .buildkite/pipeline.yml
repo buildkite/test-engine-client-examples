@@ -103,7 +103,6 @@ steps:
         env:
           BUILDKITE_ANALYTICS_LOCATION_PREFIX: cucumber
 
-  # Some steps request fresh bktec tokens after dependency setup.
   - group: ":javascript: JavaScript"
     steps:
       - label: ":mocha: Mocha"
@@ -112,7 +111,6 @@ steps:
         commands:
           - cd mocha
           - npm ci
-          - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
           - bktec run
         plugins:
           - tests#v1.2.0:
@@ -174,7 +172,8 @@ steps:
         commands:
           - cd vitest-otel
           - npm ci
-          - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN BUILDKITE_TESTS_OTLP_TOKEN
+          # Let the OTLP relay supply its own local authentication token.
+          - unset BUILDKITE_TESTS_OTLP_TOKEN
           - export BUILDKITE_ANALYTICS_KEY="$$BUILDKITE_BUILD_ID-vitest-otel-$$BUILDKITE_JOB_ID"
           - bktec run
         env:
@@ -199,7 +198,6 @@ steps:
         commands:
           - cd jest
           - npm install
-          - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
           - bktec run
         plugins:
           - tests#v1.2.0:
@@ -217,7 +215,6 @@ steps:
         commands:
           - cd jest
           - npm install
-          - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
           - rm -f tmp/jest-retry-demo
           - bktec run
         plugins:
@@ -240,7 +237,8 @@ steps:
         commands:
           - cd jest-otel
           - npm ci
-          - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN BUILDKITE_TESTS_OTLP_TOKEN
+          # Let the OTLP relay supply its own local authentication token.
+          - unset BUILDKITE_TESTS_OTLP_TOKEN
           - export BUILDKITE_ANALYTICS_KEY="$$BUILDKITE_BUILD_ID-jest-otel-$$BUILDKITE_JOB_ID"
           - bktec run
         env:
@@ -285,7 +283,6 @@ steps:
         commands:
           - cd cypress
           - bin/setup
-          - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
           - bktec run
         plugins:
           - tests#v1.2.0:
@@ -302,7 +299,6 @@ steps:
           - cd playwright
           - npm install
           - npx playwright install --with-deps chromium
-          - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
           - bktec run
         plugins:
           - tests#v1.2.0:
@@ -323,7 +319,8 @@ steps:
           - npm ci
           - npx playwright install --with-deps chromium
           - export BUILDKITE_ANALYTICS_KEY="$$BUILDKITE_BUILD_ID-playwright-otel-$$BUILDKITE_JOB_ID"
-          - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN BUILDKITE_TESTS_OTLP_TOKEN
+          # Let the OTLP relay supply its own local authentication token.
+          - unset BUILDKITE_TESTS_OTLP_TOKEN
           - bktec run
         env:
           BUILDKITE_ANALYTICS_LOCATION_PREFIX: playwright-otel
@@ -472,7 +469,6 @@ steps:
           - pip install -r requirements.txt
           - mkdir -p tmp
           - export BUILDKITE_ANALYTICS_KEY="$$BUILDKITE_BUILD_ID-python-otel-relay-$$BUILDKITE_JOB_ID"
-          - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
           - bktec run
         artifact_paths: pytest-otel/tmp/otel-relay.json
         env:
@@ -618,8 +614,6 @@ steps:
               suite-slug: test-engine-client-examples
               upload-results: false
               client-version: *bktec_version
-              # Cover setup and test-collector uploads with a two-hour token.
-              oidc-lifetime: 7200
           - mise#v1.1.6:
               dir: gradle-jvm
 
@@ -652,8 +646,6 @@ steps:
           - cd rust
           - mkdir -p target
           - bin/discover > target/selectors.txt
-          # Request fresh credentials after compiling the workspace during discovery.
-          - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
           - '"$$BUILDKITE_TEST_ENGINE_CLIENT_PATH" run --plan-out target/plan.json'
         artifact_paths:
           - rust/target/plan.json

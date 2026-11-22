@@ -26,7 +26,5 @@ steps:
           suite-slug: examples-rspec-failures
           client-version: "${BKTEC_VERSION:-3.5.0}"
           retry-count: 2
-          # Cover setup, retries and uploads with a two-hour token.
-          oidc-lifetime: 7200
       - mise#v1.1.6:
           dir: .buildkite/fixtures/rspec
