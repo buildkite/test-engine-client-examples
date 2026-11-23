@@ -8,7 +8,7 @@ Copy the `Jest (OTel setup by collector)` step from [pipeline.yml](../.buildkite
 
 ## Test collector
 
-Use Node.js 22.15 or later with Jest 29 or 30. Add the packages from [package.json](./package.json) and keep the collector's reporter, with `otelEnabled: true`, and its `runtime` from [jest.config.js](./jest.config.js). The runtime records spans in Jest workers, and the reporter sends them. See the collector's [Jest guide](https://github.com/buildkite/bktest/blob/test-collector-javascript/v1.16.0/test-collector-javascript/docs/opentelemetry.md#jest).
+Use Node.js 22.15 or later with Jest 29 or 30. Add the packages from [package.json](./package.json) and keep the collector's reporter, with `otelEnabled: true`, and its `runtime` from [jest.config.js](./jest.config.js). The runtime records spans in Jest workers, and the reporter sends them. See the collector's [Jest guide](https://github.com/buildkite/bktest/blob/test-collector-javascript/v1.16.1/test-collector-javascript/docs/opentelemetry.md#jest).
 
 OpenTelemetry collection is experimental. Child spans count toward your plan's [trace ingestion limits](https://buildkite.com/pricing/feature-comparison) and can include URLs and database statements, so review what your instrumentation records.
 
