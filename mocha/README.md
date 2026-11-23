@@ -29,7 +29,7 @@ The test collector uploads results, so set `upload-results: false`. Add an [OIDC
 
 Add `buildkite-test-collector` and `mocha-multi-reporters` to your dependencies and copy [reporter-config.json](./reporter-config.json). It enables the console reporter and `buildkite-test-collector/mocha/reporter`. Keep `token_name: "BUILDKITE_ANALYTICS_TOKEN"` in the collector options.
 
-This example currently pins Mocha 11. Mocha 12 requires collector 1.16.1 or later and `mocha-multi-reporters` 1.5.2 or later.
+Mocha 12 requires collector 1.16.1 or later and `mocha-multi-reporters` 1.5.2 or later.
 
 For tests in a subdirectory of a monorepo, set `BUILDKITE_ANALYTICS_LOCATION_PREFIX` to that directory, as our pipeline does with `mocha`. The collector reports repository-relative file locations.
 
