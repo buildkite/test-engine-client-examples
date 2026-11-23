@@ -4,7 +4,7 @@ Send pytest results to Test Engine as OpenTelemetry spans, with SQLite and HTTP 
 
 ## Pipeline
 
-Copy the `pytest (OTel setup by collector)` step from [pipeline.yml](../.buildkite/pipeline.yml) and [adapt it](../README.md#adapt-a-step). `BUILDKITE_ANALYTICS_OTEL_ENABLED` turns on OpenTelemetry collection, `BUILDKITE_TESTS_OTLP_RELAY` makes bktec forward the collector's spans to Test Engine and refresh their token, and `PYTEST_ADDOPTS` starts three xdist workers. See [Relay OpenTelemetry traces](https://github.com/buildkite/test-engine-client/tree/v3.5.0#relay-opentelemetry-traces).
+Copy the `pytest (OTel setup by collector)` step from [pipeline.yml](../.buildkite/pipeline.yml) and [adapt it](../README.md#adapt-a-step). `BUILDKITE_ANALYTICS_OTEL_ENABLED` turns on OpenTelemetry collection, `BUILDKITE_TESTS_OTLP_RELAY` makes bktec forward the collector's spans to Test Engine and refresh their token, and `PYTEST_ADDOPTS` starts three xdist workers. See [Relay OpenTelemetry traces](https://github.com/buildkite/test-engine-client/tree/v3.6.0#relay-opentelemetry-traces).
 
 ## Test collector
 

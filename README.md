@@ -28,7 +28,7 @@ Examples of collecting test results and splitting tests with [Test Engine](https
 Copy the example's step from [pipeline.yml](./.buildkite/pipeline.yml), then:
 
 1. Set `suite-slug` to your test suite, and add an [OIDC policy](https://buildkite.com/docs/pipelines/configure/tests/test-collection/oidc) that allows your pipeline.
-1. Replace `client-version: *bktec_version` with a bktec version, such as `"3.5.0"`.
+1. Replace `client-version: *bktec_version` with a bktec version, such as `"3.6.0"`.
 1. Remove `cd <example>`, and remove the example directory from repository-relative paths such as `artifact_paths`.
 1. Remove the `mise` plugin if your agents already have the language runtime.
 1. Remove `BUILDKITE_ANALYTICS_LOCATION_PREFIX` if your tests run from the repository root. Otherwise, set it to their directory.
