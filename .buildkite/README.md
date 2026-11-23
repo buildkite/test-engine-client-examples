@@ -1,11 +1,6 @@
 # Check recorded results
 
-Check per-example Test Engine result counts after a finished release-harness or daily build, not a PR build (Python 3.9+).
-
-```sh
-export BUILDKITE_API_TOKEN=...  # read_builds, read_suites, and read_build_logs
-python3 .buildkite/verify-results.py 1349
-```
+The daily `main` build checks per-example Test Engine counts. For release testing, create a Buildkite API or UI build with `VERIFY_RESULTS=true` (and `BKTEST_VERSION` to test another bktest release). Read the **Verify Test Engine results** step. PR builds skip it.
 
 | Line | Meaning |
 | --- | --- |

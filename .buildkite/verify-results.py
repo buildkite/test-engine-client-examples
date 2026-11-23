@@ -71,18 +71,24 @@ def get(url):
             next_request = time.monotonic() + max(1.3, delay)
 
 
-def job_ids(build_number):
+def job_ids(build_number, verifier_job_id):
     jobs = {}
+    found_verifier = False
     url = f"{PIPELINE}/builds/{build_number}/jobs?per_page=100&include_retried_jobs=false"
     while url:
         page, _ = get(url)
         for job in page["items"]:
             if job["type"] == "script" and not job.get("retried"):
-                if not job.get("started_at"):
+                if job.get("step_key") == "verify-results":
+                    found_verifier |= job["id"] == verifier_job_id
+                    continue
+                if not job.get("started_at") or (verifier_job_id and not job.get("finished_at")):
                     die(f"BUILD INCOMPLETE: {job['name']}: {job.get('state', 'not started')}")
                 label = re.sub(r"XCUITest shard \d+", "XCUITest shard %n", job["name"])
                 jobs.setdefault(label, []).append(job["id"])
         url = page["links"].get("next")
+    if verifier_job_id and not found_verifier:
+        die("BUILD INCOMPLETE: current job is not the verifier")
     return {label: ids for label, ids in jobs.items() if label not in NO_RESULTS}
 
 
@@ -137,15 +143,16 @@ def main(argv=None):
     next_request = 0
     retry_deadline = time.monotonic() + args.timeout
     if not os.environ.get("BUILDKITE_API_TOKEN"):
-        die("AUTH ERROR: set BUILDKITE_API_TOKEN to a token with read_builds and read_suites")
+        die("AUTH ERROR: set BUILDKITE_API_TOKEN to a token with read_builds, read_suites, and read_build_logs")
     expected = {label: +Counter(results) for label, results in
                 json.loads(Path(__file__).with_name("expected-results.json").read_text()).items()}
 
     try:
         build, _ = get(f"{PIPELINE}/builds/{args.build}?exclude_jobs=true&exclude_pipeline=true")
-        if not build.get("finished_at"):
+        verifier_job_id = os.environ.get("BUILDKITE_JOB_ID") if os.environ.get("BUILDKITE_BUILD_ID") == build["id"] else None
+        if not build.get("finished_at") and not verifier_job_id:
             die("BUILD NOT FINISHED: run this after every job has finished")
-        jobs = job_ids(args.build)
+        jobs = job_ids(args.build, verifier_job_id)
     except API_ERRORS as error:
         die(f"API ERROR: cannot read build {args.build}: {error}")
     unknown = jobs.keys() - expected.keys()

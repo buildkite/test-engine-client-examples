@@ -635,3 +635,20 @@ steps:
                 - "test.framework.name=nextest"
           - mise#v1.1.6:
               dir: rust
+
+  - wait
+
+  - label: ":mag: Verify Test Engine results"
+    key: verify-results
+    if: >-
+      build.pull_request.id == null &&
+      ((build.source == "schedule" && build.branch == "main") ||
+       ((build.source == "api" || build.source == "ui") && build.env("VERIFY_RESULTS") == "true"))
+    command: 'python3 .buildkite/verify-results.py "$$BUILDKITE_BUILD_NUMBER"'
+    agents:
+      queue: hosted
+    plugins:
+      - mise#v1.1.6:
+          dir: pytest
+    secrets:
+      BUILDKITE_API_TOKEN: TEST_ENGINE_VERIFY_API_TOKEN
