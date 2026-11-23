@@ -4,7 +4,7 @@ Split RSpec specs across parallel jobs with bktec. The Ruby test collector sends
 
 ## Pipeline
 
-Copy the `RSpec` step from [pipeline.yml](../.buildkite/pipeline.yml) and [adapt it](../README.md#adapt-a-step). `BUILDKITE_TESTS_OTLP_RELAY` makes bktec forward the collector's spans to Test Engine and refresh their token. See [Relay OpenTelemetry traces](https://github.com/buildkite/test-engine-client/tree/v3.5.0#relay-opentelemetry-traces).
+Copy the `RSpec` step from [pipeline.yml](../.buildkite/pipeline.yml) and [adapt it](../README.md#adapt-a-step). `BUILDKITE_TESTS_OTLP_RELAY` makes bktec forward the collector's spans to Test Engine and refresh their token. See [Relay OpenTelemetry traces](https://github.com/buildkite/test-engine-client/tree/v3.6.0#relay-opentelemetry-traces).
 
 The `RSpec (Test Scheduler pool exec)` step keeps one RSpec process in each job, which runs batches from a pool shared by the step's jobs. It doesn't use the relay, so the collector uploads with the plugin's token.
 

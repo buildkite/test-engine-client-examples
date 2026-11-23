@@ -1,7 +1,7 @@
 # To run every example on another bktec release, such as a release candidate,
 # set BKTEC_VERSION on a new build, for example BKTEC_VERSION=3.6.0-rc.2.
 common:
-  - &bktec_version "${BKTEC_VERSION:-3.5.0}"
+  - &bktec_version "${BKTEC_VERSION:-3.6.0}"
 
 steps:
   - group: ":ruby: Ruby"

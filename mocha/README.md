@@ -18,7 +18,7 @@ steps:
           test-file-pattern: "src/**/*.test.js"
           suite-slug: your-suite-slug
           upload-results: false
-          client-version: "3.5.0"
+          client-version: "3.6.0"
 ```
 
 `test-file-pattern` discovers files; `test-cmd` runs only each job's assignments. Mocha uses the custom runner, which splits whole files rather than individual tests and does not support automatic retries. This example does not configure a local result file or demonstrate muting.
