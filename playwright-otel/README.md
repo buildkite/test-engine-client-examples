@@ -10,7 +10,7 @@ The custom runner splits files that match `test-file-pattern`. bktec doesn't rea
 
 ## Test collector
 
-Use Node.js 22.15 or later with Playwright 1.41.2 or later. Add the packages from [package.json](./package.json) and enable the collector's reporter with `otelEnabled: true`, as in [playwright.config.js](./playwright.config.js). Spans come from Playwright's steps, not from your application or browser. See the collector's [Playwright guide](https://github.com/buildkite/bktest/blob/test-collector-javascript/v1.16.0/test-collector-javascript/docs/opentelemetry.md#playwright).
+Use Node.js 22.15 or later with Playwright 1.41.2 or later. Add the packages from [package.json](./package.json) and enable the collector's reporter with `otelEnabled: true`, as in [playwright.config.js](./playwright.config.js). Spans come from Playwright's steps, not from your application or browser. See the collector's [Playwright guide](https://github.com/buildkite/bktest/blob/test-collector-javascript/v1.16.1/test-collector-javascript/docs/opentelemetry.md#playwright).
 
 OpenTelemetry collection is experimental. Child spans count toward your plan's [trace ingestion limits](https://buildkite.com/pricing/feature-comparison), and Playwright records every step, so check the volume before enabling a large suite. Text in actions is redacted, but step titles and assertion messages aren't, so keep secrets out of them.
 

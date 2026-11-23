@@ -5,7 +5,7 @@
     "test": "mocha \"src/**/*.test.js\" --reporter mocha-multi-reporters --reporter-options configFile=reporter-config.json"
   },
   "devDependencies": {
-    "buildkite-test-collector": "1.16.0",
+    "buildkite-test-collector": "1.16.1",
     "mocha": "11.8.0",
     "mocha-multi-reporters": "1.5.2"
   }
