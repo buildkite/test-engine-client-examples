@@ -2,6 +2,8 @@
 # set BKTEC_VERSION on a new build, for example BKTEC_VERSION=3.6.0-rc.2.
 common:
   - &bktec_version "${BKTEC_VERSION:-3.6.0}"
+  # This pipeline and its suite have the same slug before and after the rename.
+  - &examples_suite "${BUILDKITE_PIPELINE_SLUG}"
 
 steps:
   - group: ":ruby: Ruby"
@@ -18,7 +20,7 @@ steps:
           - tests#v1.2.0:
               test-runner: rspec
               result-path: tmp/rspec.json
-              suite-slug: bktest-examples
+              suite-slug: *examples_suite
               upload-results: false
               client-version: *bktec_version
           - mise#v1.1.6:
@@ -42,7 +44,7 @@ steps:
           - tests#v1.2.0:
               test-runner: rspec
               result-path: tmp/rspec.json
-              suite-slug: bktest-examples
+              suite-slug: *examples_suite
               upload-results: false
               client-version: *bktec_version
           - mise#v1.1.6:
@@ -59,7 +61,7 @@ steps:
           - tests#v1.2.0:
               test-runner: rspec
               result-path: tmp/rspec.json
-              suite-slug: bktest-examples
+              suite-slug: *examples_suite
               upload-results: false
               client-version: *bktec_version
           - mise#v1.1.6:
@@ -76,7 +78,7 @@ steps:
               test-runner: custom
               test-cmd: "bundle exec rake test TEST_FILES='{{testExamples}}'"
               test-file-pattern: "**/*_test.rb"
-              suite-slug: bktest-examples
+              suite-slug: *examples_suite
               upload-results: false
               client-version: *bktec_version
           - mise#v1.1.6:
@@ -95,7 +97,7 @@ steps:
           - tests#v1.2.0:
               test-runner: cucumber
               result-path: tmp/cucumber.json
-              suite-slug: bktest-examples
+              suite-slug: *examples_suite
               upload-results: false
               client-version: *bktec_version
           - mise#v1.1.6:
@@ -117,7 +119,7 @@ steps:
               test-runner: custom
               test-cmd: "npx mocha {{testExamples}} --reporter mocha-multi-reporters --reporter-options configFile=reporter-config.json"
               test-file-pattern: "src/**/*.test.js"
-              suite-slug: bktest-examples
+              suite-slug: *examples_suite
               upload-results: false
               client-version: *bktec_version
           - mise#v1.1.6:
@@ -138,7 +140,7 @@ steps:
               test-cmd: "npx vitest run {{testExamples}} --outputFile {{resultPath}}"
               retry-cmd: "npx vitest run {{testExamples}} --testNamePattern '{{testNamePattern}}' --outputFile {{resultPath}}"
               result-path: tmp/vitest-results.json
-              suite-slug: bktest-examples
+              suite-slug: *examples_suite
               upload-results: false
               client-version: *bktec_version
           - mise#v1.1.6:
@@ -159,7 +161,7 @@ steps:
               test-cmd: "npx vitest run {{testExamples}} --outputFile {{resultPath}}"
               retry-cmd: "npx vitest run {{testExamples}} --testNamePattern '{{testNamePattern}}' --outputFile {{resultPath}}"
               result-path: tmp/vitest-results.json
-              suite-slug: bktest-examples
+              suite-slug: *examples_suite
               upload-results: false
               client-version: *bktec_version
           - mise#v1.1.6:
@@ -187,7 +189,7 @@ steps:
               test-cmd: "npx vitest run {{testExamples}} --outputFile {{resultPath}}"
               retry-cmd: "npx vitest run {{testExamples}} --testNamePattern '{{testNamePattern}}' --outputFile {{resultPath}}"
               result-path: tmp/vitest-results.json
-              suite-slug: bktest-examples
+              suite-slug: *examples_suite
               upload-results: false
               client-version: *bktec_version
           - mise#v1.1.6:
@@ -203,7 +205,7 @@ steps:
           - tests#v1.2.0:
               test-runner: jest
               result-path: jest-result.json
-              suite-slug: bktest-examples
+              suite-slug: *examples_suite
               upload-results: false
               client-version: *bktec_version
           - mise#v1.1.6:
@@ -223,7 +225,7 @@ steps:
               result-path: jest-result.json
               retry-count: 3
               retry-cmd: "npx jest {{testExamples}} --testNamePattern '{{testNamePattern}}' --json --testLocationInResults --outputFile {{resultPath}}"
-              suite-slug: bktest-examples
+              suite-slug: *examples_suite
               upload-results: false
               client-version: *bktec_version
           - mise#v1.1.6:
@@ -249,7 +251,7 @@ steps:
           - tests#v1.2.0:
               test-runner: jest
               result-path: jest-result.json
-              suite-slug: bktest-examples
+              suite-slug: *examples_suite
               upload-results: false
               client-version: *bktec_version
           - mise#v1.1.6:
@@ -270,7 +272,7 @@ steps:
           - tests#v1.2.0:
               test-runner: jest
               result-path: jest-result.json
-              suite-slug: bktest-examples
+              suite-slug: *examples_suite
               upload-results: false
               client-version: *bktec_version
           - mise#v1.1.6:
@@ -287,7 +289,7 @@ steps:
         plugins:
           - tests#v1.2.0:
               test-runner: cypress
-              suite-slug: bktest-examples
+              suite-slug: *examples_suite
               upload-results: false
               client-version: *bktec_version
           - mise#v1.1.6:
@@ -304,7 +306,7 @@ steps:
           - tests#v1.2.0:
               test-runner: playwright
               result-path: tmp/playwright-results.json
-              suite-slug: bktest-examples
+              suite-slug: *examples_suite
               upload-results: false
               client-version: *bktec_version
           - mise#v1.1.6:
@@ -331,7 +333,7 @@ steps:
               test-runner: custom
               test-cmd: "npm test -- {{testExamples}}"
               test-file-pattern: "tests/**/*.spec.js"
-              suite-slug: bktest-examples
+              suite-slug: *examples_suite
               upload-results: false
               client-version: *bktec_version
           - mise#v1.1.6:
@@ -354,7 +356,7 @@ steps:
               test-runner: playwright
               test-file-pattern: "tests/**/*.spec.js"
               result-path: tmp/playwright-results.json
-              suite-slug: bktest-examples
+              suite-slug: *examples_suite
               upload-results: false
               client-version: *bktec_version
           - mise#v1.1.6:
@@ -373,7 +375,7 @@ steps:
         plugins:
           - tests#v1.2.0:
               test-runner: pytest
-              suite-slug: bktest-examples
+              suite-slug: *examples_suite
               upload-results: false
               client-version: *bktec_version
           - mise#v1.1.6:
@@ -391,7 +393,7 @@ steps:
         plugins:
           - tests#v1.2.0:
               test-runner: pytest
-              suite-slug: bktest-examples
+              suite-slug: *examples_suite
               upload-results: false
               client-version: *bktec_version
           - mise#v1.1.6:
@@ -407,7 +409,7 @@ steps:
           - tests#v1.2.0:
               test-runner: pytest
               tag-filters: "component:frontend"
-              suite-slug: bktest-examples
+              suite-slug: *examples_suite
               upload-results: false
               client-version: *bktec_version
           - mise#v1.1.6:
@@ -427,7 +429,7 @@ steps:
         plugins:
           - tests#v1.2.0:
               test-runner: pytest
-              suite-slug: bktest-examples
+              suite-slug: *examples_suite
               upload-results: false
               client-version: *bktec_version
           - mise#v1.1.6:
@@ -456,7 +458,7 @@ steps:
         plugins:
           - tests#v1.2.0:
               test-runner: pytest
-              suite-slug: bktest-examples
+              suite-slug: *examples_suite
               upload-results: false
               client-version: *bktec_version
           - mise#v1.1.6:
@@ -479,7 +481,7 @@ steps:
           - tests#v1.2.0:
               test-runner: pytest
               result-path: tmp/otel-relay.json
-              suite-slug: bktest-examples
+              suite-slug: *examples_suite
               upload-results: false
               client-version: *bktec_version
           - mise#v1.1.6:
@@ -501,7 +503,7 @@ steps:
         plugins:
           - tests#v1.2.0:
               test-runner: custom
-              suite-slug: bktest-examples
+              suite-slug: *examples_suite
               upload-results: false
               install-client: false
           - docker#v5.14.0:
@@ -540,7 +542,7 @@ steps:
           - tests#v1.2.0:
               test-runner: custom
               test-cmd: swift-xcuitest/bin/test {{testExamples}}
-              suite-slug: bktest-examples
+              suite-slug: *examples_suite
               upload-results: false
               client-version: *bktec_version
 
@@ -577,7 +579,7 @@ steps:
                 --env BUILDKITE_BUILD_NUMBER --env BUILDKITE_BUILD_URL --env BUILDKITE_BRANCH --env BUILDKITE_COMMIT
                 ghcr.io/cirruslabs/android-sdk:34
                 ./gradlew --no-configuration-cache --continue splitTests -PtestClasses="$$1"' sh '{{testExamples}}'
-              suite-slug: bktest-examples
+              suite-slug: *examples_suite
               upload-results: false
               client-version: *bktec_version
 
@@ -611,7 +613,7 @@ steps:
           - tests#v1.2.0:
               test-runner: custom
               test-cmd: "./gradlew --no-daemon --no-configuration-cache --continue splitTests -PtestClasses='{{testExamples}}'"
-              suite-slug: bktest-examples
+              suite-slug: *examples_suite
               upload-results: false
               client-version: *bktec_version
           - mise#v1.1.6:
@@ -629,7 +631,7 @@ steps:
           - tests#v1.2.0:
               test-runner: gotest
               result-path: tmp/gotest-result.jsonl
-              suite-slug: bktest-examples
+              suite-slug: *examples_suite
               client-version: *bktec_version
               tags:
                 - "language.name=go"
@@ -657,7 +659,7 @@ steps:
               test-runner: custom
               test-cmd: "bin/test {{testExamples}}"
               result-path: target/nextest/ci/buildkite.xml
-              suite-slug: bktest-examples
+              suite-slug: *examples_suite
               client-version: *bktec_version
               tags:
                 - "language.name=rust"
