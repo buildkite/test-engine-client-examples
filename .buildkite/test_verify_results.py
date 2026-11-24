@@ -55,7 +55,7 @@ class VerifyResultsTest(unittest.TestCase):
             self.assertEqual((endpoint.scheme, endpoint.netloc), ("https", "api.buildkite.com"))
             self.assertEqual(request.get_header("Buildkite-version"), "2026-08-01")
             query = parse_qs(endpoint.query)
-            build_path = "/v2/organizations/buildkite/pipelines/test-engine-client-examples/builds/1349"
+            build_path = "/v2/organizations/buildkite/pipelines/bktest-examples/builds/1349"
             if endpoint.path == build_path:
                 self.assertEqual(query, {"exclude_jobs": ["true"], "exclude_pipeline": ["true"]})
                 return response({"id": "build-id", "created_at": "2026-11-22T22:05:30.555Z",
@@ -84,7 +84,7 @@ class VerifyResultsTest(unittest.TestCase):
                 self.assertEqual(query, {**job_query, "after": ["next-cursor"]})
                 return response({"items": jobs[1:], "links": {}})
 
-            suite_path = "/v2/analytics/organizations/buildkite/suites/test-engine-client-examples/tests"
+            suite_path = "/v2/analytics/organizations/buildkite/suites/bktest-examples/tests"
             build_totals = endpoint.path == "/v2/analytics/organizations/buildkite/builds/build-id/tests"
             if not build_totals:
                 self.assertEqual(endpoint.path, suite_path)

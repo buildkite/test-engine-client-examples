@@ -15,8 +15,8 @@ from urllib.parse import urlencode
 from urllib.request import Request, urlopen
 
 API = "https://api.buildkite.com/v2"
-PIPELINE = f"{API}/organizations/buildkite/pipelines/test-engine-client-examples"
-SUITE = f"{API}/analytics/organizations/buildkite/suites/test-engine-client-examples"
+PIPELINE = f"{API}/organizations/buildkite/pipelines/bktest-examples"
+SUITE = f"{API}/analytics/organizations/buildkite/suites/bktest-examples"
 NO_RESULTS = {
     ":pipeline:", ":swift: XCUITest build and discover", ":android: Discover JVM tests",
     ":gradle: Discover Kotlin / Java tests",

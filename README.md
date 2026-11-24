@@ -1,8 +1,8 @@
-# Buildkite Test Engine Client examples
+# Buildkite Test Engine examples
 
-[![Build status](https://badge.buildkite.com/a8ccba369ce3e20a00a424e4989224fc5f45f0a4fc00db39e6.svg?branch=main)](https://buildkite.com/buildkite/test-engine-client-examples)
+[![Build status](https://badge.buildkite.com/a8ccba369ce3e20a00a424e4989224fc5f45f0a4fc00db39e6.svg?branch=main)](https://buildkite.com/buildkite/bktest-examples)
 
-Examples of collecting test results and splitting tests with [Test Engine](https://buildkite.com/docs/test-engine) and the [Test Engine Client (bktec)](https://buildkite.com/docs/pipelines/configure/tests/bktec/installing-and-using-the-client). Every example runs in the [public pipeline](https://buildkite.com/buildkite/test-engine-client-examples), and its steps are in [pipeline.yml](./.buildkite/pipeline.yml).
+Examples of collecting test results and splitting tests with [Test Engine](https://buildkite.com/docs/test-engine) and the [Test Engine Client (bktec)](https://buildkite.com/docs/pipelines/configure/tests/bktec/installing-and-using-the-client). Every example runs in the [public pipeline](https://buildkite.com/buildkite/bktest-examples), and its steps are in [pipeline.yml](./.buildkite/pipeline.yml).
 
 ## Choose an example
 
@@ -42,4 +42,4 @@ Keep `unset BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN` in Test Scheduler pool steps
 
 ## Failure demo
 
-The [failure demo pipeline](https://buildkite.com/buildkite/test-engine-client-examples-failures) runs [failures.yml](./.buildkite/failures.yml). Its builds fail on purpose: the RSpec fixtures demonstrate bktec retries and Test Engine flaky detection. The examples pipeline should stay green.
+The [failure demo pipeline](https://buildkite.com/buildkite/bktest-examples-failures) runs [failures.yml](./.buildkite/failures.yml). Its builds fail on purpose: the RSpec fixtures demonstrate bktec retries and Test Engine flaky detection. The examples pipeline should stay green.
