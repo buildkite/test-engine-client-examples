@@ -7,7 +7,7 @@ steps:
       then passes when bktec retries it. Flight test fails on odd build numbers and passes on even ones.
       bktec retries failures twice; no tests are quarantined yet.
       Setup, authentication and upload errors are not intended failures.
-      See the examples-rspec-failures suite in Test Engine for the results and retry attempts.'
+      See the bktest-examples-failures suite in Test Engine for the results and retry attempts.'
 
   - wait
 
@@ -23,7 +23,7 @@ steps:
           test-runner: rspec
           test-file-pattern: "*_spec.rb"
           result-path: tmp/rspec.json
-          suite-slug: examples-rspec-failures
+          suite-slug: bktest-examples-failures
           client-version: "${BKTEC_VERSION:-3.6.0}"
           retry-count: 2
       - mise#v1.1.6:
