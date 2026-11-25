@@ -636,6 +636,7 @@ steps:
           - mise#v1.1.6:
               dir: rust
 
+  # Also waits for the workers uploaded by the pool planners.
   - wait
 
   - label: ":mag: Verify Test Engine results"
@@ -644,11 +645,24 @@ steps:
       build.pull_request.id == null &&
       ((build.source == "schedule" && build.branch == "main") ||
        ((build.source == "api" || build.source == "ui") && build.env("VERIFY_RESULTS") == "true"))
-    command: 'python3 .buildkite/verify-results.py "$$BUILDKITE_BUILD_NUMBER"'
+    command: |
+      set -e
+      : "$${BUILDKITE_CLIENT_ID:?Set the verifier workload identity Client ID}"
+      : "$${BUILDKITE_AUDIENCE:?Set the verifier workload identity OIDC audience}"
+      oidc_token="$$(buildkite-agent oidc request-token --audience "$$BUILDKITE_AUDIENCE" --lifetime 3600)"
+      if ! response="$$(curl --silent --show-error --fail --max-time 30 https://buildkite.com/oauth/token \
+        --data-urlencode 'grant_type=client_credentials' \
+        --data-urlencode "client_id=$$BUILDKITE_CLIENT_ID" \
+        --data-urlencode 'client_assertion_type=urn:ietf:params:oauth:client-assertion-type:jwt-bearer' \
+        --data-urlencode "client_assertion=$$oidc_token")"; then
+        printf 'Workload identity exchange failed\n' >&2
+        exit 1
+      fi
+      BUILDKITE_API_TOKEN="$$(printf '%s' "$$response" | python3 -c 'import json, sys; token = json.load(sys.stdin)["access_token"]; sys.exit("Missing access token") if not isinstance(token, str) or not token else print(token)')"
+      export BUILDKITE_API_TOKEN
+      python3 .buildkite/verify-results.py "$$BUILDKITE_BUILD_NUMBER"
     agents:
       queue: hosted
     plugins:
       - mise#v1.1.6:
           dir: pytest
-    secrets:
-      BUILDKITE_API_TOKEN: TEST_ENGINE_VERIFY_API_TOKEN
