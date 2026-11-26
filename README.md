@@ -8,15 +8,15 @@ Examples of collecting test results and splitting tests with [Test Engine](https
 
 | Runner | Example | What it shows |
 | --- | --- | --- |
-| RSpec | [Test collector](./rspec/README.md) · [OpenTelemetry](./rspec-otel/) | Parallel jobs and Test Scheduler pool exec, with collector-configured OpenTelemetry; HTTP, Active Record, and Redis spans |
+| RSpec | [Test collector](./rspec/README.md) · [OpenTelemetry](./rspec-otel/) | Parallel jobs and `pool run` with a persistent runner; collector-configured OpenTelemetry with HTTP, Active Record, and Redis spans |
 | Minitest | [Test collector](./ruby-minitest/README.md) | Custom runner that splits test files |
 | Cucumber | [Test collector](./cucumber/README.md) | Parallel jobs |
-| Jest | [Test collector](./jest/README.md) · [OpenTelemetry](./jest-otel/README.md) | Parallel jobs, retries, and Test Scheduler pool consume; manual, HTTP, and fetch spans |
-| Playwright | [Test collector](./playwright/README.md) · [OpenTelemetry](./playwright-otel/README.md) | Parallel jobs and Test Scheduler pool consume; step, action, and assertion spans |
+| Jest | [Test collector](./jest/README.md) · [OpenTelemetry](./jest-otel/README.md) | Parallel jobs, retries, and `pool run` with a fresh process per batch; manual, HTTP, and fetch spans |
+| Playwright | [Test collector](./playwright/README.md) · [OpenTelemetry](./playwright-otel/README.md) | Parallel jobs and `pool run` with a fresh process per batch; step, action, and assertion spans |
 | Cypress | [Test collector](./cypress/README.md) | Parallel jobs and Linux browser setup |
 | Mocha | [Test collector](./mocha/README.md) | Custom runner that splits test files |
 | Vitest | [Test collector (5)](./vitest/README.md) · [Test collector (4)](./vitest-4/README.md) · [OpenTelemetry](./vitest-otel/README.md) | bktest with the collector's reporters; hook, manual, HTTP, and fetch spans |
-| pytest | [Test collector](./pytest/README.md) · [OpenTelemetry](./pytest-otel/) · [Tag filters](./pytest-tag-filters/README.md) | xdist, Test Scheduler pool consume and exec, and tag filters; collector-configured OpenTelemetry with SQLite and HTTP spans |
+| pytest | [Test collector](./pytest/README.md) · [OpenTelemetry](./pytest-otel/) · [Tag filters](./pytest-tag-filters/README.md) | xdist, both `pool run` modes, and tag filters; collector-configured OpenTelemetry with SQLite and HTTP spans |
 | XCTest / XCUITest | [SwiftPM test collector](./swift-xctest/README.md) · [Xcode OpenTelemetry](./swift-xcuitest/README.md) | SwiftPM on Linux without bktest; build once and split classes across Macs |
 | Android JVM / JUnit | [Test collector](./android/README.md) | Gradle class discovery and a custom runner |
 | Kotlin and Java / JUnit, Kotest | [Test collector](./gradle-jvm/README.md) | Kotlin DSL and Groovy DSL builds, Gradle class discovery, and a custom runner |
@@ -28,17 +28,23 @@ Examples of collecting test results and splitting tests with [Test Engine](https
 Copy the example's step from [pipeline.yml](./.buildkite/pipeline.yml), then:
 
 1. Set `suite-slug` to your test suite, and add an [OIDC policy](https://buildkite.com/docs/pipelines/configure/tests/test-collection/oidc) that allows your pipeline.
-1. Replace `client-version: *bktest_version` with a bktest version, such as `"3.6.1"`.
+1. Replace `client-version: *bktest_version` with a bktest version, such as `"3.7.0"`.
 1. Remove `cd <example>`, and remove the example directory from repository-relative paths such as `artifact_paths`.
 1. Remove the `mise` plugin if your agents already have the language runtime.
 1. Remove `BUILDKITE_ANALYTICS_LOCATION_PREFIX` if your tests run from the repository root. Otherwise, set it to their directory.
 1. Remove any `export BUILDKITE_ANALYTICS_KEY=...` line. These examples share one test suite, so some steps give each job its own run. Your build ID is the right run key.
 1. Check your organization's OIDC lifetime limit. The Tests Buildkite plugin defaults to a two-hour token issued before setup, matching Buildkite's default maximum. Set `oidc-lifetime` within your organization's limit if it is lower. Tokens are not refreshed, so their lifetime must cover setup, tests, and uploads; uploads after expiry can fail without failing the job.
 
-Keep `unset BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN` in Test Scheduler pool steps. Pools need a token with job identity claims, which bktest requests but the plugin doesn't.
-
 > [!IMPORTANT]
 > Use one result upload method per test run. When a test collector uploads results, keep `upload-results: false` to avoid duplicate test executions. The Go and Rust examples use bktest's built-in upload instead.
+
+### Adapt a Test Scheduler pool
+
+Copy the planning step and its worker template. Set `suite-slug` in the planning step; the template inherits it at upload. Pin both the planner and workers to the same bktest version (3.7.0 or later), as the pipeline does with `BKTEST_VERSION`.
+
+Keep the planner's `--pipeline-upload` path relative to its working directory, and match discovery settings such as the test file pattern and location prefix in both jobs. Pass both the pool ID and the fallback flag so workers can still run when planning falls back to a local split.
+
+Keep `unset BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN` in the planner and workers. Scheduler requests need a token with job identity claims, which bktest requests but the plugin doesn't.
 
 ## Failure demo
 

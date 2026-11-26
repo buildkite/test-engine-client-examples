@@ -1,6 +1,6 @@
 {
   ":rspec: RSpec": {"passed": 10},
-  ":rspec: RSpec (Test Scheduler pool exec)": {"passed": 10},
+  ":rspec: RSpec (Test Scheduler pool)": {"passed": 10},
   ":rspec: RSpec (OpenTelemetry setup by test collector)": {"passed": 3},
   ":ruby: Minitest": {"passed": 1},
   ":cucumber: Cucumber": {"passed": 4},
@@ -20,7 +20,7 @@
   ":pytest: pytest (with xdist)": {"passed": 9, "skipped": 3},
   ":pytest: pytest (tag filters)": {"passed": 3},
   ":pytest: pytest (Test Scheduler pool)": {"passed": 9, "skipped": 3},
-  ":pytest: pytest (Test Scheduler pool exec)": {"passed": 9, "skipped": 3},
+  ":pytest: pytest (Test Scheduler pool, persistent runner)": {"passed": 9, "skipped": 3},
   ":pytest: pytest (OTel setup by collector)": {"passed": 2},
   ":swift: Swift: XCTest (test-collector-swift)": {"passed": 2, "skipped": 1},
   ":swift: XCUITest shard %n": {"passed": 2},

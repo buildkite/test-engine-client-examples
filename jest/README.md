@@ -4,10 +4,10 @@ Split Jest tests across parallel jobs with bktest. The JavaScript test collector
 
 ## Pipeline
 
-Copy the `Jest` step from [pipeline.yml](../.buildkite/pipeline.yml) and [adapt it](../README.md#adapt-a-step). Two more steps build on it:
+Copy the `Jest` step from [pipeline.yml](../.buildkite/pipeline.yml) and [adapt it](../README.md#adapt-a-step). Two more examples build on it:
 
 - `Jest (Retry Enabled)` retries failed tests with bktest. Remove `JEST_RETRY_DEMO_MARKER` and its `rm` line, which make a demo test fail once.
-- `Jest (Test Scheduler pool)` runs batches from a pool shared by the step's jobs.
+- For Test Scheduler, copy `Plan Jest pool` and [pool-workers.yml](./pool-workers.yml), then [adapt the pair](../README.md#adapt-a-test-scheduler-pool). `bktest pool run` starts a fresh Jest process for each batch.
 
 ## Test collector
 

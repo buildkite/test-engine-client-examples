@@ -1,7 +1,9 @@
 # To run every example on another bktest release, such as a release candidate,
-# set BKTEST_VERSION on a new build, for example BKTEST_VERSION=3.6.0-rc.3.
+# set BKTEST_VERSION on a new build. The pool examples require 3.7.0 or later.
+env:
+  BKTEST_VERSION: &bktest_version "${BKTEST_VERSION:-3.7.0}"
+
 common:
-  - &bktest_version "${BKTEST_VERSION:-3.6.1}"
   # This pipeline and its suite have the same slug before and after the rename.
   - &examples_suite "${BUILDKITE_PIPELINE_SLUG}"
 
@@ -26,20 +28,16 @@ steps:
           - mise#v1.1.6:
               dir: rspec
 
-      # bktest pool exec runs one persistent buildkite-rspec process that leases
-      # batches from a Test Scheduler pool shared by this step's jobs.
-      # --pool-lease-max-attempts 2 caps attempts per lease so jobs cycle
-      # through several leases from the pool instead of one big lease.
-      # Unlike pool consume, pool exec does not inject an upload token, so the
-      # BUILDKITE_ANALYTICS_TOKEN exported by the Tests plugin stays set for the
-      # collector running inside the persistent runner.
-      - label: ":rspec: RSpec (Test Scheduler pool exec)"
-        parallelism: 2
+      # Plan once, then upload the workers with the pool ID and fallback flag.
+      # The small lease cap demonstrates multiple leases on these tiny suites.
+      - label: ":rspec: Plan RSpec pool"
         commands:
           - cd rspec
+          # Planning can load the specs to discover individual examples.
           - bundle install
+          # Scheduler requests need job identity claims that the plugin's token lacks.
           - unset BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
-          - bktest pool exec --pool-lease-max-attempts 2 -- bundle exec buildkite-rspec
+          - bktest pool plan --pool-lease-max-attempts 2 --pipeline-upload pool-workers.yml
         plugins:
           - tests#v1.3.0:
               test-runner: rspec
@@ -257,26 +255,17 @@ steps:
           - mise#v1.1.6:
               dir: jest-otel
 
-      # bktest pool consume starts a fresh Jest process for each leased batch,
-      # drawing from a Test Scheduler pool shared by this step's jobs.
-      # --pool-lease-max-attempts 2 caps attempts per lease so jobs cycle
-      # through several leases from the pool instead of one big lease.
-      - label: ":jest: Jest (Test Scheduler pool)"
-        parallelism: 2
+      - label: ":jest: Plan Jest pool"
         commands:
           - cd jest
-          - npm install
-          - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
-          - bktest pool consume --pool-lease-max-attempts 2
+          - unset BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
+          - bktest pool plan --pool-lease-max-attempts 2 --pipeline-upload pool-workers.yml
         plugins:
           - tests#v1.3.0:
               test-runner: jest
-              result-path: jest-result.json
               suite-slug: *examples_suite
               upload-results: false
               client-version: *bktest_version
-          - mise#v1.1.6:
-              dir: jest
         env:
           BUILDKITE_ANALYTICS_LOCATION_PREFIX: jest
 
@@ -339,28 +328,18 @@ steps:
           - mise#v1.1.6:
               dir: playwright-otel
 
-      # bktest pool consume starts a fresh Playwright process for each leased
-      # batch, drawing from a Test Scheduler pool shared by this step's jobs.
-      # --pool-lease-max-attempts 2 caps attempts per lease so jobs cycle
-      # through several leases from the pool instead of one big lease.
-      - label: ":playwright: Playwright (Test Scheduler pool)"
-        parallelism: 2
+      - label: ":playwright: Plan Playwright pool"
         commands:
           - cd playwright
-          - npm install
-          - npx playwright install --with-deps chromium
-          - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
-          - bktest pool consume --pool-lease-max-attempts 2
+          - unset BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
+          - bktest pool plan --pool-lease-max-attempts 2 --pipeline-upload pool-workers.yml
         plugins:
           - tests#v1.3.0:
               test-runner: playwright
               test-file-pattern: "tests/**/*.spec.js"
-              result-path: tmp/playwright-results.json
               suite-slug: *examples_suite
               upload-results: false
               client-version: *bktest_version
-          - mise#v1.1.6:
-              dir: playwright
         env:
           BUILDKITE_ANALYTICS_LOCATION_PREFIX: playwright
 
@@ -415,17 +394,13 @@ steps:
           - mise#v1.1.6:
               dir: pytest-tag-filters
 
-      # bktest pool consume starts a fresh pytest process for each leased batch,
-      # drawing from a Test Scheduler pool shared by this step's jobs.
-      # --pool-lease-max-attempts 2 caps attempts per lease so jobs cycle
-      # through several leases from the pool instead of one big lease.
-      - label: ":pytest: pytest (Test Scheduler pool)"
-        parallelism: 2
+      - label: ":pytest: Plan pytest pool"
         commands:
           - cd pytest
+          # Planning can collect individual tests from files flagged by Test Engine.
           - pip install -e '.[dev]'
-          - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
-          - bktest pool consume --pool-lease-max-attempts 2
+          - unset BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
+          - bktest pool plan --pool-lease-max-attempts 2 --pipeline-upload pool-workers.yml
         plugins:
           - tests#v1.3.0:
               test-runner: pytest
@@ -435,26 +410,12 @@ steps:
           - mise#v1.1.6:
               dir: pytest
 
-      # bktest pool exec runs one persistent buildkite-pytest process that
-      # leases batches from a Test Scheduler pool shared by this step's jobs,
-      # so pytest startup and session fixtures run once per job.
-      # --pool-lease-max-attempts 2 caps attempts per lease so jobs cycle
-      # through several leases from the pool instead of one big lease.
-      - label: ":pytest: pytest (Test Scheduler pool exec)"
-        parallelism: 2
-        env:
-          # Without a TTY, Python block-buffers the runner's stdout; keep it
-          # streaming so a silent or hung runner is visible in the job log.
-          PYTHONUNBUFFERED: "1"
+      - label: ":pytest: Plan persistent pytest pool"
         commands:
           - cd pytest
           - pip install -e '.[dev]'
-          # 1.10.0 includes the buildkite-pytest runner;
-          # --force-reinstall replaces the older buildkite-test-collector
-          # already installed by `pip install -e '.[dev]'`.
-          - pip install --force-reinstall 'buildkite-test-collector==1.10.0'
           - unset BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
-          - bktest pool exec --pool-lease-max-attempts 2 -- buildkite-pytest
+          - bktest pool plan --pool-lease-max-attempts 2 --pipeline-upload pool-workers-persistent.yml
         plugins:
           - tests#v1.3.0:
               test-runner: pytest

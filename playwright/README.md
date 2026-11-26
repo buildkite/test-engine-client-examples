@@ -4,7 +4,9 @@ Split Playwright tests across parallel jobs with bktest. The JavaScript test col
 
 ## Pipeline
 
-Copy the `Playwright` step from [pipeline.yml](../.buildkite/pipeline.yml) and [adapt it](../README.md#adapt-a-step). The `Playwright (Test Scheduler pool)` step runs batches from a pool shared by the step's jobs.
+Copy the `Playwright` step from [pipeline.yml](../.buildkite/pipeline.yml) and [adapt it](../README.md#adapt-a-step).
+
+For Test Scheduler, copy `Plan Playwright pool` and [pool-workers.yml](./pool-workers.yml), then [adapt the pair](../README.md#adapt-a-test-scheduler-pool). `bktest pool run` starts a fresh Playwright process for each batch.
 
 ## Test collector
 

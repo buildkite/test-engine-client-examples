@@ -20,6 +20,8 @@ SUITE = f"{API}/analytics/organizations/buildkite/suites/bktest-examples"
 NO_RESULTS = {
     ":pipeline:", ":swift: XCUITest build and discover", ":android: Discover JVM tests",
     ":gradle: Discover Kotlin / Java tests",
+    ":rspec: Plan RSpec pool", ":jest: Plan Jest pool", ":playwright: Plan Playwright pool",
+    ":pytest: Plan pytest pool", ":pytest: Plan persistent pytest pool",
 }
 API_ERRORS = (OSError, ValueError, KeyError, TypeError)
 next_request = 0
