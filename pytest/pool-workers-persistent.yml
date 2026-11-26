@@ -8,9 +8,7 @@ steps:
       PYTHONUNBUFFERED: "1"
     commands:
       - cd pytest
-      - python -m venv .venv
-      - . .venv/bin/activate
-      - python -m pip install -e '.[dev]'
+      - pip install -e '.[dev]'
       - unset BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
       - bktest pool run -- buildkite-pytest
     plugins:

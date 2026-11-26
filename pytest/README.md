@@ -18,12 +18,10 @@ Add `buildkite-test-collector` to your test dependencies, as in [setup.py](./set
 
 ## Run locally
 
-Use Python from `mise.toml` with a virtual environment in this directory:
+Use Python from `mise.toml` and run these commands from this directory:
 
 ```bash
-python -m venv .venv
-. .venv/bin/activate
-python -m pip install -e '.[dev]'
+pip install -e '.[dev]'
 pytest
 pytest -n 3 # with three xdist workers
 ```
