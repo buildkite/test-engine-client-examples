@@ -1,6 +1,6 @@
 describe('Click', () => {
   it('clicks the link "type"', () => {
-    cy.visit('https://example.cypress.io')
+    cy.visit('cypress/fixtures/index.html')
 
     cy.contains('type').click()
 

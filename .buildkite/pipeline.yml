@@ -343,11 +343,14 @@ steps:
         parallelism: 2
         commands:
           - cd pytest
-          - pip install -e '.[dev]'
+          - python -m venv .venv
+          - . .venv/bin/activate
+          - python -m pip install -e '.[dev]'
           - bktest run
         plugins:
           - tests#v1.3.0:
               test-runner: pytest
+              test-file-pattern: "tests/**/test_*.py"
               suite-slug: *examples_suite
               upload-results: false
               client-version: *bktest_version
@@ -358,7 +361,9 @@ steps:
         parallelism: 2
         commands:
           - cd pytest
-          - pip install -e '.[dev]'
+          - python -m venv .venv
+          - . .venv/bin/activate
+          - python -m pip install -e '.[dev]'
           - bktest run
         env:
           PYTEST_XDIST_ENABLED: "true"
@@ -366,6 +371,7 @@ steps:
         plugins:
           - tests#v1.3.0:
               test-runner: pytest
+              test-file-pattern: "tests/**/test_*.py"
               suite-slug: *examples_suite
               upload-results: false
               client-version: *bktest_version
@@ -376,11 +382,14 @@ steps:
         parallelism: 2
         commands:
           - cd pytest-tag-filters
-          - pip install -e '.[dev]'
+          - python -m venv .venv
+          - . .venv/bin/activate
+          - python -m pip install -e '.[dev]'
           - bktest run
         plugins:
           - tests#v1.3.0:
               test-runner: pytest
+              test-file-pattern: "tests/**/test_*.py"
               tag-filters: "component:frontend"
               suite-slug: *examples_suite
               upload-results: false
@@ -392,12 +401,15 @@ steps:
         commands:
           - cd pytest
           # Planning can collect individual tests from files flagged by Test Engine.
-          - pip install -e '.[dev]'
+          - python -m venv .venv
+          - . .venv/bin/activate
+          - python -m pip install -e '.[dev]'
           - unset BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
           - bktest pool plan --pool-lease-max-attempts 2 --pipeline-upload pool-workers.yml
         plugins:
           - tests#v1.3.0:
               test-runner: pytest
+              test-file-pattern: "tests/**/test_*.py"
               suite-slug: *examples_suite
               upload-results: false
               client-version: *bktest_version
@@ -407,12 +419,15 @@ steps:
       - label: ":pytest: Plan persistent pytest pool"
         commands:
           - cd pytest
-          - pip install -e '.[dev]'
+          - python -m venv .venv
+          - . .venv/bin/activate
+          - python -m pip install -e '.[dev]'
           - unset BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
           - bktest pool plan --pool-lease-max-attempts 2 --pipeline-upload pool-workers-persistent.yml
         plugins:
           - tests#v1.3.0:
               test-runner: pytest
+              test-file-pattern: "tests/**/test_*.py"
               suite-slug: *examples_suite
               upload-results: false
               client-version: *bktest_version
@@ -423,7 +438,9 @@ steps:
         key: pytest-otel-relay
         commands:
           - cd pytest-otel
-          - pip install -r requirements.txt
+          - python -m venv .venv
+          - . .venv/bin/activate
+          - python -m pip install -r requirements.txt
           - export BUILDKITE_ANALYTICS_KEY="$$BUILDKITE_BUILD_ID-python-otel-relay-$$BUILDKITE_JOB_ID"
           - bktest run
         env:
@@ -433,6 +450,7 @@ steps:
         plugins:
           - tests#v1.3.0:
               test-runner: pytest
+              test-file-pattern: "tests/**/test_*.py"
               suite-slug: *examples_suite
               upload-results: false
               client-version: *bktest_version
@@ -459,7 +477,7 @@ steps:
               upload-results: false
               install-client: false
           - docker#v5.14.0:
-              image: "swift:6.0-noble"
+              image: "swift:6.4.3-noble"
               propagate-environment: true
               environment:
                 - BUILDKITE_ANALYTICS_TOKEN
@@ -508,7 +526,7 @@ steps:
           - android/**/build/test-selectors/*.txt
         plugins:
           - docker#v5.14.0:
-              image: ghcr.io/cirruslabs/android-sdk:34
+              image: ghcr.io/cirruslabs/android-sdk:34@sha256:1c2e7e9c4490dbc1f85364556aa08e550945e6dffb29baab86d5fe2c7be0773a
               user: "0:0"
 
       - label: ":android: Android"
@@ -528,7 +546,7 @@ steps:
                 sh -c 'docker run --rm --user 0:0 --volume "$$PWD:/workdir" --workdir /workdir
                 --env BUILDKITE_ANALYTICS_TOKEN --env BUILDKITE_BUILD_ID --env BUILDKITE_JOB_ID
                 --env BUILDKITE_BUILD_NUMBER --env BUILDKITE_BUILD_URL --env BUILDKITE_BRANCH --env BUILDKITE_COMMIT
-                ghcr.io/cirruslabs/android-sdk:34
+                ghcr.io/cirruslabs/android-sdk:34@sha256:1c2e7e9c4490dbc1f85364556aa08e550945e6dffb29baab86d5fe2c7be0773a
                 ./gradlew --no-configuration-cache --continue splitTests -PtestClasses="$$1"' sh '{{testExamples}}'
               suite-slug: *examples_suite
               upload-results: false
@@ -576,7 +594,7 @@ steps:
         parallelism: 2
         commands:
           - cd go
-          - go install gotest.tools/gotestsum@v1.12.0
+          - go install gotest.tools/gotestsum@v1.13.0
           - bktest run
         plugins:
           - tests#v1.3.0:

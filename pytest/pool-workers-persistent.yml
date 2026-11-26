@@ -8,12 +8,15 @@ steps:
       PYTHONUNBUFFERED: "1"
     commands:
       - cd pytest
-      - pip install -e '.[dev]'
+      - python -m venv .venv
+      - . .venv/bin/activate
+      - python -m pip install -e '.[dev]'
       - unset BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
       - bktest pool run -- buildkite-pytest
     plugins:
       - tests#v1.3.0:
           test-runner: pytest
+          test-file-pattern: "tests/**/test_*.py"
           suite-slug: "$BUILDKITE_TEST_ENGINE_SUITE_SLUG"
           upload-results: false
           client-version: "${BKTEST_VERSION:-3.7.0}"
