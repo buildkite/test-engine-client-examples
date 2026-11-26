@@ -36,6 +36,7 @@ def die(message):
 def get(url):
     global next_request
     request = Request(url, headers={
+        "Accept": "application/json",
         "Authorization": f"Bearer {os.environ['BUILDKITE_API_TOKEN']}",
         "Buildkite-Version": "2026-08-01",
     })

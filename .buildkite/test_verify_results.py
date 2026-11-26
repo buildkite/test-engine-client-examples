@@ -56,6 +56,7 @@ class VerifyResultsTest(unittest.TestCase):
             endpoint = urlsplit(url)
             calls.append((clock[0], endpoint.path, parse_qs(endpoint.query)))
             self.assertEqual((endpoint.scheme, endpoint.netloc), ("https", "api.buildkite.com"))
+            self.assertEqual(request.get_header("Accept"), "application/json")
             self.assertEqual(request.get_header("Buildkite-version"), "2026-08-01")
             query = parse_qs(endpoint.query)
             build_path = "/v2/organizations/buildkite/pipelines/bktest-examples/builds/1349"
