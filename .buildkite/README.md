@@ -1,14 +1,14 @@
 # Check recorded results
 
-The daily `main` build checks per-example Test Engine counts. For release testing, create a Buildkite API or UI build with `VERIFY_RESULTS=true` (and `BKTEST_VERSION` to test another bktest release). Read the **Verify Test Engine results** step. It waits for the uploaded pool workers and checks their combined results, not the planners. PR builds skip it.
+The daily `main` build checks Test Engine results. For release testing, set `VERIFY_RESULTS=true` in a new Buildkite API or UI build (and `BKTEST_VERSION` to test another bktest release), then read **Verify Test Engine results**. PR builds skip it.
 
-The step sets the verifier's [workload identity](https://buildkite.com/docs/apis/workload-identity-federation/buildkite-agents) Client ID and uses the Buildkite organization's default OIDC audience. Restrict the identity to the `verify-results` step on trusted branches of `bktest-examples`. Give it only `read_builds`, `read_suites`, and `read_build_logs` as its default and grantable scopes, with access limited to the examples pipeline and suite.
+The step uses a [Buildkite workload identity](https://buildkite.com/docs/apis/workload-identity-federation/buildkite-agents) scoped to the examples pipeline and suite, with `read_builds`, `read_suites`, and `read_build_logs`.
 
 You can also check a finished build directly (Python 3.9+):
 
 ```sh
 export BUILDKITE_API_TOKEN=...  # read_builds, read_suites, and read_build_logs
-python3 .buildkite/verify-results.py 1394
+python3 .buildkite/verify-results.py 1349
 ```
 
 | Line | Meaning |

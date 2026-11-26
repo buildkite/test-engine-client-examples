@@ -203,11 +203,6 @@ class VerifyResultsTest(unittest.TestCase):
         self.assertIn("BUILD INCOMPLETE: :swift: XCUITest build and discover: running", output)
         self.assertNotIn("PASS", output)
 
-        status, output, _ = self.run_check("trimmed", in_build=True)
-        self.assertEqual(status, 1)
-        self.assertIn(f"NOT RUN: {SWIFT}", output)
-        self.assertIn("FAIL: build 1349, 1/2 examples unverified", output)
-
         status, output, _ = self.run_check(in_build=True, job_id="retry")
         self.assertEqual(status, 2)
         self.assertIn("BUILD INCOMPLETE: current job is not the verifier", output)

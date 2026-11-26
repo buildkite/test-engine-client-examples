@@ -649,33 +649,7 @@ steps:
       BUILDKITE_CLIENT_ID: "d1f885ba41a081c8955f"
       BUILDKITE_AUDIENCE: "https://api.buildkite.com/v2/organizations/a98961b7-adc1-41aa-8726-cfb2c46e42e0"
     command: |
-      set -e
-      : "$${BUILDKITE_CLIENT_ID:?Set the verifier workload identity Client ID}"
-      oidc_token="$$(buildkite-agent oidc request-token --audience "$$BUILDKITE_AUDIENCE" --lifetime 3600)"
-      if ! response="$$(curl --silent --show-error --fail-with-body --max-time 30 https://buildkite.com/oauth/token \
-        --data-urlencode 'grant_type=client_credentials' \
-        --data-urlencode "client_id=$$BUILDKITE_CLIENT_ID" \
-        --data-urlencode 'client_assertion_type=urn:ietf:params:oauth:client-assertion-type:jwt-bearer' \
-        --data-urlencode "client_assertion=$$oidc_token")"; then
-        printf 'Workload identity exchange failed\n' >&2
-        printf '%s' "$$response" | OIDC_ASSERTION="$$oidc_token" python3 -c '
-      import json, os, sys
-      try:
-          body = json.load(sys.stdin)
-      except ValueError:
-          body = None
-      if isinstance(body, dict) and "error" in body:
-          for key in ("error", "error_description"):
-              value = body.get(key)
-              if isinstance(value, str):
-                  for token in (os.environ["OIDC_ASSERTION"], body.get("access_token")):
-                      if isinstance(token, str) and token:
-                          value = value.replace(token, "[redacted]")
-                  print(f"{key}: {value}", file=sys.stderr)
-      '
-        exit 1
-      fi
-      BUILDKITE_API_TOKEN="$$(printf '%s' "$$response" | python3 -c 'import json, sys; token = json.load(sys.stdin)["access_token"]; sys.exit("Missing access token") if not isinstance(token, str) or not token else print(token)')"
+      BUILDKITE_API_TOKEN="$$(.buildkite/workload-identity-token.sh)" || exit $$?
       export BUILDKITE_API_TOKEN
       python3 .buildkite/verify-results.py "$$BUILDKITE_BUILD_NUMBER"
     agents:
