@@ -4,7 +4,6 @@ env:
   BKTEST_VERSION: &bktest_version "${BKTEST_VERSION:-3.7.0}"
 
 common:
-  # This pipeline and its suite have the same slug before and after the rename.
   - &examples_suite "${BUILDKITE_PIPELINE_SLUG}"
 
 steps:
@@ -197,7 +196,7 @@ steps:
         parallelism: 2
         commands:
           - cd jest
-          - npm install
+          - npm ci
           - bktest run
         plugins:
           - tests#v1.3.0:
@@ -214,7 +213,7 @@ steps:
         parallelism: 2
         commands:
           - cd jest
-          - npm install
+          - npm ci
           - rm -f tmp/jest-retry-demo
           - bktest run
         plugins:
@@ -288,7 +287,7 @@ steps:
         parallelism: 2
         commands:
           - cd playwright
-          - npm install
+          - npm ci
           - npx playwright install --with-deps chromium
           - bktest run
         plugins:

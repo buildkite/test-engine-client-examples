@@ -17,7 +17,6 @@ Add `buildkite-test-collector` and keep the reporter and its `token_name` option
 Install [Cypress's system dependencies](https://docs.cypress.io/app/get-started/install-cypress#Linux-Prerequisites), then use Node from `mise.toml` in this directory:
 
 ```bash
-npm install
-npx cypress install
+npm ci
 npm test
 ```

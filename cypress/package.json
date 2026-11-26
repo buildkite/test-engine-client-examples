@@ -2,7 +2,6 @@
   "name": "bktest-examples-cypress",
   "version": "1.0.0",
   "description": "Cypress configuration example for Buildkite Test Engine Client",
-  "main": "index.js",
   "license": "MIT",
   "devDependencies": {
     "buildkite-test-collector": "1.16.1",

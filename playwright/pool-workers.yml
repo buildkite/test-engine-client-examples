@@ -7,7 +7,7 @@ steps:
       BUILDKITE_ANALYTICS_LOCATION_PREFIX: playwright
     commands:
       - cd playwright
-      - npm install
+      - npm ci
       - npx playwright install --with-deps chromium
       - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
       - bktest pool run

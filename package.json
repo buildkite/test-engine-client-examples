@@ -1,9 +1,0 @@
-{
-  "name": "bktest-examples",
-  "private": true,
-  "workspaces": [
-    "jest",
-    "playwright",
-    "cypress"
-  ]
-}

@@ -1,6 +1,5 @@
 node_modules/
 tmp/
-bktec
 bktest
 
 # pytest
@@ -10,9 +9,3 @@ __pycache__
 .tox
 .env*
 .direnv/*
-
-# pants
-.pants.d/
-.pids
-dist/
-__pycache__/

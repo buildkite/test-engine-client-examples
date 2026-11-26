@@ -18,6 +18,6 @@ Add `buildkite-test-collector` and keep the reporter and `testLocationInResults`
 Use Node from `mise.toml` in this directory:
 
 ```bash
-npm install
+npm ci
 npm test
 ```
