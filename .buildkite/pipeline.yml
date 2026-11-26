@@ -646,6 +646,7 @@ steps:
       ((build.source == "schedule" && build.branch == "main") ||
        ((build.source == "api" || build.source == "ui") && build.env("VERIFY_RESULTS") == "true"))
     env:
+      BUILDKITE_CLIENT_ID: "d1f885ba41a081c8955f"
       BUILDKITE_AUDIENCE: "https://api.buildkite.com/v2/organizations/a98961b7-adc1-41aa-8726-cfb2c46e42e0"
     command: |
       set -e
