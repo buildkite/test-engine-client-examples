@@ -4,7 +4,7 @@ Send RSpec results to Test Engine as OpenTelemetry spans, with HTTP, Active Reco
 
 ## Pipeline
 
-Copy the `RSpec (OpenTelemetry setup by test collector)` step from [pipeline.yml](../.buildkite/pipeline.yml) and [adapt it](../README.md#adapt-a-step). `BUILDKITE_TESTS_OTLP_RELAY` makes bktest forward the collector's spans to Test Engine and refresh their token. See [Relay OpenTelemetry traces](https://github.com/buildkite/bktest/tree/v3.6.1#relay-opentelemetry-traces).
+Copy the `RSpec (OpenTelemetry)` step from [pipeline.yml](../.buildkite/pipeline.yml) and [adapt it](../README.md#adapt-a-step). `BUILDKITE_TESTS_OTLP_RELAY` makes bktest forward the collector's spans to Test Engine and refresh their token. See [Relay OpenTelemetry traces](https://github.com/buildkite/bktest/tree/v3.7.0#relay-opentelemetry-traces).
 
 ## Test collector
 

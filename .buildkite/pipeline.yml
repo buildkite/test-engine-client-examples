@@ -1,5 +1,6 @@
 # To run every example on another bktest release, such as a release candidate,
 # set BKTEST_VERSION on a new build. The pool examples require 3.7.0 or later.
+# Keep this default in sync with the standalone pool worker templates.
 env:
   BKTEST_VERSION: &bktest_version "${BKTEST_VERSION:-3.7.0}"
 
@@ -48,7 +49,7 @@ steps:
           - mise#v1.1.6:
               dir: rspec
 
-      - label: ":rspec: RSpec (OpenTelemetry setup by test collector)"
+      - label: ":rspec: RSpec (OpenTelemetry)"
         commands:
           - cd rspec-otel
           - bundle install
@@ -172,8 +173,6 @@ steps:
         commands:
           - cd vitest-otel
           - npm ci
-          # Let the OTLP relay supply its own local authentication token.
-          - unset BUILDKITE_TESTS_OTLP_TOKEN
           - export BUILDKITE_ANALYTICS_KEY="$$BUILDKITE_BUILD_ID-vitest-otel-$$BUILDKITE_JOB_ID"
           - bktest run
         env:
@@ -232,13 +231,11 @@ steps:
           BUILDKITE_ANALYTICS_LOCATION_PREFIX: jest
           JEST_RETRY_DEMO_MARKER: tmp/jest-retry-demo
 
-      - label: ":jest: Jest (OTel setup by collector)"
+      - label: ":jest: Jest (OpenTelemetry)"
         key: jest-otel-relay
         commands:
           - cd jest-otel
           - npm ci
-          # Let the OTLP relay supply its own local authentication token.
-          - unset BUILDKITE_TESTS_OTLP_TOKEN
           - export BUILDKITE_ANALYTICS_KEY="$$BUILDKITE_BUILD_ID-jest-otel-$$BUILDKITE_JOB_ID"
           - bktest run
         env:
@@ -310,8 +307,6 @@ steps:
           - npm ci
           - npx playwright install --with-deps chromium
           - export BUILDKITE_ANALYTICS_KEY="$$BUILDKITE_BUILD_ID-playwright-otel-$$BUILDKITE_JOB_ID"
-          # Let the OTLP relay supply its own local authentication token.
-          - unset BUILDKITE_TESTS_OTLP_TOKEN
           - bktest run
         env:
           BUILDKITE_ANALYTICS_LOCATION_PREFIX: playwright-otel
@@ -368,7 +363,7 @@ steps:
           - bktest run
         env:
           PYTEST_XDIST_ENABLED: "true"
-          PYTEST_ADDOPTS: "-n 3 -o log_cli=true -o log_cli_level=DEBUG"
+          PYTEST_ADDOPTS: "-n 3 -o log_cli=true"
         plugins:
           - tests#v1.3.0:
               test-runner: pytest
@@ -425,15 +420,13 @@ steps:
           - mise#v1.1.6:
               dir: pytest
 
-      - label: ":pytest: pytest (OTel setup by collector)"
+      - label: ":pytest: pytest (OpenTelemetry)"
         key: pytest-otel-relay
         commands:
           - cd pytest-otel
           - pip install -r requirements.txt
-          - mkdir -p tmp
           - export BUILDKITE_ANALYTICS_KEY="$$BUILDKITE_BUILD_ID-python-otel-relay-$$BUILDKITE_JOB_ID"
           - bktest run
-        artifact_paths: pytest-otel/tmp/otel-relay.json
         env:
           BUILDKITE_ANALYTICS_OTEL_ENABLED: "true"
           BUILDKITE_TESTS_OTLP_RELAY: "true"
@@ -441,7 +434,6 @@ steps:
         plugins:
           - tests#v1.3.0:
               test-runner: pytest
-              result-path: tmp/otel-relay.json
               suite-slug: *examples_suite
               upload-results: false
               client-version: *bktest_version
@@ -473,7 +465,6 @@ steps:
               environment:
                 - BUILDKITE_ANALYTICS_TOKEN
                 - BUILDKITE_ANALYTICS_TAGS
-                - BUILDKITE_ANALYTICS_DEBUG_ENABLED
 
       - label: ":swift: XCUITest build and discover"
         key: swift-xcuitest-build

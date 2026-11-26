@@ -4,7 +4,7 @@ Send Vitest results to Test Engine as OpenTelemetry spans, with hook, manual, HT
 
 ## Pipeline
 
-Copy the `Vitest (OpenTelemetry)` step from [pipeline.yml](../.buildkite/pipeline.yml) and [adapt it](../README.md#adapt-a-step). `BUILDKITE_TESTS_OTLP_RELAY` makes bktest forward the collector's spans to Test Engine and refresh their token, and `BUILDKITE_TESTS_OTLP_RELAY_BATCHING` sends them in fewer uploads. See [Relay OpenTelemetry traces](https://github.com/buildkite/bktest/tree/v3.6.1#relay-opentelemetry-traces).
+Copy the `Vitest (OpenTelemetry)` step from [pipeline.yml](../.buildkite/pipeline.yml) and [adapt it](../README.md#adapt-a-step). `BUILDKITE_TESTS_OTLP_RELAY` makes bktest forward the collector's spans to Test Engine and refresh their token, and `BUILDKITE_TESTS_OTLP_RELAY_BATCHING` sends them in fewer uploads. See [Relay OpenTelemetry traces](https://github.com/buildkite/bktest/tree/v3.7.0#relay-opentelemetry-traces).
 
 Keep the step's `test-cmd` and `retry-cmd`: bktest's default commands pass `--reporter` flags, which replace the collector's reporter. bktest reads Vitest's JSON results to retry and mute tests, but doesn't upload them.
 
