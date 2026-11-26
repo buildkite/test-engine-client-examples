@@ -6,6 +6,10 @@ const { defineConfig, devices } = require('@playwright/test');
  */
 module.exports = defineConfig({
   testDir: './tests',
+  webServer: {
+    command: 'node test-site.js',
+    wait: { stdout: /Listening on port (?<TEST_SITE_PORT>\d+)/ },
+  },
   /* Configure projects for major browsers */
   projects: [
     {
