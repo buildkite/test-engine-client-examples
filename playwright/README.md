@@ -17,7 +17,7 @@ Add `buildkite-test-collector` and keep both reporters from [playwright.config.j
 Use Node from `mise.toml` in this directory:
 
 ```bash
-npm install
+npm ci
 npx playwright install --with-deps chromium
 npm test
 ```

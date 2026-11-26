@@ -7,7 +7,7 @@ steps:
       BUILDKITE_ANALYTICS_LOCATION_PREFIX: jest
     commands:
       - cd jest
-      - npm install
+      - npm ci
       - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
       - bktest pool run
     plugins:
