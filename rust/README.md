@@ -1,12 +1,12 @@
 # Split Rust tests by nextest binary
 
-Split nextest test binaries across parallel jobs with bktec's custom runner, which uploads tagged JUnit results to Test Engine. You don't need a test collector.
+Split nextest test binaries across parallel jobs with bktest's custom runner, which uploads tagged JUnit results to Test Engine. You don't need a test collector.
 
 ## Pipeline
 
-Copy the `Rust / nextest` step from [pipeline.yml](../.buildkite/pipeline.yml) and [adapt it](../README.md#adapt-a-step). Each job lists binaries with `bin/discover`, and bktec passes the job's binaries to `bin/test`.
+Copy the `Rust / nextest` step from [pipeline.yml](../.buildkite/pipeline.yml) and [adapt it](../README.md#adapt-a-step). Each job lists binaries with `bin/discover`, and bktest passes the job's binaries to `bin/test`.
 
-- The step runs `$BUILDKITE_TEST_ENGINE_CLIENT_PATH`, the plugin's bktec, even if another `bktec` is on `PATH`.
+- The step runs `$BUILDKITE_TEST_ENGINE_CLIENT_PATH`, the plugin's bktest, even if another `bktest` is on `PATH`.
 
 ## Configure your workspace
 
@@ -16,7 +16,7 @@ Copy [bin/discover](./bin/discover), [bin/test](./bin/test), and [.config/nextes
 
 - Splits by binary, not by test, so a large binary stays on one job. Don't add nextest's `--partition`.
 - Every job discovers and compiles. Run doctests separately.
-- bktec can't retry tests. Muting has no effect: `bin/test` keeps nextest's failure exit code, `100`, and bktec only treats exit code `1` as muted failures.
+- bktest can't retry tests. Muting has no effect: `bin/test` keeps nextest's failure exit code, `100`, and bktest only treats exit code `1` as muted failures.
 - Manual test selection can match more binaries than intended, especially IDs with `::`.
 
 ## Run locally

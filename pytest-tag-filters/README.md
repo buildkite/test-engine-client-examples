@@ -1,10 +1,10 @@
 # pytest tag filters
 
-Run only the pytest tests with an execution tag, such as `component:frontend`, split across parallel jobs with bktec.
+Run only the pytest tests with an execution tag, such as `component:frontend`, split across parallel jobs with bktest.
 
 ## Pipeline
 
-Copy the `pytest (tag filters)` step from [pipeline.yml](../.buildkite/pipeline.yml) and [adapt it](../README.md#adapt-a-step). Set `tag-filters` to the tag to run. bktec applies the filter through the Python test collector, so the collector is required.
+Copy the `pytest (tag filters)` step from [pipeline.yml](../.buildkite/pipeline.yml) and [adapt it](../README.md#adapt-a-step). Set `tag-filters` to the tag to run. bktest applies the filter through the Python test collector, so the collector is required.
 
 ## Test collector
 
@@ -20,7 +20,7 @@ See [execution tags](https://buildkite.com/docs/pipelines/configure/tests/test-c
 
 ## Run locally
 
-Use Python from `mise.toml` with a virtual environment in this directory. Running pytest directly runs every test; only bktec applies the filter.
+Use Python from `mise.toml` with a virtual environment in this directory. Running pytest directly runs every test; only bktest applies the filter.
 
 ```bash
 pip install -e '.[dev]'

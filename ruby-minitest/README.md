@@ -1,10 +1,10 @@
 # Minitest
 
-Split Minitest files across parallel jobs with bktec's custom runner. The Ruby test collector sends results to Test Engine.
+Split Minitest files across parallel jobs with bktest's custom runner. The Ruby test collector sends results to Test Engine.
 
 ## Pipeline
 
-Copy the `Minitest` step from [pipeline.yml](../.buildkite/pipeline.yml) and [adapt it](../README.md#adapt-a-step). `test-file-pattern` finds your test files, and `test-cmd` passes each job's files to Rake in `TEST_FILES`. bktec doesn't read results from this step, so it can't retry or mute tests.
+Copy the `Minitest` step from [pipeline.yml](../.buildkite/pipeline.yml) and [adapt it](../README.md#adapt-a-step). `test-file-pattern` finds your test files, and `test-cmd` passes each job's files to Rake in `TEST_FILES`. bktest doesn't read results from this step, so it can't retry or mute tests.
 
 ## Test collector
 

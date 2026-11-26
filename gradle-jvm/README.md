@@ -1,6 +1,6 @@
 # Split Kotlin and Java Gradle tests across Buildkite jobs
 
-Discover Kotlin and Java test classes with Gradle once, then split them across parallel jobs with bktec's custom runner. The Android test collector's Gradle plugin, which works with any JVM project, sends results to Test Engine.
+Discover Kotlin and Java test classes with Gradle once, then split them across parallel jobs with bktest's custom runner. The Android test collector's Gradle plugin, which works with any JVM project, sends results to Test Engine.
 
 ## Pipeline
 
@@ -43,7 +43,7 @@ See [Android](https://buildkite.com/docs/pipelines/configure/tests/test-collecti
 - Tests missing from `build/test-selectors/all.txt` never run in split jobs. Check it lists every test class.
 - Class names must be unique across modules.
 - New classes use default timings until history appears, which can take about an hour.
-- bktec doesn't read results from this step, so it can't retry or mute tests. Gradle failures fail the job.
+- bktest doesn't read results from this step, so it can't retry or mute tests. Gradle failures fail the job.
 - Every job configures and compiles, and split test tasks never come from the build cache.
 
 ## Run locally

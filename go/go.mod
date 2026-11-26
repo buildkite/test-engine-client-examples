@@ -1,3 +1,3 @@
-module github.com/buildkite/test-engine-client-examples/go
+module github.com/buildkite/bktest-examples/go
 
 go 1.24

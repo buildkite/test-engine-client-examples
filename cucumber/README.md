@@ -1,6 +1,6 @@
 # Cucumber
 
-Split Cucumber features across parallel jobs with bktec. The Ruby test collector sends results to Test Engine.
+Split Cucumber features across parallel jobs with bktest. The Ruby test collector sends results to Test Engine.
 
 ## Pipeline
 

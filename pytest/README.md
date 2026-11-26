@@ -1,6 +1,6 @@
 # pytest
 
-Split pytest tests across parallel jobs with bktec. The Python test collector sends results to Test Engine.
+Split pytest tests across parallel jobs with bktest. The Python test collector sends results to Test Engine.
 
 ## Pipeline
 

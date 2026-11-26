@@ -1,10 +1,10 @@
 # Jest OpenTelemetry
 
-Send Jest results to Test Engine as OpenTelemetry spans, with manual, HTTP, and fetch child spans, through bktec's OTLP relay.
+Send Jest results to Test Engine as OpenTelemetry spans, with manual, HTTP, and fetch child spans, through bktest's OTLP relay.
 
 ## Pipeline
 
-Copy the `Jest (OTel setup by collector)` step from [pipeline.yml](../.buildkite/pipeline.yml) and [adapt it](../README.md#adapt-a-step). `BUILDKITE_TESTS_OTLP_RELAY` makes bktec forward the collector's spans to Test Engine and refresh their token, and `BUILDKITE_TESTS_OTLP_RELAY_BATCHING` sends them in fewer uploads. See [Relay OpenTelemetry traces](https://github.com/buildkite/test-engine-client/tree/v3.6.0#relay-opentelemetry-traces). bktec reads Jest's JSON results to retry and mute tests, but doesn't upload them.
+Copy the `Jest (OTel setup by collector)` step from [pipeline.yml](../.buildkite/pipeline.yml) and [adapt it](../README.md#adapt-a-step). `BUILDKITE_TESTS_OTLP_RELAY` makes bktest forward the collector's spans to Test Engine and refresh their token, and `BUILDKITE_TESTS_OTLP_RELAY_BATCHING` sends them in fewer uploads. See [Relay OpenTelemetry traces](https://github.com/buildkite/bktest/tree/v3.6.1#relay-opentelemetry-traces). bktest reads Jest's JSON results to retry and mute tests, but doesn't upload them.
 
 ## Test collector
 
