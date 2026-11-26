@@ -15,13 +15,16 @@ spec.loader.exec_module(verify)
 
 JEST = ":jest: Jest (Retry Enabled)"
 SWIFT = ":swift: XCUITest shard %n"
+POOL = ":jest: Jest (Test Scheduler pool)"
 EXPECTED = {JEST: {"passed": 10, "failed": 1}, SWIFT: {"passed": 2}}
 
 
 class VerifyResultsTest(unittest.TestCase):
-    def run_check(self, scenario="normal"):
+    def run_check(self, scenario="normal", *, pool_log=None):
         clock, calls, polls = [0], [], [0]
         breakdown_errors = [0]
+        jest_label = JEST if pool_log is None else POOL
+        expected = {jest_label: EXPECTED[JEST], SWIFT: EXPECTED[SWIFT]}
 
         def response(data, link=""):
             result = io.BytesIO(json.dumps(data).encode())
@@ -62,7 +65,7 @@ class VerifyResultsTest(unittest.TestCase):
                                  "finished_at": None if scenario == "unfinished" else "2026-11-22T22:08:57.022Z"})
             if endpoint.path == f"{build_path}/jobs":
                 job_query = {"per_page": ["100"], "include_retried_jobs": ["false"]}
-                jobs = [{"type": "script", "id": "retry", "name": JEST, "started_at": "timestamp"},
+                jobs = [{"type": "script", "id": "retry", "name": jest_label, "started_at": "timestamp"},
                         {"type": "script", "id": "shard0", "name": SWIFT.replace("%n", "0"), "started_at": "timestamp"},
                         {"type": "script", "id": "shard1", "name": SWIFT.replace("%n", "1"), "started_at": "timestamp"},
                         {"type": "script", "id": "old", "name": JEST, "retried": True, "started_at": "timestamp"},
@@ -83,6 +86,8 @@ class VerifyResultsTest(unittest.TestCase):
                     return response({"items": jobs[:1], "links": {"next": f"{url}&after=next-cursor"}})
                 self.assertEqual(query, {**job_query, "after": ["next-cursor"]})
                 return response({"items": jobs[1:], "links": {}})
+            if pool_log is not None and endpoint.path == f"{build_path}/jobs/retry/log":
+                return response({"content": pool_log})
 
             suite_path = "/v2/analytics/organizations/buildkite/suites/bktest-examples/tests"
             build_totals = endpoint.path == "/v2/analytics/organizations/buildkite/builds/build-id/tests"
@@ -143,7 +148,7 @@ class VerifyResultsTest(unittest.TestCase):
         output = io.StringIO()
         with patch.dict("os.environ", {"BUILDKITE_API_TOKEN": "test-only"}), \
                 patch.object(verify, "urlopen", open_url), \
-                patch.object(verify.Path, "read_text", return_value=json.dumps(EXPECTED)), \
+                patch.object(verify.Path, "read_text", return_value=json.dumps(expected)), \
                 patch.object(verify.time, "monotonic", side_effect=lambda: clock[0]), \
                 patch.object(verify.time, "time", return_value=1795305600), \
                 patch.object(verify.time, "sleep", side_effect=sleep), \
@@ -208,12 +213,22 @@ class VerifyResultsTest(unittest.TestCase):
                     self.assertGreater(sum(q.get("tags") == ["build.id:build-id"] and "page" not in q
                                            for _, _, q in calls), 1)
 
-    def test_trimmed_pipeline_only_checks_steps_that_ran(self):
+    def test_missing_expected_step_fails_the_check(self):
         status, output, calls = self.run_check("trimmed")
-        self.assertEqual(status, 0)
+        self.assertEqual(status, 1)
         self.assertIn(f"NOT RUN: {SWIFT}", output)
-        self.assertIn("0/1 examples unverified", output)
+        self.assertIn("FAIL: build 1349, 1/2 examples unverified", output)
         self.assertEqual(sum("build.job_id:" in q.get("tags", [""])[0] for _, _, q in calls), 1)
+
+    def test_pool_fallback_fails_even_when_counts_match(self):
+        status, output, _ = self.run_check(pool_log="Using local fallback\n")
+        self.assertEqual(status, 1, output)
+        self.assertIn(f"FALLBACK: {POOL}", output)
+        self.assertIn("FAIL: build 1349, 1/2 examples unverified", output)
+
+        status, output, _ = self.run_check(pool_log="Acquired lease lease-id (10 tests)\n")
+        self.assertEqual(status, 0, output)
+        self.assertIn(f"OK: {POOL}", output)
 
     def test_present_but_unstarted_jobs_cannot_pass(self):
         for state in ("waiting_failed", "canceled", "expired", "skipped"):
