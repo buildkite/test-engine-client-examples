@@ -8,7 +8,7 @@ Copy the `XCUITest build and discover` and `XCUITest shard %n` steps from [pipel
 
 ## Test collector
 
-Copy [bin/build](./bin/build) and [bin/test](./bin/test), and set your project or workspace, shared scheme, test plan, and simulator. Link `test-collector-swift` 2.0.0-beta.5, a prerelease, into each test target. Keep the relay variables, and the `TEST_RUNNER_` forwarding in `bin/test` that passes the relay's endpoint, token, and build details to the tests. See the collector's [setup steps](https://github.com/buildkite/test-collector-swift/blob/v2.0.0-beta.5/README.md#step-3).
+Copy [bin/build](./bin/build) and [bin/test](./bin/test), and set your project or workspace, shared scheme, test plan, and simulator. Link `test-collector-swift` 2.0.0-beta.5, a prerelease, into each test target. Keep the relay variables, and the `TEST_RUNNER_` forwarding in `bin/test` that passes the relay's endpoint, token, and build details to the tests. See the collector's [setup steps](https://github.com/buildkite/bktest/blob/test-collector-swift/v2.0.0-beta.5/test-collector-swift/README.md#step-3).
 
 This collector sends results only as OpenTelemetry spans, so OTLP ingestion must be enabled for your Buildkite organization. Until it is, every upload is rejected and no results appear in Test Engine.
 

@@ -4,26 +4,11 @@ Split your Mocha files across parallel jobs with bktest's custom runner and send
 
 ## Pipeline
 
-```yaml
-steps:
-  - label: ":mocha: Mocha"
-    parallelism: 2
-    commands:
-      - npm ci
-      - bktest run
-    plugins:
-      - tests#v1.3.0:
-          test-runner: custom
-          test-cmd: "npx mocha {{testExamples}} --reporter mocha-multi-reporters --reporter-options configFile=reporter-config.json"
-          test-file-pattern: "src/**/*.test.js"
-          suite-slug: your-suite-slug
-          upload-results: false
-          client-version: "3.6.1"
-```
+Copy the `Mocha` step from [pipeline.yml](../.buildkite/pipeline.yml) and [adapt it](../README.md#adapt-a-step).
 
 `test-file-pattern` discovers files; `test-cmd` runs only each job's assignments. Mocha uses the custom runner, which splits whole files rather than individual tests and does not support automatic retries. This example does not configure a local result file or demonstrate muting.
 
-The test collector uploads results, so set `upload-results: false`. Add an [OIDC policy](https://buildkite.com/docs/pipelines/configure/tests/test-collection/oidc) to your test suite so your pipeline can authenticate. Our `Mocha` step is in [pipeline.yml](../.buildkite/pipeline.yml).
+The test collector uploads results, so keep `upload-results: false`.
 
 ## Test collector
 

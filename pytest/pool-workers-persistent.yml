@@ -16,6 +16,6 @@ steps:
           test-runner: pytest
           suite-slug: "$BUILDKITE_TEST_ENGINE_SUITE_SLUG"
           upload-results: false
-          client-version: "$BKTEST_VERSION"
+          client-version: "${BKTEST_VERSION:-3.7.0}"
       - mise#v1.1.6:
           dir: pytest
