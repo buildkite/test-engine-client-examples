@@ -1,0 +1,78 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directories:
+      - /cypress
+      - /jest
+      - /jest-otel
+      - /mocha
+      - /playwright
+      - /playwright-otel
+      - /vitest
+      - /vitest-4
+      - /vitest-otel
+    schedule:
+      interval: weekly
+    groups:
+      npm:
+        patterns: ["*"]
+
+  - package-ecosystem: pip
+    directories:
+      - /pytest
+      - /pytest-otel
+      - /pytest-tag-filters
+    schedule:
+      interval: weekly
+    groups:
+      pip:
+        patterns: ["*"]
+
+  - package-ecosystem: bundler
+    directories:
+      - /.buildkite/fixtures/rspec
+      - /cucumber
+      - /rspec
+      - /rspec-otel
+      - /ruby-minitest
+    schedule:
+      interval: weekly
+    groups:
+      bundler:
+        patterns: ["*"]
+
+  - package-ecosystem: gomod
+    directory: /go
+    schedule:
+      interval: weekly
+    groups:
+      gomod:
+        patterns: ["*"]
+
+  - package-ecosystem: cargo
+    directory: /rust
+    schedule:
+      interval: weekly
+    groups:
+      cargo:
+        patterns: ["*"]
+
+  - package-ecosystem: gradle
+    directories:
+      - /android
+      - /gradle-jvm
+    schedule:
+      interval: weekly
+    groups:
+      gradle:
+        patterns: ["*"]
+
+  - package-ecosystem: swift
+    directories:
+      - /swift-xctest
+      - /swift-xcuitest
+    schedule:
+      interval: weekly
+    groups:
+      swift:
+        patterns: ["*"]
