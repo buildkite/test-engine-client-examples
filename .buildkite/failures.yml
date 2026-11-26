@@ -24,7 +24,7 @@ steps:
           test-file-pattern: "*_spec.rb"
           result-path: tmp/rspec.json
           suite-slug: bktest-examples-failures
-          client-version: "${BKTEST_VERSION:-3.6.1}"
+          client-version: "${BKTEST_VERSION:-3.7.0}"
           retry-count: 2
       - mise#v1.1.6:
           dir: .buildkite/fixtures/rspec
