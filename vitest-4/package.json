@@ -1,5 +1,5 @@
 {
-  "name": "buildkite-test-engine-client-vitest-4-example",
+  "name": "bktest-examples-vitest-4",
   "private": true,
   "type": "module",
   "scripts": {

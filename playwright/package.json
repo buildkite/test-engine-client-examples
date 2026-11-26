@@ -1,5 +1,5 @@
 {
-  "name": "buildkite-test-engine-client-playwright-example",
+  "name": "bktest-examples-playwright",
   "version": "1.0.0",
   "description": "Playwright configuration example for Buildkite Test Engine Client",
   "main": "index.js",

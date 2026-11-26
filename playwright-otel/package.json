@@ -1,5 +1,5 @@
 {
-  "name": "buildkite-test-engine-client-playwright-otel-example",
+  "name": "bktest-examples-playwright-otel",
   "private": true,
   "scripts": {
     "test": "playwright test"

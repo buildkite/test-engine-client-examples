@@ -2,7 +2,7 @@
 from setuptools import setup
 
 setup(
-  name="buildkite-test-engine-client-pytest-example",
+  name="bktest-examples-pytest",
   version="0.1",
   install_requires=[],
   extras_require={

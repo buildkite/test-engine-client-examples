@@ -1,5 +1,5 @@
 {
-  "name": "buildkite-test-engine-client-jest-otel-example",
+  "name": "bktest-examples-jest-otel",
   "private": true,
   "scripts": {
     "test": "jest"
