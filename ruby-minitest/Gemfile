@@ -4,4 +4,4 @@ source "https://rubygems.org"
 
 gem "rake"
 gem "minitest"
-gem "buildkite-test_collector"
+gem "buildkite-test_collector", "2.17.1"

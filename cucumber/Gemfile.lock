@@ -66,7 +66,7 @@ PLATFORMS
   x86_64-linux-musl
 
 DEPENDENCIES
-  buildkite-test_collector
+  buildkite-test_collector (= 2.17.1)
   cucumber
 
 CHECKSUMS

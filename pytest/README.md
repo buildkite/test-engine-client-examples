@@ -8,7 +8,7 @@ Copy the `pytest` step from [pipeline.yml](../.buildkite/pipeline.yml) and [adap
 
 - `pytest (with xdist)` runs three workers in each job through `PYTEST_ADDOPTS`.
 - `pytest (Test Scheduler pool)` starts pytest for each batch it takes from a pool shared by the step's jobs.
-- `pytest (Test Scheduler pool exec)` keeps one `buildkite-pytest` process in each job, so startup and session fixtures run once. `buildkite-pytest` needs collector 1.10.0 or later.
+- `pytest (Test Scheduler pool exec)` keeps one `buildkite-pytest` process in each job, so startup and session fixtures run once. `buildkite-pytest` needs collector 1.10.0 or later; this example pins 1.10.0.
 
 ## Test collector
 

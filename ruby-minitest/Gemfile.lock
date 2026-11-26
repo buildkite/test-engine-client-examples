@@ -12,7 +12,7 @@ PLATFORMS
   ruby
 
 DEPENDENCIES
-  buildkite-test_collector
+  buildkite-test_collector (= 2.17.1)
   minitest
   rake
 
