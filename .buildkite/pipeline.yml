@@ -623,3 +623,25 @@ steps:
                 - "test.framework.name=nextest"
           - mise#v1.1.6:
               dir: rust
+
+  # Also waits for the workers uploaded by the pool planners.
+  - wait
+
+  - label: ":mag: Verify Test Engine results"
+    key: verify-results
+    if: >-
+      build.pull_request.id == null &&
+      ((build.source == "schedule" && build.branch == "main") ||
+       ((build.source == "api" || build.source == "ui") && build.env("VERIFY_RESULTS") == "true"))
+    env:
+      BUILDKITE_CLIENT_ID: "d1f885ba41a081c8955f"
+      BUILDKITE_AUDIENCE: "https://api.buildkite.com/v2/organizations/a98961b7-adc1-41aa-8726-cfb2c46e42e0"
+    command: |
+      BUILDKITE_API_TOKEN="$$(.buildkite/workload-identity-token.sh)" || exit $$?
+      export BUILDKITE_API_TOKEN
+      python3 .buildkite/verify-results.py "$$BUILDKITE_BUILD_NUMBER"
+    agents:
+      queue: hosted
+    plugins:
+      - mise#v1.1.6:
+          dir: pytest

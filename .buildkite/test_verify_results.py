@@ -15,16 +15,16 @@ spec.loader.exec_module(verify)
 
 JEST = ":jest: Jest (Retry Enabled)"
 SWIFT = ":swift: XCUITest shard %n"
-POOL = ":jest: Jest (Test Scheduler pool)"
+POOL = ":pytest: pytest (Test Scheduler pool, persistent runner)"
 EXPECTED = {JEST: {"passed": 10, "failed": 1}, SWIFT: {"passed": 2}}
 
 
 class VerifyResultsTest(unittest.TestCase):
-    def run_check(self, scenario="normal", *, pool_log=None):
+    def run_check(self, scenario="normal", *, pool_log=None, in_build=False, build_id="build-id", job_id="verifier"):
         clock, calls, polls = [0], [], [0]
         breakdown_errors = [0]
-        jest_label = JEST if pool_log is None else POOL
-        expected = {jest_label: EXPECTED[JEST], SWIFT: EXPECTED[SWIFT]}
+        with_pool = scenario in ("pool", "pool-not-uploaded", "pool-running")
+        expected = {**EXPECTED, POOL: {"passed": 9, "skipped": 3}} if with_pool else EXPECTED
 
         def response(data, link=""):
             result = io.BytesIO(json.dumps(data).encode())
@@ -56,16 +56,17 @@ class VerifyResultsTest(unittest.TestCase):
             endpoint = urlsplit(url)
             calls.append((clock[0], endpoint.path, parse_qs(endpoint.query)))
             self.assertEqual((endpoint.scheme, endpoint.netloc), ("https", "api.buildkite.com"))
+            self.assertEqual(request.get_header("Accept"), "application/json")
             self.assertEqual(request.get_header("Buildkite-version"), "2026-08-01")
             query = parse_qs(endpoint.query)
             build_path = "/v2/organizations/buildkite/pipelines/bktest-examples/builds/1349"
             if endpoint.path == build_path:
                 self.assertEqual(query, {"exclude_jobs": ["true"], "exclude_pipeline": ["true"]})
                 return response({"id": "build-id", "created_at": "2026-11-22T22:05:30.555Z",
-                                 "finished_at": None if scenario == "unfinished" else "2026-11-22T22:08:57.022Z"})
+                                 "finished_at": None if in_build or scenario == "unfinished" else "2026-11-22T22:08:57.022Z"})
             if endpoint.path == f"{build_path}/jobs":
                 job_query = {"per_page": ["100"], "include_retried_jobs": ["false"]}
-                jobs = [{"type": "script", "id": "retry", "name": jest_label, "started_at": "timestamp"},
+                jobs = [{"type": "script", "id": "retry", "name": JEST, "started_at": "timestamp"},
                         {"type": "script", "id": "shard0", "name": SWIFT.replace("%n", "0"), "started_at": "timestamp"},
                         {"type": "script", "id": "shard1", "name": SWIFT.replace("%n", "1"), "started_at": "timestamp"},
                         {"type": "script", "id": "old", "name": JEST, "retried": True, "started_at": "timestamp"},
@@ -80,14 +81,30 @@ class VerifyResultsTest(unittest.TestCase):
                     jobs[-1]["state"] = "failed"
                 if scenario == "unknown":
                     jobs.append({"type": "script", "id": "new", "name": "New example", "started_at": "timestamp"})
+                if with_pool:
+                    jobs.append({"type": "script", "id": "planner", "name": ":pytest: Plan persistent pytest pool",
+                                 "started_at": "timestamp"})
+                    if scenario != "pool-not-uploaded":
+                        jobs.extend({"type": "script", "id": job_id, "name": POOL, "started_at": "timestamp"}
+                                    for job_id in ("worker0", "worker1"))
+                if in_build:
+                    for job in jobs:
+                        job["finished_at"] = "timestamp"
+                    if scenario in ("running-peer", "pool-running"):
+                        jobs[-1].update(finished_at=None, state="running")
+                if in_build or scenario == "skipped-verifier":
+                    jobs.append({"type": "script", "id": "verifier", "name": "Verify Test Engine results",
+                                 "step_key": "verify-results", "state": "running" if in_build else "broken",
+                                 "started_at": "timestamp" if in_build else None, "finished_at": None})
                 # Jobs use a JSON envelope and cursor, unlike test metrics.
                 if "after" not in query:
                     self.assertEqual(query, job_query)
                     return response({"items": jobs[:1], "links": {"next": f"{url}&after=next-cursor"}})
                 self.assertEqual(query, {**job_query, "after": ["next-cursor"]})
                 return response({"items": jobs[1:], "links": {}})
-            if pool_log is not None and endpoint.path == f"{build_path}/jobs/retry/log":
-                return response({"content": pool_log})
+            if with_pool and endpoint.path in (f"{build_path}/jobs/worker0/log", f"{build_path}/jobs/worker1/log"):
+                log = pool_log if endpoint.path.endswith("/worker1/log") and pool_log is not None else "Acquired lease"
+                return response({"content": log})
 
             suite_path = "/v2/analytics/organizations/buildkite/suites/bktest-examples/tests"
             build_totals = endpoint.path == "/v2/analytics/organizations/buildkite/builds/build-id/tests"
@@ -122,6 +139,8 @@ class VerifyResultsTest(unittest.TestCase):
                     results = {} if scenario == "late" and polls[0] == 1 else jest_results()
                     return response(metrics(results), f'<{url}&page=2>; rel="next", <{url}&page=2>; rel="last"')
                 swift = {} if scenario == "trimmed" else {"passed": 3 if scenario == "redistributed" else 2}
+                if with_pool:
+                    return response(metrics(swift) + metrics({"passed": 9, "skipped": 3}))
                 return response(metrics(swift))
 
             tags = query["tags"][0]
@@ -138,6 +157,10 @@ class VerifyResultsTest(unittest.TestCase):
                     breakdown_errors[0] += 1
                     raise HTTPError(url, 503, "temporary failure", {}, None)
                 return response(metrics({"passed": 2 if scenario == "redistributed" else 1}))
+            if with_pool and tags == "build.id:build-id,build.job_id:worker0":
+                return response(metrics({"passed": 7, "skipped": 1}))
+            if with_pool and tags == "build.id:build-id,build.job_id:worker1":
+                return response(metrics({"passed": 2, "skipped": 2}))
             self.assertEqual(tags, "build.id:build-id,build.job_id:shard1")
             return response([])
 
@@ -146,7 +169,10 @@ class VerifyResultsTest(unittest.TestCase):
             clock[0] += seconds
 
         output = io.StringIO()
-        with patch.dict("os.environ", {"BUILDKITE_API_TOKEN": "test-only"}), \
+        env = {"BUILDKITE_API_TOKEN": "test-only"}
+        if in_build:
+            env.update(BUILDKITE_BUILD_ID=build_id, BUILDKITE_JOB_ID=job_id)
+        with patch.dict("os.environ", env, clear=True), \
                 patch.object(verify, "urlopen", open_url), \
                 patch.object(verify.Path, "read_text", return_value=json.dumps(expected)), \
                 patch.object(verify.time, "monotonic", side_effect=lambda: clock[0]), \
@@ -166,6 +192,44 @@ class VerifyResultsTest(unittest.TestCase):
         self.assertIn(f"OK: {SWIFT}", output)
         self.assertEqual(len(calls), 9)  # Build + two job pages + two total pages + four breakdown pages.
         self.assertTrue(all(b[0] - a[0] >= 1.3 - 1e-9 for a, b in zip(calls, calls[1:])))
+
+    def test_in_build_requires_finished_peers_but_not_the_verifier(self):
+        status, output, _ = self.run_check(in_build=True)
+        self.assertEqual(status, 0)
+        self.assertIn("PASS: build 1349, 0/2 examples unverified", output)
+
+        status, output, _ = self.run_check("running-peer", in_build=True)
+        self.assertEqual(status, 2)
+        self.assertIn("BUILD INCOMPLETE: :swift: XCUITest build and discover: running", output)
+        self.assertNotIn("PASS", output)
+
+        status, output, _ = self.run_check(in_build=True, job_id="retry")
+        self.assertEqual(status, 2)
+        self.assertIn("BUILD INCOMPLETE: current job is not the verifier", output)
+
+        status, output, _ = self.run_check(in_build=True, build_id="different-build")
+        self.assertEqual(status, 2)
+        self.assertIn("BUILD NOT FINISHED", output)
+
+    def test_in_build_checks_uploaded_pool_workers_not_the_planner(self):
+        status, output, _ = self.run_check("pool", in_build=True)
+        self.assertEqual(status, 0)
+        self.assertIn(f"OK: {POOL}", output)
+        self.assertIn("PASS: build 1349, 0/3 examples unverified", output)
+
+        status, output, _ = self.run_check("pool-not-uploaded", in_build=True)
+        self.assertEqual(status, 1)
+        self.assertIn(f"NOT RUN: {POOL}", output)
+        self.assertIn("FAIL: build 1349, 1/3 examples unverified", output)
+
+        status, output, _ = self.run_check("pool-running", in_build=True)
+        self.assertEqual(status, 2)
+        self.assertIn(f"BUILD INCOMPLETE: {POOL}: running", output)
+
+    def test_standalone_check_ignores_skipped_verifier(self):
+        status, output, _ = self.run_check("skipped-verifier")
+        self.assertEqual(status, 0)
+        self.assertIn("PASS: build 1349, 0/2 examples unverified", output)
 
     def test_polls_only_build_totals_then_breaks_down_once(self):
         for scenario in ("late", "transient"):
@@ -221,12 +285,12 @@ class VerifyResultsTest(unittest.TestCase):
         self.assertEqual(sum("build.job_id:" in q.get("tags", [""])[0] for _, _, q in calls), 1)
 
     def test_pool_fallback_fails_even_when_counts_match(self):
-        status, output, _ = self.run_check(pool_log="Using local fallback\n")
+        status, output, _ = self.run_check("pool", pool_log="Using local fallback\n", in_build=True)
         self.assertEqual(status, 1, output)
-        self.assertIn(f"FALLBACK: {POOL}", output)
-        self.assertIn("FAIL: build 1349, 1/2 examples unverified", output)
+        self.assertIn(f"FALLBACK: {POOL}: job worker1", output)
+        self.assertIn("FAIL: build 1349, 1/3 examples unverified", output)
 
-        status, output, _ = self.run_check(pool_log="Acquired lease lease-id (10 tests)\n")
+        status, output, _ = self.run_check("pool")
         self.assertEqual(status, 0, output)
         self.assertIn(f"OK: {POOL}", output)
 
