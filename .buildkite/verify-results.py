@@ -86,6 +86,22 @@ def job_ids(build_number):
     return {label: ids for label, ids in jobs.items() if label not in NO_RESULTS}
 
 
+def pool_fallbacks(build_number, jobs):
+    fallbacks = set()
+    for label, ids in jobs.items():
+        if "(Test Scheduler pool" not in label:
+            continue
+        for job_id in ids:
+            log, _ = get(f"{PIPELINE}/builds/{build_number}/jobs/{job_id}/log")
+            content = log["content"]
+            if not isinstance(content, str) or not content:
+                raise ValueError(f"no log content for {label}: job {job_id}")
+            if "Using local fallback" in content:
+                print(f"FALLBACK: {label}: job {job_id} used a local split")
+                fallbacks.add(label)
+    return fallbacks
+
+
 def recorded(build, job_id=None):
     tags = f"build.id:{build['id']}"
     if job_id is not None:
@@ -135,10 +151,15 @@ def main(argv=None):
     unknown = jobs.keys() - expected.keys()
     if unknown:
         die(f"CONFIG ERROR: steps without expectations: {sorted(unknown)}")
-    for label in sorted(expected.keys() - jobs.keys()):
+    missing = expected.keys() - jobs.keys()
+    for label in sorted(missing):
         print(f"NOT RUN: {label}")
     if not jobs:
         die("BUILD INCOMPLETE: no examples to check")
+    try:
+        fallbacks = pool_fallbacks(args.build, jobs)
+    except API_ERRORS as error:
+        die(f"API ERROR: cannot read pool worker logs: {error}")
     expected = {label: expected[label] for label in jobs}
     wanted_total = sum(expected.values(), Counter())
 
@@ -173,18 +194,19 @@ def main(argv=None):
         time.sleep(args.interval)
     if error:
         die(f"API ERROR: {error}")
-    unverified = {label for label in expected if counts[label] != expected[label]}
+    mismatches = {label for label in expected if counts[label] != expected[label]}
     for label, wanted in expected.items():
-        if label in unverified:
+        if label in mismatches:
             got = counts[label]
             verdict = "MISSING" if not got else "DUPLICATE" if not (wanted - got) else "MISMATCH"
             print(f"{verdict}: {label}: expected {dict(wanted)}, recorded {dict(got)}")
-        else:
+        elif label not in fallbacks:
             print(f"OK: {label}")
     elapsed = time.monotonic() - started
+    unverified = missing | fallbacks | mismatches
     print(f"{'FAIL' if unverified else 'PASS'}: build {args.build}, "
-          f"{len(unverified)}/{len(expected)} examples unverified, elapsed {elapsed:.1f}s")
-    if unverified:
+          f"{len(unverified)}/{len(expected) + len(missing)} examples unverified, elapsed {elapsed:.1f}s")
+    if mismatches:
         print("Recorded counts (review before updating expected-results.json):")
         print(json.dumps({label: dict(got) for label, got in counts.items()}, indent=2))
     return 1 if unverified else 0
