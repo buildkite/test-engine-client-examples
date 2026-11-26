@@ -1,5 +1,5 @@
 {
-  "name": "buildkite-test-engine-client-cypress-example",
+  "name": "bktest-examples-cypress",
   "version": "1.0.0",
   "description": "Cypress configuration example for Buildkite Test Engine Client",
   "main": "index.js",

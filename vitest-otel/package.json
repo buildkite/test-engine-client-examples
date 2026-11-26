@@ -1,5 +1,5 @@
 {
-  "name": "buildkite-test-engine-client-vitest-otel-example",
+  "name": "bktest-examples-vitest-otel",
   "private": true,
   "type": "module",
   "scripts": {

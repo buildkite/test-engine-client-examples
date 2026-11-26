@@ -1,5 +1,5 @@
 {
-  "name": "buildkite-test-engine-client-mocha-example",
+  "name": "bktest-examples-mocha",
   "private": true,
   "scripts": {
     "test": "mocha \"src/**/*.test.js\" --reporter mocha-multi-reporters --reporter-options configFile=reporter-config.json"

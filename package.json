@@ -1,5 +1,5 @@
 {
-  "name": "test-engine-client-examples",
+  "name": "bktest-examples",
   "private": true,
   "workspaces": [
     "jest",
