@@ -23,6 +23,8 @@ See [execution tags](https://buildkite.com/docs/pipelines/configure/tests/test-c
 Use Python from `mise.toml` with a virtual environment in this directory. Running pytest directly runs every test; only bktest applies the filter.
 
 ```bash
-pip install -e '.[dev]'
+python -m venv .venv
+. .venv/bin/activate
+python -m pip install -e '.[dev]'
 pytest
 ```

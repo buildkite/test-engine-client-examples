@@ -5,7 +5,7 @@ setup(
   version="0.1",
   extras_require={
     "dev": [
-      "pytest>=7.0.0",
+      "pytest==9.2.0",
       "buildkite-test-collector==1.10.0",
     ],
   },

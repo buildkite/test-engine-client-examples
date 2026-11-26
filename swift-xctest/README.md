@@ -12,7 +12,7 @@ Add the `test-collector-swift` package and link `BuildkiteTestCollector` into yo
 
 ## Run locally
 
-Use Swift 6.0 in this directory:
+Use Swift 6.4.3 in this directory:
 
 ```bash
 swift package resolve
