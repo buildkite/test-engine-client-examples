@@ -1,6 +1,6 @@
 # Split XCTest and XCUITest across Macs
 
-Build an Xcode project once, then split its XCTest and XCUITest classes across Macs with bktec's custom runner. The Swift test collector sends results to Test Engine through bktec's OTLP relay.
+Build an Xcode project once, then split its XCTest and XCUITest classes across Macs with bktest's custom runner. The Swift test collector sends results to Test Engine through bktest's OTLP relay.
 
 ## Pipeline
 
@@ -19,7 +19,7 @@ This collector sends results only as OpenTelemetry spans, so OTLP ingestion must
 - Keep `PRODUCT_NAME` equal to the target name, so timing selectors match `Target/Class`.
 - Only XCTest, not Swift Testing. Tests must not change between discovery and execution, and test identifiers can't contain whitespace, quotes, or backslashes.
 - New tests, first runs, and history older than seven days use default timings. Check `plan.json`.
-- bktec doesn't read results from this step, so it can't retry or mute tests. Xcode and fastlane retries work, and each attempt is collected separately.
+- bktest doesn't read results from this step, so it can't retry or mute tests. Xcode and fastlane retries work, and each attempt is collected separately.
 - Relay delivery is best effort: missing results can leave a job green, and unfinished tests have no result.
 
 ## Fastlane

@@ -5,7 +5,7 @@ const path = require('node:path');
 const marker = process.env.JEST_RETRY_DEMO_MARKER;
 const retryTest = marker ? test : test.skip;
 
-retryTest('passes when bktec retries the first failure', () => {
+retryTest('passes when bktest retries the first failure', () => {
   const attempted = fs.existsSync(marker);
   if (!attempted) {
     fs.mkdirSync(path.dirname(marker), { recursive: true });

@@ -1,12 +1,12 @@
 # Jest
 
-Split Jest tests across parallel jobs with bktec. The JavaScript test collector sends results to Test Engine.
+Split Jest tests across parallel jobs with bktest. The JavaScript test collector sends results to Test Engine.
 
 ## Pipeline
 
 Copy the `Jest` step from [pipeline.yml](../.buildkite/pipeline.yml) and [adapt it](../README.md#adapt-a-step). Two more steps build on it:
 
-- `Jest (Retry Enabled)` retries failed tests with bktec. Remove `JEST_RETRY_DEMO_MARKER` and its `rm` line, which make a demo test fail once.
+- `Jest (Retry Enabled)` retries failed tests with bktest. Remove `JEST_RETRY_DEMO_MARKER` and its `rm` line, which make a demo test fail once.
 - `Jest (Test Scheduler pool)` runs batches from a pool shared by the step's jobs.
 
 ## Test collector

@@ -1,6 +1,6 @@
 # Playwright
 
-Split Playwright tests across parallel jobs with bktec. The JavaScript test collector sends results to Test Engine.
+Split Playwright tests across parallel jobs with bktest. The JavaScript test collector sends results to Test Engine.
 
 ## Pipeline
 
@@ -8,7 +8,7 @@ Copy the `Playwright` step from [pipeline.yml](../.buildkite/pipeline.yml) and [
 
 ## Test collector
 
-Add `buildkite-test-collector` and keep both reporters from [playwright.config.js](./playwright.config.js): the collector's reporter uploads results, and the JSON reporter writes the file bktec reads. See [Playwright](https://buildkite.com/docs/pipelines/configure/tests/test-collection/javascript-collectors#configure-the-test-framework-playwright).
+Add `buildkite-test-collector` and keep both reporters from [playwright.config.js](./playwright.config.js): the collector's reporter uploads results, and the JSON reporter writes the file bktest reads. See [Playwright](https://buildkite.com/docs/pipelines/configure/tests/test-collection/javascript-collectors#configure-the-test-framework-playwright).
 
 ## Run locally
 

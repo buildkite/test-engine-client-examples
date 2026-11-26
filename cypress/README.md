@@ -1,10 +1,10 @@
 # Cypress
 
-Split Cypress specs across parallel jobs with bktec. The JavaScript test collector sends results to Test Engine.
+Split Cypress specs across parallel jobs with bktest. The JavaScript test collector sends results to Test Engine.
 
 ## Pipeline
 
-Copy the `Cypress` step from [pipeline.yml](../.buildkite/pipeline.yml) and [adapt it](../README.md#adapt-a-step). bktec doesn't read Cypress results, so the collector is the only way to upload them, and bktec can't retry or mute tests.
+Copy the `Cypress` step from [pipeline.yml](../.buildkite/pipeline.yml) and [adapt it](../README.md#adapt-a-step). bktest doesn't read Cypress results, so the collector is the only way to upload them, and bktest can't retry or mute tests.
 
 [bin/setup](./bin/setup) installs Cypress's Linux dependencies with `apt-get` as root, then the npm packages and the Cypress binary. Replace it if your agents already have them.
 

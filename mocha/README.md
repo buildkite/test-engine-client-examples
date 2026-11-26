@@ -1,6 +1,6 @@
 # Mocha
 
-Split your Mocha files across parallel jobs with bktec's custom runner and send results to Test Engine with the JavaScript test collector.
+Split your Mocha files across parallel jobs with bktest's custom runner and send results to Test Engine with the JavaScript test collector.
 
 ## Pipeline
 
@@ -10,15 +10,15 @@ steps:
     parallelism: 2
     commands:
       - npm ci
-      - bktec run
+      - bktest run
     plugins:
-      - tests#v1.2.0:
+      - tests#v1.3.0:
           test-runner: custom
           test-cmd: "npx mocha {{testExamples}} --reporter mocha-multi-reporters --reporter-options configFile=reporter-config.json"
           test-file-pattern: "src/**/*.test.js"
           suite-slug: your-suite-slug
           upload-results: false
-          client-version: "3.6.0"
+          client-version: "3.6.1"
 ```
 
 `test-file-pattern` discovers files; `test-cmd` runs only each job's assignments. Mocha uses the custom runner, which splits whole files rather than individual tests and does not support automatic retries. This example does not configure a local result file or demonstrate muting.
