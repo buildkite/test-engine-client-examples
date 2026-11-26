@@ -27,11 +27,9 @@ The HTTP test has a urllib `GET` span.
 
 ## Run locally
 
-Use Python from `mise.toml` with a virtual environment in this directory:
+Use Python from `mise.toml` and run these commands from this directory:
 
 ```bash
-python -m venv .venv
-. .venv/bin/activate
-python -m pip install -r requirements.txt
+pip install -r requirements.txt
 BUILDKITE_ANALYTICS_OTEL_ENABLED=true pytest -n 3
 ```
