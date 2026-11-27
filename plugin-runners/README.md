@@ -2,7 +2,7 @@
 
 Run the examples with bktest's built-in test runners, and with the same runners as external [runner plugins](https://github.com/buildkite/bktest/blob/spike/runner-plugins-combined/docs/runner-plugins.md) written in Go and in Bash, and check that all three plan, run and retry the same tests.
 
-This is a local demo for a draft bktest change, not part of [pipeline.yml](../.buildkite/pipeline.yml): released bktec versions don't support `--runner-plugin`.
+On this branch, CI also runs every example all three ways with the real Test Engine; see [In CI](#in-ci). The script here runs them locally against a fake Test Engine and compares what the three variants sent.
 
 ## What it does
 
@@ -38,3 +38,13 @@ Expected output ends with one line per runner, for example:
 ```
 rspec: 3 variants sent runner 'rspec'; same planned tests: True; same statistics: True; tests: 11; statistics: [...]
 ```
+
+## In CI
+
+Released bktest versions don't support `--runner-plugin`, so on this branch [pipeline.yml](../.buildkite/pipeline.yml) builds bktest from the `spike/runner-plugins-combined` branch of buildkite/bktest and every step uses that build:
+
+- [build-bktest](../.buildkite/build-bktest) builds bktest and the Go plugins, and uploads them with the Bash plugins as an artifact.
+- Each step starts with `source .buildkite/use-built-bktest`, which puts that bktest on `PATH` in place of the release the `tests` plugin would install.
+- The steps in pipeline.yml run with bktest's built-in runners. [runner-plugin-variants](../.buildkite/runner-plugin-variants) then adds two groups that repeat every step that runs `bktest run`: one with each runner as an external Go plugin, and one as a Bash plugin. Those steps differ only in `BKTEST_RUNNER_VARIANT`, which `use-built-bktest` turns into `BUILDKITE_TEST_ENGINE_RUNNER_PLUGIN`.
+
+The pool steps and the macOS steps use the built bktest with built-in runners only. Set `BKTEST_REF` on a new build to build another bktest branch, tag or commit.

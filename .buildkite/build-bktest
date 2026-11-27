@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+# Builds bktest and its runner plugins from a buildkite/bktest branch, tag or
+# commit, for the agents this pipeline uses. Runs in a Go container.
+#
+# Writes dist/bktest-<os>-<arch>.tar.gz, each with:
+#   bin/bktest, bin/bktec   the CLI
+#   plugins/<runner>/go     the runner as an external Go plugin, built
+#   plugins/<runner>/bash   the runner as a Bash plugin
+set -euo pipefail
+
+ref="${BKTEST_REF:?set BKTEST_REF to a buildkite/bktest branch, tag or commit}"
+out="$PWD/dist"
+src="$(mktemp -d)"
+
+git -C "$src" init --quiet
+git -C "$src" fetch --quiet --depth 1 https://github.com/buildkite/bktest "$ref"
+git -C "$src" checkout --quiet FETCH_HEAD
+commit="$(git -C "$src" rev-parse --short HEAD)"
+echo "--- Building bktest from buildkite/bktest@$commit ($ref)"
+
+export CGO_ENABLED=0
+for target in linux/amd64 darwin/arm64; do
+  export GOOS="${target%/*}" GOARCH="${target#*/}"
+  stage="$(mktemp -d)"
+  mkdir -p "$stage/bin"
+  (
+    cd "$src"
+    # 3.7.0 is the release the branch started from.
+    go build -trimpath -buildvcs=false \
+      -ldflags "-X github.com/buildkite/bktest/v3/internal/version.Version=v3.7.0+$commit" \
+      -o "$stage/bin/bktest" ./cmd/bktest
+    plugins/build.sh
+  )
+  ln -s bktest "$stage/bin/bktec"
+  cp -R "$src/plugins" "$stage/plugins"
+  mkdir -p "$out"
+  tar -czf "$out/bktest-$GOOS-$GOARCH.tar.gz" -C "$stage" bin plugins
+  echo "Built dist/bktest-$GOOS-$GOARCH.tar.gz"
+done
