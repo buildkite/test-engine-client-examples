@@ -6,6 +6,7 @@ steps:
       BUILDKITE_TEST_ENGINE_POOL_FALLBACK: "$BUILDKITE_TEST_ENGINE_POOL_FALLBACK"
       BUILDKITE_ANALYTICS_LOCATION_PREFIX: jest
     commands:
+      - source .buildkite/use-built-bktest
       - cd jest
       - npm ci
       - unset BUILDKITE_ANALYTICS_TOKEN BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
@@ -16,6 +17,6 @@ steps:
           result-path: jest-result.json
           suite-slug: "$BUILDKITE_TEST_ENGINE_SUITE_SLUG"
           upload-results: false
-          client-version: "${BKTEST_VERSION:-3.7.0}"
+          install-client: false
       - mise#v1.1.6:
           dir: jest

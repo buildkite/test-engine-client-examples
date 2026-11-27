@@ -1,0 +1,44 @@
+# Source this in a step to put the bktest that the "Build bktest" step built on
+# PATH, in place of a released bktest:
+#
+#   source .buildkite/use-built-bktest
+#
+# BKTEST_RUNNER_VARIANT chooses how bktest gets its test runner:
+#   built-in (default)  the runner inside the bktest binary
+#   go                  the same runner as an external Go plugin
+#   bash                the runner as an external Bash plugin
+#
+# Works in Bash 3.2, for the macOS agents.
+
+bktest_os="$(uname -s | tr '[:upper:]' '[:lower:]')"
+case "$(uname -m)" in
+  x86_64) bktest_arch=amd64 ;;
+  *) bktest_arch=arm64 ;;
+esac
+bktest_dir="$(mktemp -d)"
+
+echo "--- :buildkite: Installing bktest from the Build bktest step"
+buildkite-agent artifact download "dist/bktest-$bktest_os-$bktest_arch.tar.gz" "$bktest_dir" --step bktest-build || exit 1
+tar -xzf "$bktest_dir/dist/bktest-$bktest_os-$bktest_arch.tar.gz" -C "$bktest_dir" || exit 1
+
+export PATH="$bktest_dir/bin:$PATH"
+export BUILDKITE_TEST_ENGINE_CLIENT_PATH="$bktest_dir/bin/bktest"
+bktest --version
+
+case "${BKTEST_RUNNER_VARIANT:-built-in}" in
+  built-in)
+    echo "Using the built-in ${BUILDKITE_TEST_ENGINE_TEST_RUNNER:-} runner"
+    ;;
+  go | bash)
+    export BUILDKITE_TEST_ENGINE_RUNNER_PLUGIN="$bktest_dir/plugins/$BUILDKITE_TEST_ENGINE_TEST_RUNNER/$BKTEST_RUNNER_VARIANT"
+    if [ ! -f "$BUILDKITE_TEST_ENGINE_RUNNER_PLUGIN/plugin.json" ]; then
+      echo "No runner plugin at $BUILDKITE_TEST_ENGINE_RUNNER_PLUGIN" >&2
+      exit 1
+    fi
+    echo "Using the $BUILDKITE_TEST_ENGINE_TEST_RUNNER runner plugin at $BUILDKITE_TEST_ENGINE_RUNNER_PLUGIN"
+    ;;
+  *)
+    echo "Unknown BKTEST_RUNNER_VARIANT: $BKTEST_RUNNER_VARIANT" >&2
+    exit 1
+    ;;
+esac

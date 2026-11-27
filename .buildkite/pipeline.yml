@@ -1,18 +1,34 @@
-# To run every example on another bktest release, such as a release candidate,
-# set BKTEST_VERSION on a new build. The pool examples require 3.7.0 or later.
-# Keep this default in sync with the standalone pool worker templates.
+# This branch runs every example with a bktest built from a buildkite/bktest
+# branch instead of a release, to try the runner plugins in buildkite/bktest#190.
+# Each step that runs tests runs three times: with bktest's built-in runner
+# (the steps below), and with that runner as an external Go plugin and as a
+# Bash plugin (the groups that .buildkite/runner-plugin-variants adds).
+# Set BKTEST_REF on a new build to use another branch, tag or commit.
 env:
-  BKTEST_VERSION: &bktest_version "${BKTEST_VERSION:-3.7.0}"
+  BKTEST_REF: "${BKTEST_REF:-spike/runner-plugins-combined}"
 
 common:
   - &examples_suite "${BUILDKITE_PIPELINE_SLUG}"
 
 steps:
+  - label: ":hammer_and_wrench: Build bktest"
+    key: bktest-build
+    command: .buildkite/build-bktest
+    artifact_paths: "dist/bktest-*.tar.gz"
+    plugins:
+      - docker#v5.14.0:
+          image: "golang:1.27.3-bookworm"
+          environment:
+            - BKTEST_REF
+
+  - wait
+
   - group: ":ruby: Ruby"
     steps:
       - label: ":rspec: RSpec"
         parallelism: 2
         commands:
+          - source .buildkite/use-built-bktest
           - cd rspec
           - bundle install
           - bktest run
@@ -24,7 +40,7 @@ steps:
               result-path: tmp/rspec.json
               suite-slug: *examples_suite
               upload-results: false
-              client-version: *bktest_version
+              install-client: false
           - mise#v1.1.6:
               dir: rspec
 
@@ -32,6 +48,7 @@ steps:
       # The small lease cap demonstrates multiple leases on these tiny suites.
       - label: ":rspec: Plan RSpec pool"
         commands:
+          - source .buildkite/use-built-bktest
           - cd rspec
           # Planning can load the specs to discover individual examples.
           - bundle install
@@ -44,12 +61,13 @@ steps:
               result-path: tmp/rspec.json
               suite-slug: *examples_suite
               upload-results: false
-              client-version: *bktest_version
+              install-client: false
           - mise#v1.1.6:
               dir: rspec
 
       - label: ":rspec: RSpec (OpenTelemetry)"
         commands:
+          - source .buildkite/use-built-bktest
           - cd rspec-otel
           - bundle install
           - bktest run
@@ -61,13 +79,14 @@ steps:
               result-path: tmp/rspec.json
               suite-slug: *examples_suite
               upload-results: false
-              client-version: *bktest_version
+              install-client: false
           - mise#v1.1.6:
               dir: rspec-otel
 
       - label: ":ruby: Minitest"
         parallelism: 2
         commands:
+          - source .buildkite/use-built-bktest
           - cd ruby-minitest
           - bundle install
           - bktest run
@@ -78,7 +97,7 @@ steps:
               test-file-pattern: "**/*_test.rb"
               suite-slug: *examples_suite
               upload-results: false
-              client-version: *bktest_version
+              install-client: false
           - mise#v1.1.6:
               dir: ruby-minitest
         env:
@@ -87,6 +106,7 @@ steps:
       - label: ":cucumber: Cucumber"
         parallelism: 2
         commands:
+          - source .buildkite/use-built-bktest
           - cd cucumber
           - bundle install
           - mkdir -p tmp
@@ -97,7 +117,7 @@ steps:
               result-path: tmp/cucumber.json
               suite-slug: *examples_suite
               upload-results: false
-              client-version: *bktest_version
+              install-client: false
           - mise#v1.1.6:
               dir: cucumber
         env:
@@ -109,6 +129,7 @@ steps:
         key: mocha
         parallelism: 2
         commands:
+          - source .buildkite/use-built-bktest
           - cd mocha
           - npm ci
           - bktest run
@@ -119,7 +140,7 @@ steps:
               test-file-pattern: "src/**/*.test.js"
               suite-slug: *examples_suite
               upload-results: false
-              client-version: *bktest_version
+              install-client: false
           - mise#v1.1.6:
               dir: mocha
         env:
@@ -128,6 +149,7 @@ steps:
       - label: ":vitest: Vitest 4"
         key: vitest-4
         commands:
+          - source .buildkite/use-built-bktest
           - cd vitest-4
           - npm ci
           - bktest run
@@ -140,7 +162,7 @@ steps:
               result-path: tmp/vitest-results.json
               suite-slug: *examples_suite
               upload-results: false
-              client-version: *bktest_version
+              install-client: false
           - mise#v1.1.6:
               dir: vitest-4
         env:
@@ -149,6 +171,7 @@ steps:
       - label: ":vitest: Vitest"
         key: vitest
         commands:
+          - source .buildkite/use-built-bktest
           - cd vitest
           - npm ci
           - bktest run
@@ -161,7 +184,7 @@ steps:
               result-path: tmp/vitest-results.json
               suite-slug: *examples_suite
               upload-results: false
-              client-version: *bktest_version
+              install-client: false
           - mise#v1.1.6:
               dir: vitest
         env:
@@ -170,6 +193,7 @@ steps:
       - label: ":vitest: Vitest (OpenTelemetry)"
         key: vitest-otel-relay
         commands:
+          - source .buildkite/use-built-bktest
           - cd vitest-otel
           - npm ci
           - export BUILDKITE_ANALYTICS_KEY="$$BUILDKITE_BUILD_ID-vitest-otel-$$BUILDKITE_JOB_ID"
@@ -187,13 +211,14 @@ steps:
               result-path: tmp/vitest-results.json
               suite-slug: *examples_suite
               upload-results: false
-              client-version: *bktest_version
+              install-client: false
           - mise#v1.1.6:
               dir: vitest-otel
 
       - label: ":jest: Jest"
         parallelism: 2
         commands:
+          - source .buildkite/use-built-bktest
           - cd jest
           - npm ci
           - bktest run
@@ -203,7 +228,7 @@ steps:
               result-path: jest-result.json
               suite-slug: *examples_suite
               upload-results: false
-              client-version: *bktest_version
+              install-client: false
           - mise#v1.1.6:
               dir: jest
         env:
@@ -211,6 +236,7 @@ steps:
       - label: ":jest: Jest (Retry Enabled)"
         parallelism: 2
         commands:
+          - source .buildkite/use-built-bktest
           - cd jest
           - npm ci
           - rm -f tmp/jest-retry-demo
@@ -223,7 +249,7 @@ steps:
               retry-cmd: "npx jest {{testExamples}} --testNamePattern '{{testNamePattern}}' --json --testLocationInResults --outputFile {{resultPath}}"
               suite-slug: *examples_suite
               upload-results: false
-              client-version: *bktest_version
+              install-client: false
           - mise#v1.1.6:
               dir: jest
         env:
@@ -233,6 +259,7 @@ steps:
       - label: ":jest: Jest (OpenTelemetry)"
         key: jest-otel-relay
         commands:
+          - source .buildkite/use-built-bktest
           - cd jest-otel
           - npm ci
           - export BUILDKITE_ANALYTICS_KEY="$$BUILDKITE_BUILD_ID-jest-otel-$$BUILDKITE_JOB_ID"
@@ -247,12 +274,13 @@ steps:
               result-path: jest-result.json
               suite-slug: *examples_suite
               upload-results: false
-              client-version: *bktest_version
+              install-client: false
           - mise#v1.1.6:
               dir: jest-otel
 
       - label: ":jest: Plan Jest pool"
         commands:
+          - source .buildkite/use-built-bktest
           - cd jest
           - unset BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
           - bktest pool plan --pool-lease-max-attempts 2 --pipeline-upload pool-workers.yml
@@ -261,13 +289,14 @@ steps:
               test-runner: jest
               suite-slug: *examples_suite
               upload-results: false
-              client-version: *bktest_version
+              install-client: false
         env:
           BUILDKITE_ANALYTICS_LOCATION_PREFIX: jest
 
       - label: ":cypress: Cypress"
         parallelism: 2
         commands:
+          - source .buildkite/use-built-bktest
           - cd cypress
           - bin/setup
           - bktest run
@@ -276,13 +305,14 @@ steps:
               test-runner: cypress
               suite-slug: *examples_suite
               upload-results: false
-              client-version: *bktest_version
+              install-client: false
           - mise#v1.1.6:
               dir: cypress
 
       - label: ":playwright: Playwright"
         parallelism: 2
         commands:
+          - source .buildkite/use-built-bktest
           - cd playwright
           - npm ci
           - npx playwright install --with-deps chromium
@@ -293,7 +323,7 @@ steps:
               result-path: tmp/playwright-results.json
               suite-slug: *examples_suite
               upload-results: false
-              client-version: *bktest_version
+              install-client: false
           - mise#v1.1.6:
               dir: playwright
         env:
@@ -302,6 +332,7 @@ steps:
       - label: ":playwright: Playwright (OpenTelemetry)"
         key: playwright-otel
         commands:
+          - source .buildkite/use-built-bktest
           - cd playwright-otel
           - npm ci
           - npx playwright install --with-deps chromium
@@ -318,12 +349,13 @@ steps:
               test-file-pattern: "tests/**/*.spec.js"
               suite-slug: *examples_suite
               upload-results: false
-              client-version: *bktest_version
+              install-client: false
           - mise#v1.1.6:
               dir: playwright-otel
 
       - label: ":playwright: Plan Playwright pool"
         commands:
+          - source .buildkite/use-built-bktest
           - cd playwright
           - unset BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
           - bktest pool plan --pool-lease-max-attempts 2 --pipeline-upload pool-workers.yml
@@ -333,7 +365,7 @@ steps:
               test-file-pattern: "tests/**/*.spec.js"
               suite-slug: *examples_suite
               upload-results: false
-              client-version: *bktest_version
+              install-client: false
         env:
           BUILDKITE_ANALYTICS_LOCATION_PREFIX: playwright
 
@@ -342,6 +374,7 @@ steps:
       - label: ":pytest: pytest"
         parallelism: 2
         commands:
+          - source .buildkite/use-built-bktest
           - cd pytest
           - pip install -e '.[dev]'
           - bktest run
@@ -351,13 +384,14 @@ steps:
               test-file-pattern: "tests/**/test_*.py"
               suite-slug: *examples_suite
               upload-results: false
-              client-version: *bktest_version
+              install-client: false
           - mise#v1.1.6:
               dir: pytest
 
       - label: ":pytest: pytest (with xdist)"
         parallelism: 2
         commands:
+          - source .buildkite/use-built-bktest
           - cd pytest
           - pip install -e '.[dev]'
           - bktest run
@@ -370,13 +404,14 @@ steps:
               test-file-pattern: "tests/**/test_*.py"
               suite-slug: *examples_suite
               upload-results: false
-              client-version: *bktest_version
+              install-client: false
           - mise#v1.1.6:
               dir: pytest
 
       - label: ":pytest: pytest (tag filters)"
         parallelism: 2
         commands:
+          - source .buildkite/use-built-bktest
           - cd pytest-tag-filters
           - pip install -e '.[dev]'
           - bktest run
@@ -387,12 +422,13 @@ steps:
               tag-filters: "component:frontend"
               suite-slug: *examples_suite
               upload-results: false
-              client-version: *bktest_version
+              install-client: false
           - mise#v1.1.6:
               dir: pytest-tag-filters
 
       - label: ":pytest: Plan pytest pool"
         commands:
+          - source .buildkite/use-built-bktest
           - cd pytest
           # Planning can collect individual tests from files flagged by Test Engine.
           - pip install -e '.[dev]'
@@ -404,12 +440,13 @@ steps:
               test-file-pattern: "tests/**/test_*.py"
               suite-slug: *examples_suite
               upload-results: false
-              client-version: *bktest_version
+              install-client: false
           - mise#v1.1.6:
               dir: pytest
 
       - label: ":pytest: Plan persistent pytest pool"
         commands:
+          - source .buildkite/use-built-bktest
           - cd pytest
           - pip install -e '.[dev]'
           - unset BUILDKITE_TEST_ENGINE_API_ACCESS_TOKEN
@@ -420,13 +457,14 @@ steps:
               test-file-pattern: "tests/**/test_*.py"
               suite-slug: *examples_suite
               upload-results: false
-              client-version: *bktest_version
+              install-client: false
           - mise#v1.1.6:
               dir: pytest
 
       - label: ":pytest: pytest (OpenTelemetry)"
         key: pytest-otel-relay
         commands:
+          - source .buildkite/use-built-bktest
           - cd pytest-otel
           - pip install -r requirements.txt
           - export BUILDKITE_ANALYTICS_KEY="$$BUILDKITE_BUILD_ID-python-otel-relay-$$BUILDKITE_JOB_ID"
@@ -441,7 +479,7 @@ steps:
               test-file-pattern: "tests/**/test_*.py"
               suite-slug: *examples_suite
               upload-results: false
-              client-version: *bktest_version
+              install-client: false
           - mise#v1.1.6:
               dir: pytest-otel
 
@@ -483,6 +521,7 @@ steps:
         depends_on: swift-xcuitest-build
         parallelism: 2
         commands:
+          - source .buildkite/use-built-bktest
           - buildkite-agent artifact download swift-xcuitest/artifacts/tests.tar.gz . --step swift-xcuitest-build
           - tar -xzf swift-xcuitest/artifacts/tests.tar.gz -C swift-xcuitest/artifacts
           - bktest run --plan-out swift-xcuitest/artifacts/plan.json
@@ -501,7 +540,7 @@ steps:
               test-cmd: swift-xcuitest/bin/test {{testExamples}}
               suite-slug: *examples_suite
               upload-results: false
-              client-version: *bktest_version
+              install-client: false
 
   - group: ":android: Android"
     steps:
@@ -522,6 +561,7 @@ steps:
         depends_on: android-discover
         parallelism: 2
         commands:
+          - source .buildkite/use-built-bktest
           - buildkite-agent artifact download "android/*/test-selectors/*.txt" . --step android-discover
           - cd android
           - bktest run
@@ -538,7 +578,7 @@ steps:
                 ./gradlew --no-configuration-cache --continue splitTests -PtestClasses="$$1"' sh '{{testExamples}}'
               suite-slug: *examples_suite
               upload-results: false
-              client-version: *bktest_version
+              install-client: false
 
   # Gradle runs on the agent, so --no-daemon keeps it from leaving daemons behind.
   - group: ":kotlin: Kotlin / Java"
@@ -561,6 +601,7 @@ steps:
         depends_on: gradle-jvm-discover
         parallelism: 2
         commands:
+          - source .buildkite/use-built-bktest
           - buildkite-agent artifact download "gradle-jvm/*/test-selectors/*.txt" . --step gradle-jvm-discover
           - cd gradle-jvm
           - bktest run
@@ -572,7 +613,7 @@ steps:
               test-cmd: "./gradlew --no-daemon --no-configuration-cache --continue splitTests -PtestClasses='{{testExamples}}'"
               suite-slug: *examples_suite
               upload-results: false
-              client-version: *bktest_version
+              install-client: false
           - mise#v1.1.6:
               dir: gradle-jvm
 
@@ -581,6 +622,7 @@ steps:
       - label: ":golang: Go test"
         parallelism: 2
         commands:
+          - source .buildkite/use-built-bktest
           - cd go
           - go install gotest.tools/gotestsum@v1.13.0
           - bktest run
@@ -589,7 +631,7 @@ steps:
               test-runner: gotest
               result-path: tmp/gotest-result.jsonl
               suite-slug: *examples_suite
-              client-version: *bktest_version
+              install-client: false
               tags:
                 - "language.name=go"
                 - "test.framework.name=go-test"
@@ -602,6 +644,7 @@ steps:
         key: rust-nextest
         parallelism: 2
         commands:
+          - source .buildkite/use-built-bktest
           - cd rust
           - mkdir -p target
           - bin/discover > target/selectors.txt
@@ -617,9 +660,12 @@ steps:
               test-cmd: "bin/test {{testExamples}}"
               result-path: target/nextest/ci/buildkite.xml
               suite-slug: *examples_suite
-              client-version: *bktest_version
+              install-client: false
               tags:
                 - "language.name=rust"
                 - "test.framework.name=nextest"
           - mise#v1.1.6:
               dir: rust
+
+  - label: ":pipeline: Runner plugin variants"
+    command: .buildkite/runner-plugin-variants | buildkite-agent pipeline upload

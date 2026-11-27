@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+# Prints a pipeline that repeats every step of pipeline.yml that runs tests
+# with `bktest run`, once with each runner as an external Go plugin and once as
+# a Bash plugin. pipeline.yml itself runs them with the built-in runners.
+#
+# The macOS steps are left out: the Bash plugins need Bash 4.4 or later.
+set -euo pipefail
+
+# Keep ${VARIABLES} as written, so the upload of this output interpolates them.
+buildkite-agent pipeline upload --dry-run --format json --no-interpolation .buildkite/pipeline.yml |
+  jq '
+    def variant($name; $title):
+      {
+        group: ":electric_plug: \($title) runner plugins",
+        steps: [
+          .steps[]
+          | select(type == "object")
+          | (.steps // [.])[]
+          | select(type == "object" and .agents == null)
+          | select((.command // "") | test("(bktest|CLIENT_PATH\") run"))
+          | .label += " (\($title) plugin)"
+          | .env.BKTEST_RUNNER_VARIANT = $name
+          | if .key then .key += "-\($name)-plugin" else . end
+        ]
+      };
+    {steps: [variant("go"; "Go"), variant("bash"; "Bash")]}
+  '

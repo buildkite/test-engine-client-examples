@@ -6,6 +6,7 @@ steps:
       BUILDKITE_TEST_ENGINE_POOL_FALLBACK: "$BUILDKITE_TEST_ENGINE_POOL_FALLBACK"
       BUILDKITE_ANALYTICS_LOCATION_PREFIX: playwright
     commands:
+      - source .buildkite/use-built-bktest
       - cd playwright
       - npm ci
       - npx playwright install --with-deps chromium
@@ -18,6 +19,6 @@ steps:
           result-path: tmp/playwright-results.json
           suite-slug: "$BUILDKITE_TEST_ENGINE_SUITE_SLUG"
           upload-results: false
-          client-version: "${BKTEST_VERSION:-3.7.0}"
+          install-client: false
       - mise#v1.1.6:
           dir: playwright
